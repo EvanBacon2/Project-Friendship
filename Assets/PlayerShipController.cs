@@ -20,23 +20,32 @@ public class PlayerShipController : MonoBehaviour {
     }
 
 	private void FixedUpdate() {
-        moveShip();
+        if (Input.GetKey(KeyCode.LeftShift))
+            slowShip();
+        else
+            moveShip();
         rotateToMouse();
     }
 
 	private void rotateToMouse() {
         Vector3 mousePos = Input.mousePosition;
         Vector3 playerPos = Camera.main.WorldToScreenPoint(transform.position);
-        Debug.Log(mousePos);
         float turnAngle = Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.AngleAxis(turnAngle - 90, Vector3.forward);
     }
 
     private void moveShip() {
         Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-        if (selfRigidBody.velocity.magnitude <= maxSpeed)
-            selfRigidBody.AddForce(movement * speed);
+            selfRigidBody.AddForce(movement.normalized * speed);
         if (selfRigidBody.velocity.magnitude > maxSpeed)
             selfRigidBody.velocity = selfRigidBody.velocity.normalized * maxSpeed;
+    }
+
+    private void slowShip()
+    {
+        if (selfRigidBody.velocity.magnitude < speed * .01f)
+            selfRigidBody.velocity = Vector3.zero;
+        else
+            selfRigidBody.AddForce(selfRigidBody.velocity.normalized * -speed * .8f);
     }
 }

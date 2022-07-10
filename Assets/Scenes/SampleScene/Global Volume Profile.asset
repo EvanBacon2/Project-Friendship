@@ -26,16 +26,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5e1dc532bcb41949b58bc4f2abfbb7e, type: 3}
   m_Name: LensDistortion
   m_EditorClassIdentifier: 
-  active: 0
+  active: 1
   intensity:
     m_OverrideState: 1
-    m_Value: 0.81
+    m_Value: 0.55
   xMultiplier:
     m_OverrideState: 1
-    m_Value: 0.84
+    m_Value: 0.55
   yMultiplier:
     m_OverrideState: 1
-    m_Value: 0.88
+    m_Value: 0.55
   center:
     m_OverrideState: 0
     m_Value: {x: 0.5, y: 0.5}

@@ -130,8 +130,6 @@ Library: lib_burst_generated
 --compilation-defines=MODULE_PHYSICS_2D_EXISTS
 --compilation-defines=MODULE_PARTICLE_SYSTEM_EXISTS
 --compilation-defines=ENABLE_ANIMATION_BURST
---compilation-defines=ENABLE_SPRITESHAPE_BURST
---compilation-defines=TIMELINE_FRAMEACCURATE
 --compilation-defines=CINEMACHINE_POST_PROCESSING_V2
 --compilation-defines=CINEMACHINE_TIMELINE
 --compilation-defines=CINEMACHINE_PHYSICS_2D
@@ -141,6 +139,8 @@ Library: lib_burst_generated
 --compilation-defines=CINEMACHINE_PIXEL_PERFECT_2_0_3
 --compilation-defines=CINEMACHINE_UNITY_ANIMATION
 --compilation-defines=CINEMACHINE_UNITY_IMGUI
+--compilation-defines=ENABLE_SPRITESHAPE_BURST
+--compilation-defines=TIMELINE_FRAMEACCURATE
 --linker-options=PdbAltPath="My project_Data/Plugins/x86_64"
 --generate-link-xml=Temp\burst.link.xml
 --output=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Plugins\x86_64\lib_burst_generated
@@ -157,6 +157,7 @@ Library: lib_burst_generated
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.TextMeshPro.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.Burst.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.RenderPipeline.Universal.ShaderLibrary.dll
+--root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Cinemachine.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.Services.Core.Environments.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.2D.SpriteShape.Runtime.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.Services.Core.Internal.dll
@@ -179,7 +180,6 @@ Library: lib_burst_generated
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.InternalAPIEngineBridge.001.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Assembly-CSharp.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.RenderPipelines.Universal.Shaders.dll
---root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Cinemachine.dll
 --assembly-folder=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\
 --pdb-search-paths=Temp/ManagedSymbols/
 --method=Unity.Jobs.IJobForExtensions+ForJobStruct`1[[UnityEngine.Rendering.Universal.ReorderJob`1[[UnityEngine.Rendering.Universal.LightMinMaxZ, Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Execute(UnityEngine.Rendering.Universal.ReorderJob`1[[UnityEngine.Rendering.Universal.LightMinMaxZ, Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|Unity.Jobs.LowLevel.Unsafe.JobRanges&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)--e943843acfb78f5f2f3716a6553740d9
@@ -327,8 +327,6 @@ Library: lib_burst_generated
 --compilation-defines=MODULE_PHYSICS_2D_EXISTS
 --compilation-defines=MODULE_PARTICLE_SYSTEM_EXISTS
 --compilation-defines=ENABLE_ANIMATION_BURST
---compilation-defines=ENABLE_SPRITESHAPE_BURST
---compilation-defines=TIMELINE_FRAMEACCURATE
 --compilation-defines=CINEMACHINE_POST_PROCESSING_V2
 --compilation-defines=CINEMACHINE_TIMELINE
 --compilation-defines=CINEMACHINE_PHYSICS_2D
@@ -338,6 +336,8 @@ Library: lib_burst_generated
 --compilation-defines=CINEMACHINE_PIXEL_PERFECT_2_0_3
 --compilation-defines=CINEMACHINE_UNITY_ANIMATION
 --compilation-defines=CINEMACHINE_UNITY_IMGUI
+--compilation-defines=ENABLE_SPRITESHAPE_BURST
+--compilation-defines=TIMELINE_FRAMEACCURATE
 --linker-options=PdbAltPath="My project_Data/Plugins/x86_64"
 --generate-link-xml=Temp\burst.link.xml
 --output=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Plugins\x86_64\lib_burst_generated
@@ -354,6 +354,7 @@ Library: lib_burst_generated
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.TextMeshPro.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.Burst.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.RenderPipeline.Universal.ShaderLibrary.dll
+--root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Cinemachine.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.Services.Core.Environments.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.2D.SpriteShape.Runtime.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.Services.Core.Internal.dll
@@ -376,7 +377,6 @@ Library: lib_burst_generated
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.InternalAPIEngineBridge.001.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Assembly-CSharp.dll
 --root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Unity.RenderPipelines.Universal.Shaders.dll
---root-assembly=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\Cinemachine.dll
 --assembly-folder=C:\Users\evan\OneDrive\Documents\Project Friendship\Temp\StagingArea\Data\Managed\
 --pdb-search-paths=Temp/ManagedSymbols/
 --method=Unity.Jobs.IJobForExtensions+ForJobStruct`1[[UnityEngine.Rendering.Universal.ReorderJob`1[[UnityEngine.Rendering.Universal.LightMinMaxZ, Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Execute(UnityEngine.Rendering.Universal.ReorderJob`1[[UnityEngine.Rendering.Universal.LightMinMaxZ, Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|Unity.Jobs.LowLevel.Unsafe.JobRanges&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)--e943843acfb78f5f2f3716a6553740d9

@@ -184,6 +184,7 @@ GameObject:
   - component: {fileID: 356274345}
   - component: {fileID: 356274344}
   - component: {fileID: 356274347}
+  - component: {fileID: 356274348}
   m_Layer: 0
   m_Name: Player Ship
   m_TagString: Untagged
@@ -286,6 +287,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abdc1d326330b9e4f9de8be945433753, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &356274348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 356274343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50a59e3b9a74ebd45afc3ddcfb55ed29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  brakeOn: 0
+  activateBoost: 0
+  boosting: 0
+  acceleration: 0
+  maxSpeed: 0
+  boostCooldown: 0
+  boostAccelerationMod: 0
+  boostMaxSpeedMod: 0
 --- !u!1 &416281454
 GameObject:
   m_ObjectHideFlags: 0
@@ -545,6 +566,7 @@ GameObject:
   - component: {fileID: 1033673028}
   - component: {fileID: 1033673030}
   - component: {fileID: 1033673031}
+  - component: {fileID: 1033673032}
   m_Layer: 0
   m_Name: cm
   m_TagString: Untagged
@@ -593,7 +615,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_TrackedObjectOffset: {x: 0, y: 0, z: 0}
   m_LookaheadTime: 0.3
-  m_LookaheadSmoothing: 0.1
+  m_LookaheadSmoothing: 14.8
   m_LookaheadIgnoreY: 0
   m_XDamping: 0.1
   m_YDamping: 0.1
@@ -622,6 +644,23 @@ MonoBehaviour:
   m_MaximumFOV: 60
   m_MinimumOrthoSize: 1
   m_MaximumOrthoSize: 5000
+--- !u!114 &1033673032
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1033673027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68bb026fafb42b14791938953eaace77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_NoiseProfile: {fileID: 11400000, guid: a3dacaec0287d7444b4bd276816e1666, type: 2}
+  m_PivotOffset: {x: 0, y: 0, z: 0}
+  m_AmplitudeGain: 0.2
+  m_FrequencyGain: 1
+  mNoiseOffsets: {x: -732.67053, y: 457.5898, z: -935.0283}
 --- !u!1 &1257072249
 GameObject:
   m_ObjectHideFlags: 0

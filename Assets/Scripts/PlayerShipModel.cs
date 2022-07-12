@@ -5,12 +5,8 @@ using UnityEngine;
 public class PlayerShipModel : MonoBehaviour {
     public Rigidbody selfRigidBody;
 
-    public float horizontalInput;
-    public float verticalInput;
     private Vector3 mousePos;
     private Vector3 playerPos;
-    public bool brakeInput;
-    public bool boostInput;
     public bool boosting;
 
     [SerializeField] private float acceleration;
@@ -31,7 +27,6 @@ public class PlayerShipModel : MonoBehaviour {
         boostCooldown = 3.0f;
         boostAccelerationMod = 2.0f;
         boostMaxSpeedMod = 25;
-        boostInput = false;
         boosting = false;
         boostLevel = 0;
         maxBoostLevel = 3;
@@ -50,16 +45,16 @@ public class PlayerShipModel : MonoBehaviour {
     }
 
     //State view methods
-    public bool isAccelerating() {
+    /*public bool isAccelerating() {
         return horizontalInput != 0 || verticalInput != 0;
-    }
+    }*/
 
     public float speedLimit() {
         return maxSpeed + boostMaxSpeedMod * boostLevel;
     }
 
     public float accelerationForce() {
-        return acceleration * (boostLevel > 0 ? boostAccelerationMod : 1.0f);
+        return acceleration; //* (boostLevel > 0 ? boostAccelerationMod : 1.0f);
     }
 
     public float brakeForce() {
@@ -67,10 +62,10 @@ public class PlayerShipModel : MonoBehaviour {
     }
 
     //State change methods
-	public void rotateToMouse() {
+	/*public void rotateToMouse() {
         float turnAngle = Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.AngleAxis(turnAngle - 90, Vector3.forward);
-    }
+    }*/
 
     /*public void accelerateShip() {
         Vector3 movement = new Vector3(horizontalInput, verticalInput,0).normalized;
@@ -86,7 +81,7 @@ public class PlayerShipModel : MonoBehaviour {
             selfRigidBody.velocity = selfRigidBody.velocity.normalized * speedLimit();
     }*/
 
-    public void boostShip() {
+    /*public void boostShip() {
         if (boostLevel < maxBoostLevel) {
             startBoost();
             StartCoroutine(endBoost());
@@ -115,5 +110,5 @@ public class PlayerShipModel : MonoBehaviour {
             selfRigidBody.velocity = Vector3.zero;
         else
             selfRigidBody.AddForce(selfRigidBody.velocity.normalized * -brakeForce());
-    }
+    }*/
 }

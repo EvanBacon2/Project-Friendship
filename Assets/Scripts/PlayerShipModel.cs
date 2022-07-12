@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerShipModel : MonoBehaviour {
-    private Rigidbody selfRigidBody;
+    public Rigidbody selfRigidBody;
 
-    private float horizontalAcceleration;
-    private float verticalAcceleration;
+    public float horizontalInput;
+    public float verticalInput;
     private Vector3 mousePos;
     private Vector3 playerPos;
-    public bool brakeOn;
-    public bool activateBoost;
+    public bool brakeInput;
+    public bool boostInput;
     public bool boosting;
 
     [SerializeField] private float acceleration;
@@ -19,7 +19,7 @@ public class PlayerShipModel : MonoBehaviour {
     [SerializeField] private float boostCooldown;
     [SerializeField] private float boostAccelerationMod;
     [SerializeField] private int boostMaxSpeedMod;
-    private int boostLevel;
+    public int boostLevel;
     public int maxBoostLevel;
 
     void Start() {
@@ -31,25 +31,27 @@ public class PlayerShipModel : MonoBehaviour {
         boostCooldown = 3.0f;
         boostAccelerationMod = 2.0f;
         boostMaxSpeedMod = 25;
-        activateBoost = false;
+        boostInput = false;
         boosting = false;
         boostLevel = 0;
         maxBoostLevel = 3;
     }
 
     void Update() {
-        horizontalAcceleration = Input.GetAxis("Horizontal");
-        verticalAcceleration = Input.GetAxis("Vertical");
+        /*horizontalAcceleration = Input.GetAxisRaw("Horizontal");
+        verticalAcceleration = Input.GetAxisRaw("Vertical");
         mousePos = Input.mousePosition;
         playerPos = Camera.main.WorldToScreenPoint(transform.position);
         brakeOn = Input.GetKey(KeyCode.LeftShift);
         if (Input.GetKeyDown(KeyCode.Space) && !boosting && isAccelerating())
             activateBoost = true;
+
+        Debug.Log(selfRigidBody.velocity.magnitude);*/
     }
 
     //State view methods
     public bool isAccelerating() {
-        return horizontalAcceleration != 0 || verticalAcceleration != 0;
+        return horizontalInput != 0 || verticalInput != 0;
     }
 
     public float speedLimit() {
@@ -70,12 +72,19 @@ public class PlayerShipModel : MonoBehaviour {
         transform.rotation = Quaternion.AngleAxis(turnAngle - 90, Vector3.forward);
     }
 
-    public void accelerateShip() {
-        Vector2 movement = new Vector2(horizontalAcceleration, verticalAcceleration);
-        selfRigidBody.AddForce(movement.normalized * accelerationForce());
+    /*public void accelerateShip() {
+        Vector3 movement = new Vector3(horizontalInput, verticalInput,0).normalized;
+        Vector3 newVelocity = selfRigidBody.velocity + movement * accelerationForce() * Time.fixedDeltaTime;
+        if (newVelocity.magnitude > speedLimit())
+            newVelocity = newVelocity.normalized * speedLimit();
+
+        selfRigidBody.velocity = newVelocity;
+    }*/
+
+    /*public void checkSpeed() {
         if (selfRigidBody.velocity.magnitude > speedLimit())
             selfRigidBody.velocity = selfRigidBody.velocity.normalized * speedLimit();
-    }
+    }*/
 
     public void boostShip() {
         if (boostLevel < maxBoostLevel) {
@@ -85,9 +94,11 @@ public class PlayerShipModel : MonoBehaviour {
     }
 
     public void startBoost() {
-        activateBoost = false;
+        boostInput = false;
         boosting = true;
         boostLevel += 1;
+
+        selfRigidBody.velocity = new Vector2(horizontalInput, verticalInput).normalized * selfRigidBody.velocity.magnitude;
     }
 
     public IEnumerator endBoost() {

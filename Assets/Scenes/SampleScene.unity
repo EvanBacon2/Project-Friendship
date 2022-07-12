@@ -185,6 +185,7 @@ GameObject:
   - component: {fileID: 356274344}
   - component: {fileID: 356274347}
   - component: {fileID: 356274348}
+  - component: {fileID: 356274349}
   m_Layer: 0
   m_Name: Player Ship
   m_TagString: Untagged
@@ -299,6 +300,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a59e3b9a74ebd45afc3ddcfb55ed29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  selfRigidBody: {fileID: 0}
+  horizontalAcceleration: 0
+  verticalAcceleration: 0
   brakeOn: 0
   activateBoost: 0
   boosting: 0
@@ -307,6 +311,20 @@ MonoBehaviour:
   boostCooldown: 0
   boostAccelerationMod: 0
   boostMaxSpeedMod: 0
+  boostLevel: 0
+  maxBoostLevel: 0
+--- !u!114 &356274349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 356274343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62430302a29ec2e41915010375012204, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &416281454
 GameObject:
   m_ObjectHideFlags: 0

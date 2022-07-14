@@ -28,7 +28,6 @@ public class PlayerShipController {
     }
 
     public void executeRequests() {
-        float oldMag = shipModel.selfRigidBody.velocity.magnitude;
 
         if (accelerationPriority > 0)
             shipModel.acceleration = priorityAcceleration;
@@ -37,15 +36,15 @@ public class PlayerShipController {
             shipModel.maxSpeed = priorityMaxSpeed;
 
         if (directionPriority > 0)
-            shipModel.selfRigidBody.velocity = priorityDirection;
+            shipModel.direction = priorityDirection;
 
-        if (magnitudePriority > 0) 
-            shipModel.selfRigidBody.velocity = shipModel.selfRigidBody.velocity.normalized * priorityMagnitude;
-        else
-            shipModel.selfRigidBody.velocity = shipModel.selfRigidBody.velocity.normalized * oldMag;
+        if (magnitudePriority > 0)
+            shipModel.magnitude = priorityMagnitude;
 
         if (rotationPriority > 0)
-            shipModel.selfTransform.rotation = priorityRotation;
+            shipModel.rotation = priorityRotation;
+
+        shipModel.setVelocity();
 
         accelerationPriority = 0;
         maxSpeedPriority = 0;

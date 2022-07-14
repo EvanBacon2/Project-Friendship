@@ -13,15 +13,15 @@ public class BrakeRequest {
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (args.brakeInput) {
-            shipController.requestDirection(20, shipModel.selfRigidBody.velocity.normalized);
+            shipController.requestDirection(20, shipModel.getVelocity().normalized);
             shipController.requestMagnitude(20, slowShip());
         }
     }
 
     private float slowShip() {
-        if (shipModel.selfRigidBody.velocity.magnitude < shipModel.acceleration * .005f)
+        if (shipModel.getVelocity().magnitude < shipModel.acceleration * .005f)
             return 0;
         else
-            return shipModel.selfRigidBody.velocity.magnitude + (shipModel.acceleration * -0.8f * Time.fixedDeltaTime);
+            return shipModel.getVelocity().magnitude + (shipModel.acceleration * -0.8f * Time.fixedDeltaTime);
     }
 }

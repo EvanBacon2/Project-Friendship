@@ -27,7 +27,7 @@ public class PlayerInputRecorder : MonoBehaviour {
 
     void Update() {
         mouseInput = Input.mousePosition;
-        playerPos = shipModel.selfTransform.position;
+        playerPos = shipModel.position;
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
         brakeInput = Input.GetKey(KeyCode.LeftShift);

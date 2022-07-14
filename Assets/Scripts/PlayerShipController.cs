@@ -6,12 +6,11 @@ public class PlayerShipController {
     private int directionPriority;
     private int magnitudePriority;
     private int rotationPriority;
-    private int boostLevelPriority;
+    private int boostPriority;
 
     private Vector3 priorityDirection;
     private float priorityMagnitude;
     private Quaternion priorityRotation;
-    private int priorityBoostLevel;
 
     PlayerShipModel shipModel;
 
@@ -19,24 +18,32 @@ public class PlayerShipController {
         this.shipModel = shipModel;
         directionPriority = 0;
         magnitudePriority = 0;
+        rotationPriority = 0;
+        boostPriority = 0;
     }
 
     public void executeRequests() {
         float oldMag = shipModel.selfRigidBody.velocity.magnitude;
+
         if (directionPriority > 0)
             shipModel.selfRigidBody.velocity = priorityDirection;
+
         if (magnitudePriority > 0) 
             shipModel.selfRigidBody.velocity = shipModel.selfRigidBody.velocity.normalized * priorityMagnitude;
         else
             shipModel.selfRigidBody.velocity = shipModel.selfRigidBody.velocity.normalized * oldMag;
 
-        //shipModel.direction = priorityDirection
-        //shipModel.magnitude = priorityMagnitude
-        //shipModel.rotation = priorityRotation
-        //shipModel.boostLevel = priorityBoostlevel
+        if (rotationPriority > 0)
+            shipModel.selfTransform.rotation = priorityRotation;
+
+        if (boostPriority > 0) {
+            shipModel.boostShip();
+        }
 
         directionPriority = 0;
         magnitudePriority = 0;
+        rotationPriority = 0;
+        boostPriority = 0;
     }
 
     public void requestDirection(int priority, Vector3 direction) {
@@ -52,12 +59,15 @@ public class PlayerShipController {
         }
     }
     public void requestRotation(int priority, Quaternion rotation) {
-        if (priority > rotationPriority)
+        if (priority > rotationPriority) {
+            rotationPriority = priority;
             priorityRotation = rotation;
+        }
     }
-    public void requestBoostLevel(int priority, int boostLevel) {
-        if (priority > boostLevelPriority)
-            priorityBoostLevel = boostLevel;
+    public void requestBoost(int priority) {
+        if (priority > boostPriority) {
+            boostPriority = priority;
+        }
     }
 
     /*void Start() {
@@ -66,7 +76,7 @@ public class PlayerShipController {
 
     void Update() {
         
-    }
+    }*/
 
 	private void FixedUpdate() {
         /*if (shipModel.brakeOn) {
@@ -82,7 +92,7 @@ public class PlayerShipController {
         if (!shipModel.isAccelerating())
             shipModel.shaveBoostSpeed();
 
-        shipModel.checkSpeed();
-        shipModel.rotateToMouse();
-    }*/
+        shipModel.checkSpeed();*/
+        //shipModel.rotateToMouse();
+    }
 }

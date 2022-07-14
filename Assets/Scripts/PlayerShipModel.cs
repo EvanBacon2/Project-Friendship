@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class PlayerShipModel : MonoBehaviour {
     public Rigidbody selfRigidBody;
+    public Transform selfTransform;
 
-    private Vector3 mousePos;
-    private Vector3 playerPos;
     public bool boosting;
 
     [SerializeField] private float acceleration;
@@ -20,6 +21,7 @@ public class PlayerShipModel : MonoBehaviour {
 
     void Start() {
         selfRigidBody = GetComponent<Rigidbody>();
+        selfTransform = GetComponent<Transform>();
 
         acceleration = 40;
         maxSpeed = 25;
@@ -44,17 +46,21 @@ public class PlayerShipModel : MonoBehaviour {
         Debug.Log(selfRigidBody.velocity.magnitude);*/
     }
 
-    //State view methods
-    /*public bool isAccelerating() {
+	private void FixedUpdate() {
+        //rotateToMouse();
+	}
+
+	//State view methods
+	/*public bool isAccelerating() {
         return horizontalInput != 0 || verticalInput != 0;
     }*/
 
-    public float speedLimit() {
+	public float speedLimit() {
         return maxSpeed + boostMaxSpeedMod * boostLevel;
     }
 
     public float accelerationForce() {
-        return acceleration; //* (boostLevel > 0 ? boostAccelerationMod : 1.0f);
+        return acceleration * (boostLevel > 0 ? boostAccelerationMod : 1.0f);
     }
 
     public float brakeForce() {
@@ -63,8 +69,42 @@ public class PlayerShipModel : MonoBehaviour {
 
     //State change methods
 	/*public void rotateToMouse() {
-        float turnAngle = Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg;
+        Vector3 playerPos = distort(Camera.main.WorldToViewportPoint(transform.position));
+        Vector3 mouseInput = Camera.main.ScreenToViewportPoint(Input.mousePosition);
+        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.AngleAxis(turnAngle - 90, Vector3.forward);
+    }
+
+    public Vector2 distort(Vector2 uv) {
+        LensDistortion fisheye;
+        GameObject.Find("Fisheye").GetComponent<Volume>().profile.TryGet(out fisheye);
+
+        float amount = 1.6f * Mathf.Max(Mathf.Abs(fisheye.intensity.value * 100), 1f);
+        float theta = Mathf.Deg2Rad * Mathf.Min(160f, amount);
+        float sigma = 2f * Mathf.Tan(theta * 0.5f);
+
+        Vector4 p0 = new Vector4(fisheye.center.value.x * 2f - 1f, fisheye.center.value.y * 2f - 1f,
+                                 Mathf.Max(fisheye.xMultiplier.value, 1e-4f), Mathf.Max(fisheye.xMultiplier.value, 1e-4f));
+        Vector4 p1 = new Vector4((fisheye.intensity.value >= 0f ? theta : 1f / theta), sigma, 
+                                  1f / fisheye.scale.value, fisheye.intensity.value * 100f);
+        
+        Vector2 half = Vector2.one / 2f;
+        Vector2 center = fisheye.center.value * 2f - Vector2.one;
+
+        uv = uv - half * p1.z + half;
+        Vector2 ruv = new Vector2(p0.z, p0.w) * (uv - half - center);
+        float ru = ruv.magnitude;
+
+        if (p1.w > 0.0f) {
+            float wu = ru * p1.x;
+            ru = Mathf.Tan(wu) * (1.0f / (ru * sigma));
+            uv = uv - ruv * (ru - 1.0f);
+        } else {
+            ru = (1.0f / ru) * p1.x * Mathf.Atan(ru * sigma);
+            uv = uv - ruv * (ru - 1.0f);
+        }
+        
+        return uv;
     }*/
 
     /*public void accelerateShip() {
@@ -81,19 +121,18 @@ public class PlayerShipModel : MonoBehaviour {
             selfRigidBody.velocity = selfRigidBody.velocity.normalized * speedLimit();
     }*/
 
-    /*public void boostShip() {
+    public void boostShip() {
         if (boostLevel < maxBoostLevel) {
             startBoost();
             StartCoroutine(endBoost());
         }
     }
-
-    public void startBoost() {
-        boostInput = false;
+    
+    public void startBoost() {   
         boosting = true;
         boostLevel += 1;
 
-        selfRigidBody.velocity = new Vector2(horizontalInput, verticalInput).normalized * selfRigidBody.velocity.magnitude;
+        //selfRigidBody.velocity = new Vector2(horizontalInput, verticalInput).normalized * selfRigidBody.velocity.magnitude;
     }
 
     public IEnumerator endBoost() {
@@ -101,7 +140,7 @@ public class PlayerShipModel : MonoBehaviour {
         boosting = false;
     }
 
-    public void shaveBoostSpeed() {
+    /*public void shaveBoostSpeed() {
         boostLevel = 0;
     }
 

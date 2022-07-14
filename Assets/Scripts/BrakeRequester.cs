@@ -13,7 +13,7 @@ public class BrakeRequester {
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (args.brakeInput) {
-            shipController.requestDirection(20, shipModel.selfRigidBody.velocity);
+            shipController.requestDirection(20, shipModel.selfRigidBody.velocity.normalized);
             shipController.requestMagnitude(20, slowShip());
         }
     }

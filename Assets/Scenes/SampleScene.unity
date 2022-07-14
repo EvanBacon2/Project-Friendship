@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 125081736}
   - component: {fileID: 125081735}
   m_Layer: 6
-  m_Name: Global Volume
+  m_Name: Fisheye
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -183,7 +183,6 @@ GameObject:
   - component: {fileID: 356274346}
   - component: {fileID: 356274345}
   - component: {fileID: 356274344}
-  - component: {fileID: 356274347}
   - component: {fileID: 356274348}
   - component: {fileID: 356274349}
   m_Layer: 0
@@ -276,18 +275,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &356274347
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 356274343}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abdc1d326330b9e4f9de8be945433753, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &356274348
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -301,10 +288,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selfRigidBody: {fileID: 0}
-  horizontalAcceleration: 0
-  verticalAcceleration: 0
-  brakeOn: 0
-  activateBoost: 0
+  selfTransform: {fileID: 0}
   boosting: 0
   acceleration: 0
   maxSpeed: 0
@@ -371,7 +355,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 3
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 1.7775648, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -388,7 +372,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 416281454}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 10}
+  m_LocalPosition: {x: 23.03724, y: 0, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -509,7 +493,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 10}
+  m_LocalPosition: {x: 23.03724, y: 0, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -639,7 +623,7 @@ MonoBehaviour:
   m_YDamping: 0.1
   m_ZDamping: 1
   m_TargetMovementOnly: 1
-  m_ScreenX: 0.5
+  m_ScreenX: 0.23
   m_ScreenY: 0.5
   m_CameraDistance: 60
   m_DeadZoneWidth: 0
@@ -648,7 +632,7 @@ MonoBehaviour:
   m_UnlimitedSoftZone: 0
   m_SoftZoneWidth: 0.4
   m_SoftZoneHeight: 0.4
-  m_BiasX: 0
+  m_BiasX: -0.000000074505806
   m_BiasY: 0
   m_CenterOnActivate: 1
   m_GroupFramingMode: 2

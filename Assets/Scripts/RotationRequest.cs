@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-public class RotationRequester {
-    private PlayerShipModel shipModel;
+
+public class LookAtMouseRequest {
     private PlayerShipController shipController;
 
-    public RotationRequester(PlayerShipModel shipModel, PlayerShipController shipController) {
-        this.shipModel = shipModel;
+    public LookAtMouseRequest(PlayerShipController shipController) {
         this.shipController = shipController;
     }
 
@@ -18,7 +17,6 @@ public class RotationRequester {
     }
 
     private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
-        
         float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg;
         return Quaternion.AngleAxis(turnAngle - 90, Vector3.forward);
     }

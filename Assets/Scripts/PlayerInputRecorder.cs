@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerShipView : MonoBehaviour {
+public class PlayerInputRecorder : MonoBehaviour {
     private PlayerShipModel shipModel;
     private PlayerShipController shipController;
 
@@ -19,10 +19,10 @@ public class PlayerShipView : MonoBehaviour {
     void Start() {
         shipModel = GetComponent<PlayerShipModel>();
         shipController = new PlayerShipController(shipModel);
-        PlayerInputRecorded += new AccelerationRequester(shipModel, shipController).OnPlayerInputRecorded;
-        PlayerInputRecorded += new BrakeRequester(shipModel, shipController).OnPlayerInputRecorded;
-        PlayerInputRecorded += new RotationRequester(shipModel, shipController).OnPlayerInputRecorded;
-        PlayerInputRecorded += new BoostRequester(shipModel, shipController).OnPlayerInputRecorded;
+        PlayerInputRecorded += new MoveRequest(shipModel, shipController).OnPlayerInputRecorded;
+        PlayerInputRecorded += new BrakeRequest(shipModel, shipController).OnPlayerInputRecorded;
+        PlayerInputRecorded += new LookAtMouseRequest(shipController).OnPlayerInputRecorded;
+        PlayerInputRecorded += new BoostRequest(shipModel, shipController).OnPlayerInputRecorded;
     }
 
     void Update() {
@@ -41,22 +41,26 @@ public class PlayerShipView : MonoBehaviour {
     }
 
     protected virtual void OnPlayerInputRecorded() {
-            PlayerInputRecorded?.Invoke(this, new PlayerInputArgs() { mouseInput = mouseInput,
+            PlayerInputRecorded?.Invoke(this, new PlayerInputArgs() { time = Time.time,
+                                                                      mouseInput = mouseInput,
                                                                       playerPos = playerPos,
                                                                       horizontalInput = horizontalInput, 
                                                                       verticalInput = verticalInput,
                                                                       brakeInput = brakeInput,
-                                                                      boostInput = boostInput });
+                                                                      boostInput = boostInput,
+                                                                      isAccelerating = horizontalInput != 0 || verticalInput != 0});;
     }
 }
 
 public class PlayerInputArgs : EventArgs {
+    public float time { get; set; }
     public Vector3 mouseInput { get; set; }
     public Vector3 playerPos { get; set; }
     public float horizontalInput { get; set; }
     public float verticalInput { get; set; }
     public bool brakeInput { get; set; }
     public bool boostInput { get; set; }
+    public bool isAccelerating { get; set; }
 }
 
 /**

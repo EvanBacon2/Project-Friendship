@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BrakeRequester {
+public class BrakeRequest {
     private PlayerShipModel shipModel;
     private PlayerShipController shipController;
 
-    public BrakeRequester(PlayerShipModel shipModel, PlayerShipController shipController) {
+    public BrakeRequest(PlayerShipModel shipModel, PlayerShipController shipController) {
         this.shipModel = shipModel;
         this.shipController = shipController;
     }
@@ -19,9 +19,9 @@ public class BrakeRequester {
     }
 
     private float slowShip() {
-        if (shipModel.selfRigidBody.velocity.magnitude < shipModel.accelerationForce() * .005f)
+        if (shipModel.selfRigidBody.velocity.magnitude < shipModel.acceleration * .005f)
             return 0;
         else
-            return shipModel.selfRigidBody.velocity.magnitude + (shipModel.accelerationForce() * -0.8f * Time.fixedDeltaTime);
+            return shipModel.selfRigidBody.velocity.magnitude + (shipModel.acceleration * -0.8f * Time.fixedDeltaTime);
     }
 }

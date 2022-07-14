@@ -69,30 +69,4 @@ public class PlayerShipController {
             boostPriority = priority;
         }
     }
-
-    /*void Start() {
-        
-    }
-
-    void Update() {
-        
-    }*/
-
-	private void FixedUpdate() {
-        /*if (shipModel.brakeOn) {
-            shipModel.slowShip();
-        } else {
-            if (shipModel.isAccelerating()) {
-                if (shipModel.activateBoost)
-                    shipModel.boostShip();
-                shipModel.accelerateShip();
-            }
-        }
-
-        if (!shipModel.isAccelerating())
-            shipModel.shaveBoostSpeed();
-
-        shipModel.checkSpeed();*/
-        //shipModel.rotateToMouse();
-    }
 }

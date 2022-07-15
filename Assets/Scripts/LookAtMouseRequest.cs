@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -12,8 +10,8 @@ public class LookAtMouseRequest {
     }
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
-        shipController.requestRotation(10, lookAtMouse(Camera.main.ScreenToViewportPoint(args.mouseInput), 
-            distort(Camera.main.WorldToViewportPoint(args.playerPos))));
+        shipController.requestRotation(Request.LookAtMouse, lookAtMouse(Camera.main.ScreenToViewportPoint(args.mouseInput), 
+            distort(Camera.main.WorldToViewportPoint(args.shipModel.position))));
     }
 
     private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
@@ -21,6 +19,7 @@ public class LookAtMouseRequest {
         return Quaternion.AngleAxis(turnAngle - 90, Vector3.forward);
     }
 
+    //adjusts viewport coordinates of playerShip to account for LensDistortion
     public Vector2 distort(Vector2 uv) {
         LensDistortion fisheye;
         GameObject.Find("Fisheye").GetComponent<Volume>().profile.TryGet(out fisheye);
@@ -35,7 +34,7 @@ public class LookAtMouseRequest {
                                   1f / fisheye.scale.value, fisheye.intensity.value * 100f);
 
         Vector2 half = Vector2.one / 2f;
-        Vector2 center = fisheye.center.value * 2f - Vector2.one;
+        Vector2 center = new Vector2(p0.x, p0.y);
 
         uv = uv - half * p1.z + half;
         Vector2 ruv = new Vector2(p0.z, p0.w) * (uv - half - center);

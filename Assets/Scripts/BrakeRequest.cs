@@ -1,27 +1,26 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class BrakeRequest {
-    private PlayerShipModel shipModel;
     private PlayerShipController shipController;
 
-    public BrakeRequest(PlayerShipModel shipModel, PlayerShipController shipController) {
-        this.shipModel = shipModel;
+    public BrakeRequest(PlayerShipController shipController) {
         this.shipController = shipController;
     }
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (args.brakeInput) {
-            shipController.requestDirection(20, shipModel.getVelocity().normalized);
-            shipController.requestMagnitude(20, slowShip());
+            shipController.requestDirectionBlock(Request.Brake);
+            shipController.requestMagnitude(Request.Brake, slowShip(args.shipModel));
+            shipController.requestAccelerationBlock(Request.Brake);
+            shipController.requestMaxSpeedBlock(Request.Brake);
+            shipController.requestforceBlock(Request.Brake);
         }
     }
 
-    private float slowShip() {
-        if (shipModel.getVelocity().magnitude < shipModel.acceleration * .005f)
+    private float slowShip(PlayerShipModel shipModel) {
+        if (shipModel.velocity.magnitude < shipModel.acceleration * .005f)
             return 0;
         else
-            return shipModel.getVelocity().magnitude + (shipModel.acceleration * -0.8f * Time.fixedDeltaTime);
+            return shipModel.velocity.magnitude + (shipModel.acceleration * -0.8f * Time.fixedDeltaTime);
     }
 }

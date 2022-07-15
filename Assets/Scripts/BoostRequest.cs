@@ -1,10 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public class BoostRequest {
-    private PlayerShipModel shipModel;
     private PlayerShipController shipController;
 
     private float boostCooldown;
@@ -14,11 +10,10 @@ public class BoostRequest {
     private int maxBoostLevel;
     private float lastBoostTime;
 
-    public BoostRequest(PlayerShipModel shipModel, PlayerShipController shipController) {
-        this.shipModel = shipModel;
+    public BoostRequest(PlayerShipController shipController) {
         this.shipController = shipController;
 
-        this.boostCooldown = 3;
+        this.boostCooldown = .2f;
         this.boostAccelerationMod = 2.0f;
         this.boostMaxSpeedMod = 25;
         this.boostLevel = 0;
@@ -28,10 +23,15 @@ public class BoostRequest {
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (boostReady(args.time) && args.isAccelerating && args.boostInput && boostLevel < maxBoostLevel) {
-            shipController.requestAcceleration(10, shipModel.acceleration * boostAccelerationMod);
-            shipController.requestMaxSpeed(10, shipModel.maxSpeed + (boostLevel + 1) * boostMaxSpeedMod);
+            shipController.requestAcceleration(Request.Boost, args.shipModel.acceleration * boostAccelerationMod);
+            shipController.requestMaxSpeed(Request.Boost, args.shipModel.maxSpeed + (boostLevel + 1) * boostMaxSpeedMod);
+            shipController.requestForce(Request.Boost, new Vector3(args.horizontalInput, args.verticalInput) * args.shipModel.acceleration * 20, ForceMode.Force);
             boostLevel += 1;
             lastBoostTime = args.time;
+        } else if (!args.isAccelerating && boostLevel > 0) {
+            shipController.requestAcceleration(Request.Boost, PlayerShipModel.baseAcceleration);
+            shipController.requestMaxSpeed(Request.Boost, PlayerShipModel.baseMaxSpeed);
+            boostLevel = 0;
         }
     }
 

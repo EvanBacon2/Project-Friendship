@@ -1,36 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerShipModel : MonoBehaviour {
     private Rigidbody rigidBody;
 
-    public Vector3 direction;
-    public float magnitude;
+    public const float baseAcceleration = 40;
+    public const float baseMaxSpeed = 25;
 
-    public Vector3 position {
-        get { return transform.position; }
-        set { transform.position = value; }
-    }
+    public float acceleration;
+    public float maxSpeed;
     public Quaternion rotation {
         get { return transform.rotation; }
         set { transform.rotation = value; }
     }
 
-    public float acceleration;
-    public float maxSpeed;
+    public Vector3 position {
+        get { return transform.position; }
+        set { transform.position = value; }
+    }
+
+    public Vector3 velocity {
+        get { return rigidBody.velocity; }
+        set { rigidBody.velocity = value; }
+    }
 
     void Start() {
         rigidBody = GetComponent<Rigidbody>();
 
-        acceleration = 40;
-        maxSpeed = 25;
+        acceleration = baseAcceleration;
+        maxSpeed = baseMaxSpeed;
     }
 
-    public Vector3 getVelocity() {
-        return rigidBody.velocity;   
-    }
-    public void setVelocity() {
-        rigidBody.velocity = direction.normalized * magnitude;
+    public void addForce(Vector3 force, ForceMode mode) {
+        rigidBody.AddForce(force, mode);
+        if (rigidBody.velocity.magnitude > maxSpeed)
+            rigidBody.velocity = rigidBody.velocity.normalized * maxSpeed;
     }
 }

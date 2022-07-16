@@ -23,14 +23,14 @@ public class BoostRequest {
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (boostReady(args.time) && args.isAccelerating && args.boostInput && boostLevel < maxBoostLevel) {
-            shipController.requestAcceleration(Request.Boost, args.shipModel.acceleration * boostAccelerationMod);
-            shipController.requestMaxSpeed(Request.Boost, args.shipModel.maxSpeed + (boostLevel + 1) * boostMaxSpeedMod);
-            shipController.requestForce(Request.Boost, new Vector3(args.horizontalInput, args.verticalInput) * args.shipModel.acceleration * 20, ForceMode.Force);
+            shipController.makeRequest(PlayerShipProperties.Acceleration, Request.Boost, args.shipModel.acceleration * boostAccelerationMod);
+            shipController.makeRequest(PlayerShipProperties.MaxSpeed, Request.Boost, args.shipModel.maxSpeed + (boostLevel + 1) * boostMaxSpeedMod);
+            shipController.makeRequest(PlayerShipProperties.Force, Request.Boost, (new Vector3(args.horizontalInput, args.verticalInput) * args.shipModel.acceleration * 20, ForceMode.Force));
             boostLevel += 1;
             lastBoostTime = args.time;
         } else if (!args.isAccelerating && boostLevel > 0) {
-            shipController.requestAcceleration(Request.Boost, PlayerShipModel.baseAcceleration);
-            shipController.requestMaxSpeed(Request.Boost, PlayerShipModel.baseMaxSpeed);
+            shipController.makeRequest(PlayerShipProperties.Acceleration, Request.Boost, PlayerShipModel.baseAcceleration);
+            shipController.makeRequest(PlayerShipProperties.MaxSpeed, Request.Boost, PlayerShipModel.baseMaxSpeed);
             boostLevel = 0;
         }
     }

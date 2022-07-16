@@ -1,41 +1,46 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerShipController {
     PlayerShipModel shipModel;
 
-    private int accelerationPriority;
+    private Dictionary<string, object> priorityRequests;
+    private HashSet<string> blockedRequests;
+    private Dictionary<string, int> requestPriorities;
+
+    /*private int accelerationPriority;
     private int maxSpeedPriority;
     private int forcePriority;
-    private int directionPriority;
     private int magnitudePriority;
     private int rotationPriority;
 
     private bool blockAcceleration;
     private bool blockMaxSpeed;
-    private bool blockDirection;
     private bool blockForce;
 
     private float priorityAcceleration;
     private float priorityMaxSpeed;
     private Vector3 priorityForce;
     private ForceMode priorityForceMode;
-    private Vector3 priorityDirection;
     private float priorityMagnitude;
-    private Quaternion priorityRotation;
+    private Quaternion priorityRotation;*/
 
     public PlayerShipController(PlayerShipModel shipModel) {
         this.shipModel = shipModel;
 
-        accelerationPriority = Request.NoRequest;
+        priorityRequests = new Dictionary<string, object>();
+        blockedRequests = new HashSet<string>();
+        requestPriorities = new Dictionary<string, int>();
+
+        /*accelerationPriority = Request.NoRequest;
         maxSpeedPriority = Request.NoRequest;
         forcePriority = Request.NoRequest;
-        directionPriority = Request.NoRequest;
         magnitudePriority = Request.NoRequest;
-        rotationPriority = Request.NoRequest;
+        rotationPriority = Request.NoRequest;*/
     }
 
     public void executeRequests() {
-        if (accelerationPriority != Request.NoRequest && !blockAcceleration)
+        /*if (accelerationPriority != Request.NoRequest && !blockAcceleration)
             shipModel.acceleration = priorityAcceleration;
 
         if (maxSpeedPriority != Request.NoRequest && !blockMaxSpeed)
@@ -44,30 +49,53 @@ public class PlayerShipController {
         if (rotationPriority != Request.NoRequest)
             shipModel.rotation = priorityRotation;
 
-        if (directionPriority != Request.NoRequest && magnitudePriority != Request.NoRequest && !blockDirection)
-            shipModel.velocity = priorityDirection.normalized * priorityMagnitude;
-        else if (directionPriority != Request.NoRequest && !blockDirection)
-            shipModel.velocity = priorityDirection.normalized * shipModel.velocity.magnitude;
-        else if (magnitudePriority != Request.NoRequest)
-            shipModel.velocity = shipModel.velocity.normalized * priorityMagnitude;
-
         if (forcePriority != Request.NoRequest && !blockForce)
             shipModel.addForce(priorityForce, priorityForceMode);
+
+        if (magnitudePriority != Request.NoRequest)
+            shipModel.magnitude = priorityMagnitude;
 
         accelerationPriority = Request.NoRequest;
         maxSpeedPriority = Request.NoRequest;
         forcePriority = Request.NoRequest;
-        directionPriority = Request.NoRequest;
         magnitudePriority = Request.NoRequest;
         rotationPriority = Request.NoRequest;
 
         blockAcceleration = false;
         blockMaxSpeed = false;
-        blockDirection = false;
-        blockForce = false;
+        blockForce = false;*/
+
+        foreach (KeyValuePair<string, object> entry in priorityRequests) {
+            if (entry.Key == PlayerShipProperties.Force) 
+                shipModel.addForce(((Vector3, ForceMode))entry.Value);
+            else 
+                shipModel.GetType().GetProperty(entry.Key).SetValue(shipModel, entry.Value);
+        }
+
+        priorityRequests.Clear();
+        blockedRequests.Clear();
+        requestPriorities.Clear();
     }
 
-    public void requestAcceleration(int requestID, float acceleration) {
+    public void makeRequest<T>(string property, int priorityID, T request) {
+        int priority = PlayerShipRequestPriorities.getPriority(property, priorityID);
+        if (!priorityRequests.ContainsKey(property) || priority > requestPriorities[property]) {
+            priorityRequests[property] = request;
+            requestPriorities[property] = priority;
+            blockedRequests.Remove(property);
+        }
+    }
+
+    public void blockRequest(string property, int priorityID) {
+        int priority = PlayerShipRequestPriorities.getPriority(property, priorityID);
+        if (!priorityRequests.ContainsKey(property) || priority > requestPriorities[property]) {
+            requestPriorities[property] = priority;
+            priorityRequests.Remove(property);
+            blockedRequests.Add(property);
+        }
+    }
+
+    /*public void requestAcceleration(int requestID, float acceleration) {
         if (PlayerShipRequestPriority.accelerationPriority(requestID) > accelerationPriority) {
             accelerationPriority = PlayerShipRequestPriority.accelerationPriority(requestID);
             priorityAcceleration = acceleration;
@@ -111,20 +139,6 @@ public class PlayerShipController {
         }
     }
 
-    public void requestDirection(int requestID, Vector3 direction) {
-        if (PlayerShipRequestPriority.directionPriority(requestID) > directionPriority) {
-            directionPriority = PlayerShipRequestPriority.directionPriority(requestID);
-            priorityDirection = direction;
-        }
-    }
-
-    public void requestDirectionBlock(int requestID) {
-        if (PlayerShipRequestPriority.directionPriority(requestID) > directionPriority) {
-            directionPriority = PlayerShipRequestPriority.directionPriority(requestID);
-            blockDirection = true;
-        }
-    }
-
     public void requestMagnitude(int requestID, float magnitude) {
         if (PlayerShipRequestPriority.magnitudePriority(requestID) > magnitudePriority) {
             magnitudePriority = PlayerShipRequestPriority.magnitudePriority(requestID);
@@ -137,11 +151,12 @@ public class PlayerShipController {
             rotationPriority = PlayerShipRequestPriority.rotationPriority(requestID);
             priorityRotation = rotation;
         }
-    }
+    }*/
 }
 
 /**
  * Todo
+ *  - Find way to cut down on ShipController code.(Generics?)
  *  - add ability for requests to know if they were chosen.
  *  - finish implementing BoostRequest.
  */

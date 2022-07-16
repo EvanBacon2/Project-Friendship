@@ -9,11 +9,10 @@ public class BrakeRequest {
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (args.brakeInput) {
-            shipController.requestDirectionBlock(Request.Brake);
-            shipController.requestMagnitude(Request.Brake, slowShip(args.shipModel));
-            shipController.requestAccelerationBlock(Request.Brake);
-            shipController.requestMaxSpeedBlock(Request.Brake);
-            shipController.requestforceBlock(Request.Brake);
+            shipController.makeRequest(PlayerShipProperties.Magnitude, Request.Brake, slowShip(args.shipModel));
+            shipController.blockRequest(PlayerShipProperties.Acceleration, Request.Brake);
+            shipController.blockRequest(PlayerShipProperties.MaxSpeed, Request.Brake);
+            shipController.blockRequest(PlayerShipProperties.Force, Request.Brake);
         }
     }
 

@@ -8,59 +8,66 @@ public static class Request {
 	public const int Boost = 2;
 	public const int LookAtMouse = 3;
 }
-public static class PlayerShipRequestPriority {
-	private static readonly Dictionary<int, int> accelerationPriorities = new Dictionary<int, int>() 
+
+public static class PlayerShipRequestPriorities {
+	private static int counter = 0;
+
+	private static readonly Dictionary<int, int> accelerationPriorities = new Dictionary<int, int>()
 	{
-		{ Request.Boost, 0 },
-		{ Request.Brake, 1 },
+		{ Request.Boost, counter++ },
+		{ Request.Brake, counter++ },
 	};
 	private static readonly Dictionary<int, int> maxSpeedPriorities = new Dictionary<int, int>()
 	{
-		{ Request.Boost, 0 },
-		{ Request.Brake, 1 },
+		{ Request.Boost, counter++ },
+		{ Request.Brake, counter++ },
 	};
 	private static readonly Dictionary<int, int> forcePriorities = new Dictionary<int, int>()
 	{
-		{ Request.Move, 0 },
-		{ Request.Boost, 1 },
-		{ Request.Brake, 2 },
-	};
-	private static readonly Dictionary<int, int> directionPriorities = new Dictionary<int, int>()
-	{
-		{ Request.Boost, 0 },
-		{ Request.Brake, 1 },
+		{ Request.Move, counter++ }, //low priority
+		{ Request.Boost, counter++ },
+		{ Request.Brake, counter++ }, //high priority
 	};
 	private static readonly Dictionary<int, int> magnitudePriorities = new Dictionary<int, int>()
 	{
-		{ Request.Boost, 0 },
-		{ Request.Brake, 1 },
+		{ Request.Boost, counter++ },
+		{ Request.Brake, counter++ },
 	};
 	private static readonly Dictionary<int, int> rotationPriorities = new Dictionary<int, int>()
 	{
-		{ Request.LookAtMouse, 0 }
+		{ Request.LookAtMouse, counter++ }
 	};
 
-	public static int accelerationPriority(int request) {
-		return accelerationPriorities.ContainsKey(request) ? accelerationPriorities[request] : -1;
+	private static readonly Dictionary<string, Dictionary<int, int>> propertyMap = new Dictionary<string, Dictionary<int, int>>()
+	{
+		{ PlayerShipProperties.Acceleration, accelerationPriorities },
+		{ PlayerShipProperties.MaxSpeed, maxSpeedPriorities },
+		{ PlayerShipProperties.Force, forcePriorities },
+		{ PlayerShipProperties.Magnitude, magnitudePriorities },
+		{ PlayerShipProperties.Rotation, rotationPriorities }
+	};
+
+	public static int getPriority(string property, int request) {
+		return propertyMap[property].ContainsKey(request) ? propertyMap[property][request] : Request.NoRequest;
+	}
+
+	/*public static int accelerationPriority(int request) {
+		return accelerationPriorities.ContainsKey(request) ? accelerationPriorities[request] : Request.NoRequest;
 	}
 
 	public static int maxSpeedPriority(int request) {
-		return maxSpeedPriorities.ContainsKey(request) ? maxSpeedPriorities[request] : -1;
+		return maxSpeedPriorities.ContainsKey(request) ? maxSpeedPriorities[request] : Request.NoRequest;
 	}
 
 	public static int forcePriority(int request) {
-		return forcePriorities.ContainsKey(request) ? forcePriorities[request] : -1;
-	}
-
-	public static int directionPriority(int request) {
-		return directionPriorities.ContainsKey(request) ? directionPriorities[request] : -1;
+		return forcePriorities.ContainsKey(request) ? forcePriorities[request] : Request.NoRequest;
 	}
 
 	public static int magnitudePriority(int request) {
-		return magnitudePriorities.ContainsKey(request) ? magnitudePriorities[request] : -1;
+		return magnitudePriorities.ContainsKey(request) ? magnitudePriorities[request] : Request.NoRequest;
 	}
 
 	public static int rotationPriority(int request) {
-		return rotationPriorities.ContainsKey(request) ? rotationPriorities[request] : -1;
-	}
+		return rotationPriorities.ContainsKey(request) ? rotationPriorities[request] : Request.NoRequest;
+	}*/
 }

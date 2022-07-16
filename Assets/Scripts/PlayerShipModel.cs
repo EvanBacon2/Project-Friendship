@@ -1,13 +1,25 @@
 using UnityEngine;
 
+public class PlayerShipProperties {
+	public const string Acceleration = "acceleration";
+	public const string MaxSpeed = "maxSpeed";
+    public const string Force = "force";
+    public const string Magnitude = "magnitude";
+    public const string Rotation = "rotation";
+}
+
 public class PlayerShipModel : MonoBehaviour {
     private Rigidbody rigidBody;
 
     public const float baseAcceleration = 40;
     public const float baseMaxSpeed = 25;
 
-    public float acceleration;
-    public float maxSpeed;
+    public float acceleration { get; set; }
+    public float maxSpeed { get; set; }
+    public float magnitude {
+        get { return rigidBody.velocity.magnitude; }
+        set { rigidBody.velocity = rigidBody.velocity.normalized * value; }
+    }
     public Quaternion rotation {
         get { return transform.rotation; }
         set { transform.rotation = value; }
@@ -15,12 +27,10 @@ public class PlayerShipModel : MonoBehaviour {
 
     public Vector3 position {
         get { return transform.position; }
-        set { transform.position = value; }
     }
 
     public Vector3 velocity {
         get { return rigidBody.velocity; }
-        set { rigidBody.velocity = value; }
     }
 
     void Start() {
@@ -30,9 +40,9 @@ public class PlayerShipModel : MonoBehaviour {
         maxSpeed = baseMaxSpeed;
     }
 
-    public void addForce(Vector3 force, ForceMode mode) {
-        rigidBody.AddForce(force, mode);
-        if (rigidBody.velocity.magnitude > maxSpeed)
-            rigidBody.velocity = rigidBody.velocity.normalized * maxSpeed;
+    public void addForce((Vector3, ForceMode) force) {
+        rigidBody.AddForce(force.Item1, force.Item2);
+        if (magnitude > maxSpeed)
+            magnitude = maxSpeed;
     }
 }

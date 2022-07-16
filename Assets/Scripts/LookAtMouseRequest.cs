@@ -10,8 +10,10 @@ public class LookAtMouseRequest {
     }
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
-        shipController.requestRotation(Request.LookAtMouse, lookAtMouse(Camera.main.ScreenToViewportPoint(args.mouseInput), 
-            distort(Camera.main.WorldToViewportPoint(args.shipModel.position))));
+        Vector2 mousePos = Camera.main.ScreenToViewportPoint(args.mouseInput);
+        Vector2 playerPos = distort(Camera.main.WorldToViewportPoint(args.shipModel.position));
+
+        shipController.makeRequest(PlayerShipProperties.Rotation, Request.LookAtMouse, lookAtMouse(mousePos, playerPos));
     }
 
     private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {

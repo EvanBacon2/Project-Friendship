@@ -287,16 +287,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a59e3b9a74ebd45afc3ddcfb55ed29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selfRigidBody: {fileID: 0}
-  selfTransform: {fileID: 0}
   acceleration: 0
   maxSpeed: 0
-  boostCooldown: 0
-  boostAccelerationMod: 0
-  boostMaxSpeedMod: 0
-  boostLevel: 0
-  maxBoostLevel: 0
-  boosting: 0
 --- !u!114 &356274349
 MonoBehaviour:
   m_ObjectHideFlags: 0

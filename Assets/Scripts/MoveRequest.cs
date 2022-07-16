@@ -8,8 +8,9 @@ public class MoveRequest  {
     }
 
     public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
-        if (args.isAccelerating) 
-            shipController.requestForce(Request.Move, 
-                new Vector3(args.horizontalInput, args.verticalInput, 0).normalized * args.shipModel.acceleration, ForceMode.Force);
+        if (args.isAccelerating) {
+            (Vector3, ForceMode) force = (new Vector3(args.horizontalInput, args.verticalInput, 0).normalized * args.shipModel.acceleration, ForceMode.Force);
+            shipController.makeRequest(PlayerShipProperties.Force, Request.Move, force);
+        }
     }
 }

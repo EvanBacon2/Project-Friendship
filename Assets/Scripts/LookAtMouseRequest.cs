@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class LookAtMouseRequest {
+public class LookAtMouseRequest : Request {
+    public override RequestType type { get { return RequestType.LookAtMouse; } }
     private PlayerShipController shipController;
 
     public LookAtMouseRequest(PlayerShipController shipController) {
@@ -13,7 +14,7 @@ public class LookAtMouseRequest {
         Vector2 mousePos = Camera.main.ScreenToViewportPoint(args.mouseInput);
         Vector2 playerPos = distort(Camera.main.WorldToViewportPoint(args.shipModel.position));
 
-        shipController.makeRequest(PlayerShipProperties.Rotation, Request.LookAtMouse, lookAtMouse(mousePos, playerPos));
+        shipController.makeRequest(this, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos));
     }
 
     private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {

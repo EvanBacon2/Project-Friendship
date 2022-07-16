@@ -44,7 +44,7 @@ public class PlayerInputRecorder : MonoBehaviour {
                                                                       verticalInput = verticalInput,
                                                                       brakeInput = brakeInput,
                                                                       boostInput = boostInput,
-                                                                      isAccelerating = horizontalInput != 0 || verticalInput != 0});;
+                                                                      isAccelerating = horizontalInput != 0 || verticalInput != 0 });
     }
 }
 
@@ -63,6 +63,6 @@ public class PlayerInputArgs : EventArgs {
  * On each frame
  *  - record player input
  *  - publish a player input event to all subscribers
- *  - for each subscriber, create a request(s) based on the event, and send the request(s) to the controller
- *  - execute the highest priority requests.
+ *  - for each subscriber, create property request(s) based on the event, and send the request(s) to the controller
+ *  - execute the highest priority request for each property.
  */

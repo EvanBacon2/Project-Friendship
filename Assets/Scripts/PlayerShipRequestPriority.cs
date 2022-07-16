@@ -1,44 +1,44 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public static class Request {
-	public const int NoRequest = -1;
-	public const int Move = 0;
-	public const int Brake = 1;
-	public const int Boost = 2;
-	public const int LookAtMouse = 3;
+public enum RequestType {
+	NoRequest = -1,
+	Move,
+	Brake,
+	Boost,
+	LookAtMouse,
 }
 
 public static class PlayerShipRequestPriorities {
 	private static int counter = 0;
 
-	private static readonly Dictionary<int, int> accelerationPriorities = new Dictionary<int, int>()
+	private static readonly Dictionary<RequestType, int> accelerationPriorities = new Dictionary<RequestType, int>()
 	{
-		{ Request.Boost, counter++ },
-		{ Request.Brake, counter++ },
+		{ RequestType.Boost, counter++ },
+		{ RequestType.Brake, counter++ },
 	};
-	private static readonly Dictionary<int, int> maxSpeedPriorities = new Dictionary<int, int>()
+	private static readonly Dictionary<RequestType, int> maxSpeedPriorities = new Dictionary<RequestType, int>()
 	{
-		{ Request.Boost, counter++ },
-		{ Request.Brake, counter++ },
+		{ RequestType.Boost, counter++ },
+		{ RequestType.Brake, counter++ },
 	};
-	private static readonly Dictionary<int, int> forcePriorities = new Dictionary<int, int>()
+	private static readonly Dictionary<RequestType, int> forcePriorities = new Dictionary<RequestType, int>()
 	{
-		{ Request.Move, counter++ }, //low priority
-		{ Request.Boost, counter++ },
-		{ Request.Brake, counter++ }, //high priority
+		{ RequestType.Move, counter++ }, //low priority
+		{ RequestType.Boost, counter++ },
+		{ RequestType.Brake, counter++ }, //high priority
 	};
-	private static readonly Dictionary<int, int> magnitudePriorities = new Dictionary<int, int>()
+	private static readonly Dictionary<RequestType, int> magnitudePriorities = new Dictionary<RequestType, int>()
 	{
-		{ Request.Boost, counter++ },
-		{ Request.Brake, counter++ },
+		{ RequestType.Boost, counter++ },
+		{ RequestType.Brake, counter++ },
 	};
-	private static readonly Dictionary<int, int> rotationPriorities = new Dictionary<int, int>()
+	private static readonly Dictionary<RequestType, int> rotationPriorities = new Dictionary<RequestType, int>()
 	{
-		{ Request.LookAtMouse, counter++ }
+		{ RequestType.LookAtMouse, counter++ }
 	};
 
-	private static readonly Dictionary<string, Dictionary<int, int>> propertyMap = new Dictionary<string, Dictionary<int, int>>()
+	private static readonly Dictionary<string, Dictionary<RequestType, int>> propertyMap = new Dictionary<string, Dictionary<RequestType, int>>()
 	{
 		{ PlayerShipProperties.Acceleration, accelerationPriorities },
 		{ PlayerShipProperties.MaxSpeed, maxSpeedPriorities },
@@ -47,7 +47,7 @@ public static class PlayerShipRequestPriorities {
 		{ PlayerShipProperties.Rotation, rotationPriorities }
 	};
 
-	public static int getPriority(string property, int request) {
-		return propertyMap[property].ContainsKey(request) ? propertyMap[property][request] : Request.NoRequest;
+	public static int getPriority(string property, RequestType request) {
+		return propertyMap[property].ContainsKey(request) ? propertyMap[property][request] : (int)RequestType.NoRequest;
 	}
 }

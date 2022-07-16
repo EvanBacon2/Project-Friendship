@@ -50,24 +50,4 @@ public static class PlayerShipRequestPriorities {
 	public static int getPriority(string property, int request) {
 		return propertyMap[property].ContainsKey(request) ? propertyMap[property][request] : Request.NoRequest;
 	}
-
-	/*public static int accelerationPriority(int request) {
-		return accelerationPriorities.ContainsKey(request) ? accelerationPriorities[request] : Request.NoRequest;
-	}
-
-	public static int maxSpeedPriority(int request) {
-		return maxSpeedPriorities.ContainsKey(request) ? maxSpeedPriorities[request] : Request.NoRequest;
-	}
-
-	public static int forcePriority(int request) {
-		return forcePriorities.ContainsKey(request) ? forcePriorities[request] : Request.NoRequest;
-	}
-
-	public static int magnitudePriority(int request) {
-		return magnitudePriorities.ContainsKey(request) ? magnitudePriorities[request] : Request.NoRequest;
-	}
-
-	public static int rotationPriority(int request) {
-		return rotationPriorities.ContainsKey(request) ? rotationPriorities[request] : Request.NoRequest;
-	}*/
 }

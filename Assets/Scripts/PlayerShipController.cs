@@ -1,18 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerShipController {
+public class PlayerShipController : MonoBehaviour {
     PlayerShipModel shipModel;
-
+    
     private Dictionary<string, object> priorityRequests;
-    private Dictionary<Request, List<string>> prioritySenders;
+    private Dictionary<Request, HashSet<string>> prioritySenders;
     private Dictionary<string, int> requestPriorities;
 
-    public PlayerShipController(PlayerShipModel shipModel) {
-        this.shipModel = shipModel;
+    public void Start() {
+        shipModel = GetComponent<PlayerShipModel>();
 
         priorityRequests = new Dictionary<string, object>();
-        prioritySenders = new Dictionary<Request, List<string>>();
+        prioritySenders = new Dictionary<Request, HashSet<string>>();
         requestPriorities = new Dictionary<string, int>();
     }
 
@@ -25,7 +25,7 @@ public class PlayerShipController {
         }
 
         //notify senders of properties they modified
-        foreach (KeyValuePair<Request, List<string>> entry in prioritySenders) {
+        foreach (KeyValuePair<Request, HashSet<string>> entry in prioritySenders) {
             entry.Key.onRequestExecuted(entry.Value);
         }
 
@@ -36,42 +36,45 @@ public class PlayerShipController {
 
     public void makeRequest<T>(Request sender, string property, T request) {
         int priority = PlayerShipRequestPriorities.getPriority(property, sender.type);
-        if (!priorityRequests.ContainsKey(property) || priority > requestPriorities[property]) {
+        if (!requestPriorities.ContainsKey(property) || priority > requestPriorities[property]) {
             priorityRequests[property] = request;
             requestPriorities[property] = priority;
 
-            if (!prioritySenders.ContainsKey(sender))
-                prioritySenders[sender] = new List<string>();
-
-            prioritySenders[sender].Add(property);
+            removeSenderProperty(property);
+            addSenderProperty(sender, property);
         }
     }
 
     public void blockRequest(Request sender, string property) {
         int priority = PlayerShipRequestPriorities.getPriority(property, sender.type);
-        if (!priorityRequests.ContainsKey(property) || priority > requestPriorities[property]) {
+        if (!requestPriorities.ContainsKey(property) || priority > requestPriorities[property]) {
             priorityRequests.Remove(property);
             requestPriorities[property] = priority;
 
-            //remove entry from prioritySenders
-            foreach (KeyValuePair<Request, List<string>> entry in prioritySenders) {
-                if (entry.Value.Contains(property)) {
-                    entry.Value.Remove(property);
-                    if (entry.Value.Count == 0)
-                        prioritySenders.Remove(entry.Key);
-                }
+            removeSenderProperty(property);
+            addSenderProperty(sender, property);
+        }
+    }
+
+    private void addSenderProperty(Request sender, string property) {
+        if (!prioritySenders.ContainsKey(sender))
+            prioritySenders[sender] = new HashSet<string>();
+
+        prioritySenders[sender].Add(property);
+    }
+
+    private void removeSenderProperty(string property) {
+        foreach (KeyValuePair<Request, HashSet<string>> entry in prioritySenders) {
+            if (entry.Value.Contains(property)) {
+                entry.Value.Remove(property);
+                if (entry.Value.Count == 0)
+                    prioritySenders.Remove(entry.Key);
             }
-
-            if (!prioritySenders.ContainsKey(sender))
-                prioritySenders[sender] = new List<string>();
-
-            prioritySenders[sender].Add(property);
         }
     }
 }
 
 /**
  * Todo
- *  - add ability for requests to know what properties they affected.
  *  - finish implementing BoostRequest.
  */

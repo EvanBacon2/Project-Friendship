@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerInputRecorder : MonoBehaviour {
@@ -15,11 +16,12 @@ public class PlayerInputRecorder : MonoBehaviour {
 
     void Start() {
         shipModel = GetComponent<PlayerShipModel>();
-        shipController = new PlayerShipController(shipModel);
-        PlayerInputRecorded += new MoveRequest(shipController).OnPlayerInputRecorded;
-        PlayerInputRecorded += new BrakeRequest(shipController).OnPlayerInputRecorded;
-        PlayerInputRecorded += new LookAtMouseRequest(shipController).OnPlayerInputRecorded;
-        PlayerInputRecorded += new BoostRequest(shipController).OnPlayerInputRecorded;
+        shipController = GetComponent<PlayerShipController>();
+        Request[] subscribers = GetComponents<Request>();
+
+        foreach (Request subscriber in subscribers) {
+            PlayerInputRecorded += subscriber.OnPlayerInputRecorded;
+        }
     }
 
     void Update() {

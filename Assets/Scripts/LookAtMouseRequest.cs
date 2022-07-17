@@ -6,11 +6,11 @@ public class LookAtMouseRequest : Request {
     public override RequestType type { get { return RequestType.LookAtMouse; } }
     private PlayerShipController shipController;
 
-    public LookAtMouseRequest(PlayerShipController shipController) {
-        this.shipController = shipController;
+    public void Start() {
+        shipController = GetComponent<PlayerShipController>();
     }
 
-    public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
+    public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         Vector2 mousePos = Camera.main.ScreenToViewportPoint(args.mouseInput);
         Vector2 playerPos = distort(Camera.main.WorldToViewportPoint(args.shipModel.position));
 

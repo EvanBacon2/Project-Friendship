@@ -5,11 +5,11 @@ public class BrakeRequest : Request {
 
     private PlayerShipController shipController;
 
-    public BrakeRequest(PlayerShipController shipController) {
-        this.shipController = shipController;
+    public void Start() {
+        shipController = GetComponent<PlayerShipController>();
     }
 
-    public void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
+    public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (args.brakeInput) {
             shipController.makeRequest(this, PlayerShipProperties.Magnitude, slowShip(args.shipModel));
             shipController.blockRequest(this, PlayerShipProperties.Acceleration);

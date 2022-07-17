@@ -64,11 +64,11 @@ public class PlayerShipController : MonoBehaviour {
     }
 
     private void removeSenderProperty(string property) {
-        foreach (KeyValuePair<Request, HashSet<string>> entry in prioritySenders) {
-            if (entry.Value.Contains(property)) {
-                entry.Value.Remove(property);
-                if (entry.Value.Count == 0)
-                    prioritySenders.Remove(entry.Key);
+        foreach (Request entry in new List<Request>(prioritySenders.Keys)) {
+            if (prioritySenders[entry].Contains(property)) {
+                prioritySenders[entry].Remove(property);
+                if (prioritySenders[entry].Count == 0)
+                    prioritySenders.Remove(entry);
             }
         }
     }

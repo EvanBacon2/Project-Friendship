@@ -41,6 +41,7 @@ public class PlayerInputRecorder : MonoBehaviour {
     protected virtual void OnPlayerInputRecorded() {
             PlayerInputRecorded?.Invoke(this, new PlayerInputArgs() { time = Time.time,
                                                                       shipModel = shipModel,
+                                                                      shipController = shipController,
                                                                       mouseInput = mouseInput,
                                                                       horizontalInput = horizontalInput, 
                                                                       verticalInput = verticalInput,
@@ -53,12 +54,13 @@ public class PlayerInputRecorder : MonoBehaviour {
 public class PlayerInputArgs : EventArgs {
     public float time { get; set; }
     public PlayerShipModel shipModel { get; set; }
+    public PlayerShipController shipController { get; set; }
     public Vector3 mouseInput { get; set; }
     public float horizontalInput { get; set; }
     public float verticalInput { get; set; }
     public bool brakeInput { get; set; }
-    public bool boostInput { get; set; }
-    public bool isAccelerating { get; set; }
+    public bool boostInput { get; set;  }
+    public bool isAccelerating { get; set;  }
 }
 
 /**

@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class BoostRequest : Request {
     public override RequestType type { get { return RequestType.Boost; } }
-    private PlayerShipController shipController;
-
     PlayerInputArgs lastInputArgs;
 
     [SerializeField] private int boostLevel;
@@ -17,8 +15,6 @@ public class BoostRequest : Request {
     private int boostMaxSpeedMod;
 
     public void Start() {
-        shipController = GetComponent<PlayerShipController>();
-
         boostCooldown = .2f;
         boostAccelerationMod = 2.0f;
         boostMaxSpeedMod = 25;
@@ -31,12 +27,12 @@ public class BoostRequest : Request {
         lastInputArgs = args;
         
         if (boostReady(args.time) && args.isAccelerating && args.boostInput && boostLevel < maxBoostLevel) {
-            shipController.makeRequest(this, PlayerShipProperties.Acceleration, args.shipModel.acceleration * boostAccelerationMod);
-            shipController.makeRequest(this, PlayerShipProperties.MaxSpeed, args.shipModel.maxSpeed + (boostLevel + 1) * boostMaxSpeedMod);
-            shipController.makeRequest(this, PlayerShipProperties.Force, (new Vector3(args.horizontalInput, args.verticalInput) * args.shipModel.acceleration * 20, ForceMode.Force));
+            args.shipController.makeRequest(this, PlayerShipProperties.Acceleration, args.shipModel.acceleration * boostAccelerationMod);
+            args.shipController.makeRequest(this, PlayerShipProperties.MaxSpeed, args.shipModel.maxSpeed + (boostLevel + 1) * boostMaxSpeedMod);
+            args.shipController.makeRequest(this, PlayerShipProperties.Force, (new Vector3(args.horizontalInput, args.verticalInput) * args.shipModel.acceleration * 20, ForceMode.Force));
         } else if (!args.isAccelerating && boostLevel > 0) {
-            shipController.makeRequest(this, PlayerShipProperties.Acceleration, PlayerShipModel.baseAcceleration);
-            shipController.makeRequest(this, PlayerShipProperties.MaxSpeed, PlayerShipModel.baseMaxSpeed);
+            args.shipController.makeRequest(this, PlayerShipProperties.Acceleration, PlayerShipModel.baseAcceleration);
+            args.shipController.makeRequest(this, PlayerShipProperties.MaxSpeed, PlayerShipModel.baseMaxSpeed);
         }
     }
 

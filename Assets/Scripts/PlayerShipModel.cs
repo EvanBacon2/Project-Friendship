@@ -40,7 +40,12 @@ public class PlayerShipModel : MonoBehaviour {
         maxSpeed = baseMaxSpeed;
     }
 
-    public void addForce((Vector3, ForceMode) force) {
+	public void FixedUpdate() {
+        if (magnitude > maxSpeed)
+            magnitude = maxSpeed;
+    }
+
+	public void addForce((Vector3, ForceMode) force) {
         rigidBody.AddForce(force.Item1, force.Item2);
         if (magnitude > maxSpeed)
             magnitude = maxSpeed;

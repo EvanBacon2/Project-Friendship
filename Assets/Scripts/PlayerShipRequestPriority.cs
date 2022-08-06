@@ -30,8 +30,8 @@ public static class PlayerShipRequestPriorities {
 	};
 	private static readonly Dictionary<RequestType, int> magnitudePriorities = new Dictionary<RequestType, int>()
 	{
-		{ RequestType.Boost, counter++ },
 		{ RequestType.Brake, counter++ },
+		{ RequestType.Boost, counter++ },
 	};
 	private static readonly Dictionary<RequestType, int> rotationPriorities = new Dictionary<RequestType, int>()
 	{

@@ -15,7 +15,7 @@ public class PlayerShipModel : MonoBehaviour {
     public const float baseMaxSpeed = 25;
 
     public float acceleration { get; set; }
-    public float maxSpeed { get; set; }
+    [SerializeField] public float maxSpeed { get; set; }
     public float magnitude {
         get { return rigidBody.velocity.magnitude; }
         set { rigidBody.velocity = rigidBody.velocity.normalized * value; }
@@ -28,7 +28,6 @@ public class PlayerShipModel : MonoBehaviour {
     public Vector3 position {
         get { return transform.position; }
     }
-
     public Vector3 velocity {
         get { return rigidBody.velocity; }
     }

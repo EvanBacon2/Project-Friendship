@@ -30,6 +30,8 @@ public class PlayerInputRecorder : MonoBehaviour {
         verticalInput = Input.GetAxisRaw("Vertical");
         brakeInput = Input.GetKey(KeyCode.LeftShift);
         boostInput = !boostInput ? Input.GetKeyDown(KeyCode.Space) : boostInput;
+
+        Debug.Log(shipModel.velocity.magnitude);
     }
 
     void FixedUpdate() {

@@ -6,6 +6,7 @@ public enum RequestType {
 	Move,
 	Brake,
 	Boost,
+	BoostReset,
 	LookAtMouse,
 }
 
@@ -16,22 +17,26 @@ public static class PlayerShipRequestPriorities {
 	{
 		{ RequestType.Boost, counter++ },
 		{ RequestType.Brake, counter++ },
+		{ RequestType.BoostReset, counter++ },
 	};
 	private static readonly Dictionary<RequestType, int> maxSpeedPriorities = new Dictionary<RequestType, int>()
 	{
 		{ RequestType.Boost, counter++ },
 		{ RequestType.Brake, counter++ },
+		{ RequestType.BoostReset, counter++ },
 	};
 	private static readonly Dictionary<RequestType, int> forcePriorities = new Dictionary<RequestType, int>()
 	{
 		{ RequestType.Move, counter++ }, //low priority
 		{ RequestType.Boost, counter++ },
 		{ RequestType.Brake, counter++ }, //high priority
+		{ RequestType.BoostReset, counter++ },
 	};
 	private static readonly Dictionary<RequestType, int> magnitudePriorities = new Dictionary<RequestType, int>()
 	{
 		{ RequestType.Brake, counter++ },
 		{ RequestType.Boost, counter++ },
+		{ RequestType.BoostReset, counter++ },
 	};
 	private static readonly Dictionary<RequestType, int> rotationPriorities = new Dictionary<RequestType, int>()
 	{

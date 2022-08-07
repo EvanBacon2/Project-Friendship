@@ -34,8 +34,8 @@ public class PlayerShipController : MonoBehaviour {
         requestPriorities.Clear();
     }
 
-    public void makeRequest<T>(Request sender, string property, T request) {
-        int priority = PlayerShipRequestPriorities.getPriority(property, sender.type);
+    public void makeRequest<T>(Request sender, RequestType type, string property, T request) {
+        int priority = PlayerShipRequestPriorities.getPriority(property, type);
         if (!requestPriorities.ContainsKey(property) || priority > requestPriorities[property]) {
             priorityRequests[property] = request;
             requestPriorities[property] = priority;
@@ -45,8 +45,8 @@ public class PlayerShipController : MonoBehaviour {
         }
     }
 
-    public void blockRequest(Request sender, string property) {
-        int priority = PlayerShipRequestPriorities.getPriority(property, sender.type);
+    public void blockRequest(Request sender, RequestType type, string property) {
+        int priority = PlayerShipRequestPriorities.getPriority(property, type);
         if (!requestPriorities.ContainsKey(property) || priority > requestPriorities[property]) {
             priorityRequests.Remove(property);
             requestPriorities[property] = priority;

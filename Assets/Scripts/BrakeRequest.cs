@@ -11,9 +11,9 @@ public class BrakeRequest : Request {
     }
 
     private float slowShip(PlayerShipModel shipModel) {
-        if (shipModel.velocity.magnitude < shipModel.acceleration * .005f)
+        if (shipModel.velocity.magnitude < PlayerShipModel.baseAcceleration * .02f)
             return 0;
         else
-            return shipModel.velocity.magnitude + (shipModel.acceleration * -0.8f * Time.fixedDeltaTime);
+            return shipModel.velocity.magnitude + (PlayerShipModel.baseAcceleration * -1f * Time.fixedDeltaTime);
     }
 }

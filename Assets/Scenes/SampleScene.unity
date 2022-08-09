@@ -353,6 +353,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boostLevel: 0
+  lastBoostTime: 0
+  coastStart: 0
+  resetBoost: 0
 --- !u!114 &356274354
 MonoBehaviour:
   m_ObjectHideFlags: 0

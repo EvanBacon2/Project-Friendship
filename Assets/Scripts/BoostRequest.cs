@@ -48,11 +48,6 @@ public class BoostRequest : Request {
     }
 
     public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
-        /*if (!boostActive(args.time) && !args.isAccelerating && ((lastInputArgs?.isAccelerating ?? false) || coastStart == float.MaxValue)) 
-            coastStart = args.time;*/
-
-        //lastInputArgs = args;
-
         Debug.Log(getState(args));
 
         switch (getState(args)) {
@@ -97,42 +92,12 @@ public class BoostRequest : Request {
         }
 
         lastInputArgs = args;
-
-        /*if (resetBoost) {
-            if (args.shipModel.velocity.magnitude > PlayerShipModel.baseMaxSpeed) {
-                args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.Magnitude, args.shipModel.velocity.magnitude - brakeStep); 
-                args.shipController.blockRequest(this, RequestType.BoostReset, PlayerShipProperties.Force);
-            } else {
-                args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.Acceleration, PlayerShipModel.baseAcceleration);
-                args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.MaxSpeed, PlayerShipModel.baseMaxSpeed);
-                boostLevel = 0;
-                resetBoost = false;
-            }
-        } else if (boostActive(args.time)) {
-            float x = (boostTime - (args.time - lastBoostTime)) / boostTime;
-            float boostMagMod = x > .85f ? 0f + (1f * ((1 - x) * (1 - x) / 1f)) : (Mathf.Log10(x * 4) / 3f) + .6f;
-            args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Force, (boostVelocity * boostMagMod, ForceMode.VelocityChange));
-            coastStart = float.MaxValue;
-        } else if (boostReady(args.time) && args.isAccelerating && args.boostInput) {
-            boostFrame = true;
-            if (boostLevel < maxBoostLevel) {
-                args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Acceleration, args.shipModel.acceleration * boostAccelerationMod);
-                args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.MaxSpeed, args.shipModel.maxSpeed + boostMaxSpeedMod);
-            }
-
-            boostVelocity = new Vector3(args.horizontalInput, args.verticalInput).normalized * boostMagnitude;
-            args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Force, (boostVelocity * .01f, ForceMode.VelocityChange));
-        } else if (resetReady(args.time) && !args.isAccelerating && boostLevel > 0) {
-            brakeStep = (args.shipModel.velocity.magnitude - PlayerShipModel.baseMaxSpeed) / 30;
-            resetBoost = true;
-        }*/
     }
 
     public override void onRequestExecuted(HashSet<string> executedProperties) {
         base.onRequestExecuted(executedProperties);
         if (boostFrame) {
-            if (lastInputArgs.boostInput)//executedProperties.Contains(PlayerShipProperties.Force))
-                lastBoostTime = lastInputArgs.time;
+            lastBoostTime = lastInputArgs.time;
             if (executedProperties.Contains(PlayerShipProperties.MaxSpeed) && executedProperties.Contains(PlayerShipProperties.Acceleration))
                 boostLevel += 1;
             boostFrame = false;

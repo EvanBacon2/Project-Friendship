@@ -13,12 +13,13 @@ public class PlayerShipModel : MonoBehaviour {
 
     public const float baseAcceleration = 40;
     public const float baseMaxSpeed = 25;
+    private float newMagValue = -1;
 
     public float acceleration { get; set; }
     [SerializeField] public float maxSpeed { get; set; }
     public float magnitude {
         get { return rigidBody.velocity.magnitude; }
-        set { rigidBody.velocity = rigidBody.velocity.normalized * value; }
+        set { newMagValue = value; }
     }
     public Quaternion rotation {
         get { return transform.rotation; }
@@ -40,6 +41,11 @@ public class PlayerShipModel : MonoBehaviour {
     }
 
 	public void FixedUpdate() {
+        if (newMagValue >= 0) {
+            rigidBody.velocity = rigidBody.velocity.normalized * newMagValue;
+            newMagValue = -1;
+        }
+
         if (magnitude > maxSpeed)
             magnitude = maxSpeed;
     }

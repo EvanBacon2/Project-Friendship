@@ -34,8 +34,8 @@ public class BoostRequest : Request {
         boostLevel = 0;
         maxBoostLevel = 3;
 
-        boostCooldown = .4f;
-        boostAccelerationMod = 1.2f;
+        boostCooldown = .1f;
+        boostAccelerationMod = 1.3f;
         boostMaxSpeedMod = 3;
         boostMagnitude = PlayerShipModel.baseMaxSpeed * 2;
         
@@ -48,8 +48,6 @@ public class BoostRequest : Request {
     }
 
     public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
-        Debug.Log(getState(args));
-
         switch (getState(args)) {
             case BoostState.BOOST_START:
                 boostFrame = true;
@@ -59,7 +57,7 @@ public class BoostRequest : Request {
                 }
 
                 boostVelocity = new Vector3(args.horizontalInput, args.verticalInput).normalized * boostMagnitude;
-                args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Force, (boostVelocity * .01f, ForceMode.VelocityChange));
+                args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Force, (boostVelocity * .01f, ForceMode.VelocityChange));//try to remove
                 break;
             case BoostState.BOOST_ACTIVE:
                 float x = (boostTime - (args.time - lastBoostTime)) / boostTime;
@@ -68,13 +66,13 @@ public class BoostRequest : Request {
                 coastStart = float.MaxValue;
                 break;
             case BoostState.RESET_START:
-                brakeStep = (args.shipModel.velocity.magnitude - PlayerShipModel.baseMaxSpeed) / 30;
+                brakeStep = (args.shipModel.velocity.magnitude - PlayerShipModel.baseMaxSpeed) / 80;
                 resetBoost = true;
                 break;
             case BoostState.RESET_ACTIVE:
                 if (args.shipModel.velocity.magnitude > PlayerShipModel.baseMaxSpeed) {
                     args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.Magnitude, args.shipModel.velocity.magnitude - brakeStep);
-                    args.shipController.blockRequest(this, RequestType.BoostReset, PlayerShipProperties.Force);
+                    //args.shipController.blockRequest(this, RequestType.BoostReset, PlayerShipProperties.Force);
                 }
                 else {
                     args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.Acceleration, PlayerShipModel.baseAcceleration);

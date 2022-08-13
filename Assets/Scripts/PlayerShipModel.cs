@@ -13,7 +13,9 @@ public class PlayerShipModel : MonoBehaviour {
 
     public const float baseAcceleration = 40;
     public const float baseMaxSpeed = 25;
+
     private float newMagValue = -1;
+    private (Vector3, ForceMode)? newForce = null;
 
     public float acceleration { get; set; }
     [SerializeField] public float maxSpeed { get; set; }
@@ -41,18 +43,23 @@ public class PlayerShipModel : MonoBehaviour {
     }
 
 	public void FixedUpdate() {
+        //Debug.Log("before " + rigidBody.velocity.magnitude);
+        if (newForce.HasValue) {
+            rigidBody.AddForce(newForce.Value.Item1, newForce.Value.Item2);
+            newForce = null;
+        }
+        //Debug.Log("after " + rigidBody.velocity.magnitude);
+
         if (newMagValue >= 0) {
             rigidBody.velocity = rigidBody.velocity.normalized * newMagValue;
             newMagValue = -1;
         }
 
         if (magnitude > maxSpeed)
-            magnitude = maxSpeed;
+            rigidBody.velocity = rigidBody.velocity.normalized * maxSpeed;
     }
 
 	public void addForce((Vector3, ForceMode) force) {
-        rigidBody.AddForce(force.Item1, force.Item2);
-        if (magnitude > maxSpeed)
-            magnitude = maxSpeed;
+        newForce = force;
     }
 }

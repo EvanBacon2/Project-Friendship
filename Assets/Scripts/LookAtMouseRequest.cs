@@ -7,12 +7,19 @@ public class LookAtMouseRequest : Request {
         Vector2 mousePos = Camera.main.ScreenToViewportPoint(args.mouseInput);
         Vector2 playerPos = distort(Camera.main.WorldToViewportPoint(args.shipModel.position));
 
-        args.shipController.makeRequest(this, RequestType.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos));
+        args.shipController.makeRequest(this, RequestType.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos, args.shipModel.transform.rotation.eulerAngles.z));
     }
 
-    private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
-        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg;
-        return Quaternion.AngleAxis(turnAngle - 90, Vector3.forward);
+    private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos, float currentRotation) {
+        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
+        float angDiff = (turnAngle < 0 ? 360 + turnAngle : turnAngle) - currentRotation;
+        if (Mathf.Abs(angDiff) > 180) 
+            angDiff = (360 - Mathf.Abs(angDiff)) * (angDiff > 0 ? -1 : 1);
+
+        if (Mathf.Abs(angDiff) > 20)
+            return Quaternion.AngleAxis(currentRotation + (20 * (angDiff > 0 ? 1 : -1)), Vector3.forward);
+        else
+            return Quaternion.AngleAxis(turnAngle, Vector3.forward);
     }
 
     //adjusts viewport coordinates of playerShip to account for LensDistortion

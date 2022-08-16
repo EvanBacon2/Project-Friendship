@@ -6,12 +6,22 @@ using UnityEngine.Profiling;
 
 namespace Rope {
     class VerletNode {
-        public Vector2 position;
+        
+        public Vector2 position {
+            get { return newPosition; }
+            set { newPosition = value; }
+        }
+        public GameObject sprite;
+        private Vector2 newPosition;
         public Vector2 oldPosition;
 
-        public VerletNode(Vector2 position) {
-            this.position = position;
-            this.oldPosition = position;
+        public VerletNode(GameObject sprite) {
+            this.sprite = sprite;
+            this.oldPosition = sprite.transform.position;
+        }
+
+        public void updatePosition() {
+            sprite.transform.position = newPosition;
         }
     }
 
@@ -53,13 +63,13 @@ namespace Rope {
         // Size of the collider buffer, also the maximum number of colliders that a single node can touch at once.
         private const int COLLIDER_BUFFER_SIZE = 8;
         // IF YOU CHANGE THIS, REMEMBER TO CHANGE IT IN THE SHADER AS WELL.
-        private const int MAX_RENDER_POINTS = 256;
+        //private const int MAX_RENDER_POINTS = 256;
         // Number of triangles present in each line segment between nodes.
         // 4 = 2 per quad, one quad for the line and one for the start cap.
-        private const int TRIANGLES_PER_NODE = 4;
+        //private const int TRIANGLES_PER_NODE = 4;
         // Number of vertices present in each line segment between nodes.
         // 8 = 2 quads.
-        private const int VERTICES_PER_NODE = 8;
+        //private const int VERTICES_PER_NODE = 8;
 
         [Min(2)]
         public int totalNodes = 200;
@@ -74,13 +84,13 @@ namespace Rope {
         public float collisionRadius = 0.5f;    // Collision radius around each node.  Set high to avoid tunneling.
 
         private VerletNode[] nodes;
-        private float timeAccum;
+        //private float timeAccum;
         private CollisionInfo[] collisionInfos;
         private int numCollisions;
         private bool shouldSnapshotCollision;
 
-        private Camera cam;
-        private Material material;
+        //private Camera cam;
+        //private Material material;
         private Collider2D[] colliderBuffer;
 
         private Vector4[] renderPositions;
@@ -88,11 +98,11 @@ namespace Rope {
         public GameObject grappleChain;
 
         private void Awake() {
-            if (totalNodes > MAX_RENDER_POINTS) {
-                Debug.LogError("Total nodes is more than MAX_RENDER_POINTS, so won't be able to render the entire rope.");
-            }
+            //if (totalNodes > MAX_RENDER_POINTS) {
+                //Debug.LogError("Total nodes is more than MAX_RENDER_POINTS, so won't be able to render the entire rope.");
+            //}
 
-            nodes = new VerletNode[totalNodes];
+            nodes = new VerletNode[totalNodes + 1];
             collisionInfos = new CollisionInfo[MAX_ROPE_COLLISIONS];
             for (int i = 0; i < collisionInfos.Length; i++) {
                 collisionInfos[i] = new CollisionInfo(totalNodes);
@@ -105,13 +115,16 @@ namespace Rope {
             // Spawn nodes starting from the transform position and working down.
             Vector2 pos = transform.position;
             for (int i = 0; i < totalNodes; i++) {
-                nodes[i] = new VerletNode(pos);
+                nodes[i] = new VerletNode(Instantiate(grappleChain, pos, Quaternion.identity));
                 renderPositions[i] = new Vector4(pos.x, pos.y, 1, 1);
                 pos.y -= nodeDistance;
             }
 
+            nodes[totalNodes] = new VerletNode(new GameObject("ChainEnd"));
+            nodes[totalNodes].position = pos;
+
             // Mesh setup.
-            Mesh mesh = new Mesh();
+            /*Mesh mesh = new Mesh();
             {
                 Vector3[] vertices = new Vector3[totalNodes * VERTICES_PER_NODE];
                 int[] triangles = new int[totalNodes * TRIANGLES_PER_NODE * 3];
@@ -147,7 +160,7 @@ namespace Rope {
             }
             GetComponent<MeshFilter>().mesh = mesh;
             material = GetComponent<MeshRenderer>().material;
-            material.SetFloat("_Width", drawWidth);
+            material.SetFloat("_Width", drawWidth);*/
         }
 
         private void Update() {
@@ -156,8 +169,8 @@ namespace Rope {
             }
         }
 
-        private void LateUpdate() {
-            for (int i = 0; i < nodes.Length; i++) {
+        /*private void LateUpdate() {
+            for (int i = 0; i < nodes.Length-1; i++) {
                 renderPositions[i].w = 1;
                 Vector2 pos = nodes[i].position;
                 renderPositions[i].x = pos.x;
@@ -166,7 +179,7 @@ namespace Rope {
             }
 
             material.SetVectorArray("_Points", renderPositions);
-        }
+        }*/
 
         private void FixedUpdate() {
             shouldSnapshotCollision = true;
@@ -178,7 +191,15 @@ namespace Rope {
                 AdjustCollisions();
             }
 
-            grappleChain.transform.position = nodes[0].position;
+            for (int i = 0; i < nodes.Length; i++) {
+                nodes[i].updatePosition();
+            }
+
+            Vector2 axis = new Vector2(0, 1);
+            for (int i = 0; i < nodes.Length - 1; i++) {
+                Vector2 diff = nodes[i].position - nodes[i + 1].position;
+                nodes[i].sprite.transform.rotation = Quaternion.AngleAxis(Vector2.SignedAngle(diff, axis) * -1f, Vector3.forward);
+            }
         }
 
         private void SnapshotCollision() {

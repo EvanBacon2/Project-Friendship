@@ -75,6 +75,7 @@ namespace Rope {
         public int totalNodes = 200;
         public int iterations = 80;
         public float nodeDistance = 0.1f;
+        public float nodeAngle = 30;
         [Min(0.001f)]
         public float stepTime = 0.01f;
         public float maxStep = 0.1f;
@@ -187,7 +188,8 @@ namespace Rope {
             Simulate();
 
             for (int i = 0; i < iterations; i++) {
-                ApplyConstraints();
+                ApplyAngleConstraints();
+                //ApplyConstraints();
                 AdjustCollisions();
             }
 
@@ -326,6 +328,45 @@ namespace Rope {
             */
 
             Profiler.EndSample();
+        }
+
+        private void ApplyAngleConstraints() {
+            Vector2 axis = new Vector2(-Mathf.Sin((transform.parent.transform.rotation.eulerAngles.z) * Mathf.Deg2Rad),
+                                       Mathf.Cos((transform.parent.transform.rotation.eulerAngles.z) * Mathf.Deg2Rad));
+            nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 2 + transform.position.x,
+                                                 Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 2 + transform.position.y);
+            //Debug.Log(axis);
+            for (int i = 0; i < nodes.Length - 1; i++) {
+                VerletNode node1 = nodes[i];
+                VerletNode node2 = nodes[i + 1];
+
+                // Current distance between rope nodes.
+                float diffX = node1.position.x - node2.position.x;
+                float diffY = node1.position.y - node2.position.y;
+                float dist = Vector2.Distance(node1.position, node2.position);
+                float difference = 0;
+                // Guard against divide by 0.
+                if (dist > 0) {
+                    difference = (nodeDistance - dist) / dist;
+                }
+
+                Vector2 translate = new Vector2(diffX, diffY) * (.5f * difference);
+
+                node1.position += translate;
+                node2.position -= translate;
+
+                Vector2 diff = node2.position - node1.position;
+                dist = Vector2.Distance(node1.position, node2.position);
+                float angle = Vector2.SignedAngle(diff, axis) * -1;
+                float baseAngle = Vector2.SignedAngle(axis, new Vector2(0, 1)) * -1;
+
+                if (Math.Abs(angle) > nodeAngle) {
+                    float newAngle = ((baseAngle + (angle > 0 ? nodeAngle : -nodeAngle)) + (baseAngle + angle)) / 2;
+                    node2.position = node1.position + new Vector2(-Mathf.Sin((newAngle) * Mathf.Deg2Rad) * dist, Mathf.Cos((newAngle) * Mathf.Deg2Rad) * dist);
+                }
+
+                axis = node2.position - node1.position;
+            }
         }
 
         private void AdjustCollisions() {

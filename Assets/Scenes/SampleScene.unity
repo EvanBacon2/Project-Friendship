@@ -1663,8 +1663,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   totalNodes: 20
-  iterations: 140
+  iterations: 200
   nodeDistance: 0.5
+  nodeAngle: 30
   stepTime: 0.01
   maxStep: 0.1
   drawWidth: 0.025

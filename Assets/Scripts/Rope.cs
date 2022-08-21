@@ -65,14 +65,6 @@ namespace Rope {
         private const int MAX_ROPE_COLLISIONS = 32;
         // Size of the collider buffer, also the maximum number of colliders that a single node can touch at once.
         private const int COLLIDER_BUFFER_SIZE = 8;
-        // IF YOU CHANGE THIS, REMEMBER TO CHANGE IT IN THE SHADER AS WELL.
-        //private const int MAX_RENDER_POINTS = 256;
-        // Number of triangles present in each line segment between nodes.
-        // 4 = 2 per quad, one quad for the line and one for the start cap.
-        //private const int TRIANGLES_PER_NODE = 4;
-        // Number of vertices present in each line segment between nodes.
-        // 8 = 2 quads.
-        //private const int VERTICES_PER_NODE = 8;
 
         [Min(2)]
         public int totalNodes = 200;
@@ -87,27 +79,16 @@ namespace Rope {
         public Vector2 gravity = new Vector2(0, -20f);
         public float collisionRadius = 0.5f;    // Collision radius around each node.  Set high to avoid tunneling.
 
-        private Vector2 baseVelocity;
-
         private VerletNode[] nodes;
-        //private float timeAccum;
         private CollisionInfo[] collisionInfos;
         private int numCollisions;
         private bool shouldSnapshotCollision;
 
-        //private Camera cam;
-        //private Material material;
         private Collider2D[] colliderBuffer;
-
-        //private Vector4[] renderPositions;
 
         public GameObject grappleChain;
 
         private void Awake() {
-            //if (totalNodes > MAX_RENDER_POINTS) {
-                //Debug.LogError("Total nodes is more than MAX_RENDER_POINTS, so won't be able to render the entire rope.");
-            //}
-
             nodes = new VerletNode[totalNodes + 2];
             collisionInfos = new CollisionInfo[MAX_ROPE_COLLISIONS];
             for (int i = 0; i < collisionInfos.Length; i++) {
@@ -116,7 +97,6 @@ namespace Rope {
 
             // Buffer for OverlapCircleNonAlloc.
             colliderBuffer = new Collider2D[COLLIDER_BUFFER_SIZE];
-            //renderPositions = new Vector4[totalNodes];
 
             // Spawn nodes starting from the transform position and working down.
             Vector2 pos = transform.position;
@@ -127,78 +107,25 @@ namespace Rope {
 
             for (int i = 1; i < totalNodes+1; i++) {
                 nodes[i] = new VerletNode(Instantiate(grappleChain, pos, Quaternion.identity));
-                //renderPositions[i] = new Vector4(pos.x, pos.y, 1, 1);
                 pos.y += nodeDistance;
             }
 
             nodes[totalNodes+1] = new VerletNode(new GameObject("ChainEnd"));
             nodes[totalNodes+1].position = pos;
-
-            // Mesh setup.
-            /*Mesh mesh = new Mesh();
-            {
-                Vector3[] vertices = new Vector3[totalNodes * VERTICES_PER_NODE];
-                int[] triangles = new int[totalNodes * TRIANGLES_PER_NODE * 3];
-
-                for (int i = 0; i < totalNodes; i++) {
-                    // 4 triangles per node, 3 indices per triangle.
-                    int idx = i * TRIANGLES_PER_NODE * 3;
-                    // 8 vertices per node.
-                    int vIdx = i * VERTICES_PER_NODE;
-
-                    // Unity uses a CLOCKWISE WINDING ORDER -- clockwise tri indices are facing the camera.
-                    triangles[idx + 0] = vIdx; // v1 top
-                    triangles[idx + 1] = vIdx + 1; // v2 bottom
-                    triangles[idx + 2] = vIdx + 2; // v1 bottom
-                    triangles[idx + 3] = vIdx; // v1 top
-                    triangles[idx + 4] = vIdx + 3; // v2 top
-                    triangles[idx + 5] = vIdx + 1; // v2 bottom
-
-                    triangles[idx + 6] = vIdx + 4; // tl
-                    triangles[idx + 7] = vIdx + 7; // br
-                    triangles[idx + 8] = vIdx + 6; // bl
-                    triangles[idx + 9] = vIdx + 4; // tl
-                    triangles[idx + 10] = vIdx + 5; // tr
-                    triangles[idx + 11] = vIdx + 7; // br
-                }
-
-                // We only really care about the number of vertices, not what they actually are -- the positions aren't used.
-                mesh.vertices = vertices;
-                mesh.triangles = triangles;
-                // Since we pretty much want the rope to always render (it's always going to be on screen if it's active), we
-                // just set the bounds super large to avoid recalculating the bounds when the rope changes.
-                mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 100f);
-            }
-            GetComponent<MeshFilter>().mesh = mesh;
-            material = GetComponent<MeshRenderer>().material;
-            material.SetFloat("_Width", drawWidth);*/
         }
 
         private void Update() {
             if (shouldSnapshotCollision) {
                 SnapshotCollision();
             }
-        }
-
-        /*private void LateUpdate() {
-            for (int i = 0; i < nodes.Length-1; i++) {
-                renderPositions[i].w = 1;
-                Vector2 pos = nodes[i].position;
-                renderPositions[i].x = pos.x;
-                renderPositions[i].y = pos.y;
-                renderPositions[i].z = 1;
-            }
-
-            material.SetVectorArray("_Points", renderPositions);
-        }*/
+        } 
 
         private void FixedUpdate() {
             shouldSnapshotCollision = true;
 
             Simulate();
             for (int i = 0; i < iterations; i++) {
-                ApplyAngleConstraints();
-                //ApplyConstraints();
+                ApplyConstraints();
                 AdjustCollisions();
             }
 
@@ -290,83 +217,25 @@ namespace Rope {
             nodes[0].oldPosition = nodes[0].position;
             nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
                                                  Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
-            //if (baseVelocity.magnitude < (nodes[0].position - nodes[0].oldPosition).magnitude)
-                baseVelocity = nodes[0].position - nodes[0].oldPosition;
-
+            
             for (int i = 1; i < nodes.Length; i++) {
                 VerletNode node = nodes[i];
                 Vector2 temp = node.position;
                 Vector2 velocity = node.position - node.oldPosition;
-                float magSum = velocity.magnitude + baseVelocity.magnitude * 24 + .000000001f;
-                //node.position +=  (velocity * (velocity.magnitude / magSum) + baseVelocity * .8f * (24 * baseVelocity.magnitude / magSum));
-                //node.position += (velocity * (velocity.magnitude / magSum) + baseVelocity * .8f * (24 * baseVelocity.magnitude / magSum)).normalized * Mathf.Max(velocity.magnitude, baseVelocity.magnitude * .8f);
 
-                //if (baseVelocity.magnitude > .02f)
-                //node.position += baseVelocity.normalized * Mathf.Min(baseVelocity.magnitude, .15f);
-                //else
-
-                Vector2 newVelocity = node.oldVelocity + (velocity - node.oldVelocity) / 150.0f;//.normalized * Mathf.Min(velocity.magnitude, .25f);
+                Vector2 newVelocity = node.oldVelocity + (velocity - node.oldVelocity) / 150.0f;
 
                 node.position += newVelocity.normalized * Mathf.Min(newVelocity.magnitude, .15f) * .7f; 
                 node.oldVelocity = node.position - node.oldPosition;
                 node.oldPosition = temp;
-
-                //if (baseVelocity.magnitude < .02f)
-                  //  baseVelocity = velocity;
-
-                //prevVelocity = velocity;//(velocity + prevVelocity).normalized * (velocity.magnitude + prevVelocity.magnitude) / 2;
             }
         }
 
-		private void ApplyConstraints() {
-            Profiler.BeginSample("Constraints");
-
-            for (int i = 0; i < nodes.Length - 1; i++) {
-                VerletNode node1 = nodes[i];
-                VerletNode node2 = nodes[i + 1];
-
-                if (i == 0) {// && Input.GetMouseButton(0)) {
-                    node1.position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
-                                                 Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
-                }
-
-                // Current distance between rope nodes.
-                float diffX = node1.position.x - node2.position.x;
-                float diffY = node1.position.y - node2.position.y;
-                float dist = Vector2.Distance(node1.position, node2.position);
-                float difference = 0;
-                // Guard against divide by 0.
-                if (dist > 0) {
-                    difference = (nodeDistance - dist) / dist;
-                }
-
-                Vector2 translate = new Vector2(diffX, diffY) * (.5f * difference);
-
-                node1.position += translate;
-                node2.position -= translate;
-            }
-
-            /*
-            // Distance constraint which reduces iterations, but doesn't handle stretchyness in a natural way.
-            VerletNode first = nodes[0];
-            VerletNode last = nodes[nodes.Length-1];
-            // Same distance calculation as above, but less optimal.
-            float distance = Vector2.Distance(first.position, last.position);
-            if (distance > 0 && distance > nodes.Length * nodeDistance) {
-                Vector2 dir = (last.position - first.position).normalized;
-                last.position = first.position + nodes.Length * nodeDistance * dir;
-            }*/
-            
-
-            Profiler.EndSample();
-        }
-
-        private void ApplyAngleConstraints() {
+        private void ApplyConstraints() {
             Vector2 axis = transform.position;
 
             nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
                                             Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
-            
 
             for (int i = 0; i < nodes.Length - 1; i++) {
                 VerletNode node1 = nodes[i];
@@ -393,16 +262,6 @@ namespace Rope {
                 dist = Vector2.Distance(node1.position, node2.position);
                 float angle = Vector2.SignedAngle(diff, axis) * -1;
                 float baseAngle = Vector2.SignedAngle(axis, new Vector2(0, 1)) * -1;
-
-                /*float angleVelocity = angle - node2.oldAngle;
-                float angleAcceleration = (angleVelocity - node2.oldAngleVelocity) / 1f;
-                //float acc = angleAcceleration >= 0 ? Mathf.Min(angleAcceleration, .5f) : Mathf.Max(angleAcceleration, -.5f);
-                float newAngle = node2.oldAngle + (node2.oldAngleVelocity + angleAcceleration);
-                node2.oldAngleVelocity = (node2.oldAngleVelocity + angleAcceleration);
-                node2.oldAngle = newAngle;
-
-                float worldAngle = baseAngle + newAngle + 90;
-                node2.position = node1.position + new Vector2(Mathf.Cos(worldAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(worldAngle * Mathf.Deg2Rad) * dist);*/
 
                 if (Math.Abs(angle) > nodeAngle) {
                     float worldAngle = baseAngle + (angle >= 0 ? nodeAngle : -nodeAngle) + 90;
@@ -478,7 +337,6 @@ namespace Rope {
                         break;
                 }
             }
-
 
             Profiler.EndSample();
         }

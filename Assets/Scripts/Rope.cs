@@ -14,13 +14,15 @@ namespace Rope {
         public GameObject sprite;
         private Vector2 newPosition;
         public Vector2 oldPosition;
+        public float oldAngle = 0f;
+        public float oldAngleVelocity = 0f;
 
         public VerletNode(GameObject sprite) {
             this.sprite = sprite;
             this.oldPosition = sprite.transform.position;
         }
 
-        public void updatePosition() {
+        public void updateSpritePosition() {
             sprite.transform.position = newPosition;
         }
     }
@@ -84,6 +86,8 @@ namespace Rope {
         public Vector2 gravity = new Vector2(0, -20f);
         public float collisionRadius = 0.5f;    // Collision radius around each node.  Set high to avoid tunneling.
 
+        private Vector2 baseVelocity;
+
         private VerletNode[] nodes;
         //private float timeAccum;
         private CollisionInfo[] collisionInfos;
@@ -94,7 +98,7 @@ namespace Rope {
         //private Material material;
         private Collider2D[] colliderBuffer;
 
-        private Vector4[] renderPositions;
+        //private Vector4[] renderPositions;
 
         public GameObject grappleChain;
 
@@ -103,7 +107,7 @@ namespace Rope {
                 //Debug.LogError("Total nodes is more than MAX_RENDER_POINTS, so won't be able to render the entire rope.");
             //}
 
-            nodes = new VerletNode[totalNodes + 1];
+            nodes = new VerletNode[totalNodes + 2];
             collisionInfos = new CollisionInfo[MAX_ROPE_COLLISIONS];
             for (int i = 0; i < collisionInfos.Length; i++) {
                 collisionInfos[i] = new CollisionInfo(totalNodes);
@@ -111,18 +115,23 @@ namespace Rope {
 
             // Buffer for OverlapCircleNonAlloc.
             colliderBuffer = new Collider2D[COLLIDER_BUFFER_SIZE];
-            renderPositions = new Vector4[totalNodes];
+            //renderPositions = new Vector4[totalNodes];
 
             // Spawn nodes starting from the transform position and working down.
             Vector2 pos = transform.position;
-            for (int i = 0; i < totalNodes; i++) {
+
+            nodes[0] = new VerletNode(new GameObject("ChainStart"));
+            nodes[0].position = pos;
+            pos.y += nodeDistance;
+
+            for (int i = 1; i < totalNodes+1; i++) {
                 nodes[i] = new VerletNode(Instantiate(grappleChain, pos, Quaternion.identity));
-                renderPositions[i] = new Vector4(pos.x, pos.y, 1, 1);
-                pos.y -= nodeDistance;
+                //renderPositions[i] = new Vector4(pos.x, pos.y, 1, 1);
+                pos.y += nodeDistance;
             }
 
-            nodes[totalNodes] = new VerletNode(new GameObject("ChainEnd"));
-            nodes[totalNodes].position = pos;
+            nodes[totalNodes+1] = new VerletNode(new GameObject("ChainEnd"));
+            nodes[totalNodes+1].position = pos;
 
             // Mesh setup.
             /*Mesh mesh = new Mesh();
@@ -186,7 +195,6 @@ namespace Rope {
             shouldSnapshotCollision = true;
 
             Simulate();
-
             for (int i = 0; i < iterations; i++) {
                 ApplyAngleConstraints();
                 //ApplyConstraints();
@@ -194,11 +202,11 @@ namespace Rope {
             }
 
             for (int i = 0; i < nodes.Length; i++) {
-                nodes[i].updatePosition();
+                nodes[i].updateSpritePosition();
             }
 
             Vector2 axis = new Vector2(0, 1);
-            for (int i = 0; i < nodes.Length - 1; i++) {
+            for (int i = 1; i < nodes.Length - 1; i++) {
                 Vector2 diff = nodes[i].position - nodes[i + 1].position;
                 nodes[i].sprite.transform.rotation = Quaternion.AngleAxis(Vector2.SignedAngle(diff, axis) * -1f, Vector3.forward);
             }
@@ -277,26 +285,45 @@ namespace Rope {
         }
 
         private void Simulate() {
-            for (int i = 0; i < nodes.Length; i++) {
-                VerletNode node = nodes[i];
+            
+            nodes[0].oldPosition = nodes[0].position;
+            nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
+                                                 Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
+            //if (baseVelocity.magnitude < (nodes[0].position - nodes[0].oldPosition).magnitude)
+                baseVelocity = nodes[0].position - nodes[0].oldPosition;
 
+            for (int i = 1; i < nodes.Length; i++) {
+                VerletNode node = nodes[i];
                 Vector2 temp = node.position;
-                node.position += (node.position - node.oldPosition) + gravity * stepTime * stepTime;
+                Vector2 velocity = node.position - node.oldPosition;
+                float magSum = velocity.magnitude + baseVelocity.magnitude * 24 + .000000001f;
+                //node.position +=  (velocity * (velocity.magnitude / magSum) + baseVelocity * .8f * (24 * baseVelocity.magnitude / magSum));
+                //node.position += (velocity * (velocity.magnitude / magSum) + baseVelocity * .8f * (24 * baseVelocity.magnitude / magSum)).normalized * Mathf.Max(velocity.magnitude, baseVelocity.magnitude * .8f);
+
+                //if (baseVelocity.magnitude > .02f)
+                //node.position += baseVelocity.normalized * Mathf.Min(baseVelocity.magnitude, .15f);
+                //else
+
+                node.position += velocity;//.normalized * Mathf.Min(velocity.magnitude, .25f);
                 node.oldPosition = temp;
+
+                //if (baseVelocity.magnitude < .02f)
+                  //  baseVelocity = velocity;
+
+                //prevVelocity = velocity;//(velocity + prevVelocity).normalized * (velocity.magnitude + prevVelocity.magnitude) / 2;
             }
         }
 
-        private void ApplyConstraints() {
+		private void ApplyConstraints() {
             Profiler.BeginSample("Constraints");
 
             for (int i = 0; i < nodes.Length - 1; i++) {
                 VerletNode node1 = nodes[i];
                 VerletNode node2 = nodes[i + 1];
 
-                // First node follows the mouse, for debugging.
                 if (i == 0) {// && Input.GetMouseButton(0)) {
-                    node1.position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 2 + transform.position.x,
-                                                 Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 2 + transform.position.y);
+                    node1.position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
+                                                 Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
                 }
 
                 // Current distance between rope nodes.
@@ -324,23 +351,24 @@ namespace Rope {
             if (distance > 0 && distance > nodes.Length * nodeDistance) {
                 Vector2 dir = (last.position - first.position).normalized;
                 last.position = first.position + nodes.Length * nodeDistance * dir;
-            }
-            */
+            }*/
+            
 
             Profiler.EndSample();
         }
 
         private void ApplyAngleConstraints() {
-            Vector2 axis = new Vector2(-Mathf.Sin((transform.parent.transform.rotation.eulerAngles.z) * Mathf.Deg2Rad),
-                                       Mathf.Cos((transform.parent.transform.rotation.eulerAngles.z) * Mathf.Deg2Rad));
-            nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 2 + transform.position.x,
-                                                 Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 2 + transform.position.y);
-            //Debug.Log(axis);
+            Vector2 axis = transform.position;
+
+            nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
+                                            Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
+            
+
             for (int i = 0; i < nodes.Length - 1; i++) {
                 VerletNode node1 = nodes[i];
                 VerletNode node2 = nodes[i + 1];
 
-                // Current distance between rope nodes.
+                //Current distance between rope nodes.
                 float diffX = node1.position.x - node2.position.x;
                 float diffY = node1.position.y - node2.position.y;
                 float dist = Vector2.Distance(node1.position, node2.position);
@@ -355,17 +383,31 @@ namespace Rope {
                 node1.position += translate;
                 node2.position -= translate;
 
+                axis = node1.position - axis;
+
                 Vector2 diff = node2.position - node1.position;
                 dist = Vector2.Distance(node1.position, node2.position);
                 float angle = Vector2.SignedAngle(diff, axis) * -1;
                 float baseAngle = Vector2.SignedAngle(axis, new Vector2(0, 1)) * -1;
 
                 if (Math.Abs(angle) > nodeAngle) {
-                    float newAngle = ((baseAngle + (angle > 0 ? nodeAngle : -nodeAngle)) + (baseAngle + angle)) / 2;
-                    node2.position = node1.position + new Vector2(-Mathf.Sin((newAngle) * Mathf.Deg2Rad) * dist, Mathf.Cos((newAngle) * Mathf.Deg2Rad) * dist);
+                    float newAngle = baseAngle + (angle > 0 ? nodeAngle : -nodeAngle) + 90;
+                    node2.position = node1.position + new Vector2(Mathf.Cos(newAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(newAngle * Mathf.Deg2Rad) * dist);
+                    node2.oldAngleVelocity = 0;
+                    node2.oldAngle = angle > 0 ? nodeAngle : -nodeAngle;
                 }
+                /*else {
+                    float angleVelocity = angle - node2.oldAngle;
+                    float angleAcceleration = (angleVelocity - node2.oldAngleVelocity) / 1000.0f;
+                    float newAngle = node2.oldAngle + (node2.oldAngleVelocity + angleAcceleration);
+                    node2.oldAngleVelocity = (node2.oldAngleVelocity + angleAcceleration);
+                    node2.oldAngle = newAngle;
 
-                axis = node2.position - node1.position;
+                    newAngle = baseAngle + newAngle + 90;
+                    node2.position = node1.position + new Vector2(Mathf.Cos(newAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(newAngle * Mathf.Deg2Rad) * dist);
+                }*/
+
+                axis = node1.position;
             }
         }
 

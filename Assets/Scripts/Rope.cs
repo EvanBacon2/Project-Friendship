@@ -16,6 +16,7 @@ namespace Rope {
         public Vector2 oldPosition;
         public float oldAngle = 0f;
         public float oldAngleVelocity = 0f;
+        public Vector2 oldVelocity;
 
         public VerletNode(GameObject sprite) {
             this.sprite = sprite;
@@ -304,7 +305,10 @@ namespace Rope {
                 //node.position += baseVelocity.normalized * Mathf.Min(baseVelocity.magnitude, .15f);
                 //else
 
-                node.position += velocity;//.normalized * Mathf.Min(velocity.magnitude, .25f);
+                Vector2 newVelocity = node.oldVelocity + (velocity - node.oldVelocity) / 150.0f;//.normalized * Mathf.Min(velocity.magnitude, .25f);
+
+                node.position += newVelocity.normalized * Mathf.Min(newVelocity.magnitude, .15f) * .7f; 
+                node.oldVelocity = node.position - node.oldPosition;
                 node.oldPosition = temp;
 
                 //if (baseVelocity.magnitude < .02f)
@@ -390,22 +394,22 @@ namespace Rope {
                 float angle = Vector2.SignedAngle(diff, axis) * -1;
                 float baseAngle = Vector2.SignedAngle(axis, new Vector2(0, 1)) * -1;
 
+                /*float angleVelocity = angle - node2.oldAngle;
+                float angleAcceleration = (angleVelocity - node2.oldAngleVelocity) / 1f;
+                //float acc = angleAcceleration >= 0 ? Mathf.Min(angleAcceleration, .5f) : Mathf.Max(angleAcceleration, -.5f);
+                float newAngle = node2.oldAngle + (node2.oldAngleVelocity + angleAcceleration);
+                node2.oldAngleVelocity = (node2.oldAngleVelocity + angleAcceleration);
+                node2.oldAngle = newAngle;
+
+                float worldAngle = baseAngle + newAngle + 90;
+                node2.position = node1.position + new Vector2(Mathf.Cos(worldAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(worldAngle * Mathf.Deg2Rad) * dist);*/
+
                 if (Math.Abs(angle) > nodeAngle) {
-                    float newAngle = baseAngle + (angle > 0 ? nodeAngle : -nodeAngle) + 90;
-                    node2.position = node1.position + new Vector2(Mathf.Cos(newAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(newAngle * Mathf.Deg2Rad) * dist);
+                    float worldAngle = baseAngle + (angle >= 0 ? nodeAngle : -nodeAngle) + 90;
+                    node2.position = node1.position + new Vector2(Mathf.Cos(worldAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(worldAngle * Mathf.Deg2Rad) * dist);
                     node2.oldAngleVelocity = 0;
                     node2.oldAngle = angle > 0 ? nodeAngle : -nodeAngle;
                 }
-                /*else {
-                    float angleVelocity = angle - node2.oldAngle;
-                    float angleAcceleration = (angleVelocity - node2.oldAngleVelocity) / 1000.0f;
-                    float newAngle = node2.oldAngle + (node2.oldAngleVelocity + angleAcceleration);
-                    node2.oldAngleVelocity = (node2.oldAngleVelocity + angleAcceleration);
-                    node2.oldAngle = newAngle;
-
-                    newAngle = baseAngle + newAngle + 90;
-                    node2.position = node1.position + new Vector2(Mathf.Cos(newAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(newAngle * Mathf.Deg2Rad) * dist);
-                }*/
 
                 axis = node1.position;
             }

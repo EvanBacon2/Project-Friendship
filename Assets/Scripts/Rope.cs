@@ -14,8 +14,6 @@ namespace Rope {
         public GameObject sprite;
         private Vector2 newPosition;
         public Vector2 oldPosition;
-        public float oldAngle = 0f;
-        public float oldAngleVelocity = 0f;
         public Vector2 oldVelocity;
 
         public VerletNode(GameObject sprite) {
@@ -71,12 +69,7 @@ namespace Rope {
         public int iterations = 80;
         public float nodeDistance = 0.1f;
         public float nodeAngle = 30;
-        [Min(0.001f)]
-        public float stepTime = 0.01f;
-        public float maxStep = 0.1f;
 
-        public float drawWidth = 0.025f;
-        public Vector2 gravity = new Vector2(0, -20f);
         public float collisionRadius = 0.5f;    // Collision radius around each node.  Set high to avoid tunneling.
 
         private VerletNode[] nodes;
@@ -213,7 +206,6 @@ namespace Rope {
         }
 
         private void Simulate() {
-            
             nodes[0].oldPosition = nodes[0].position;
             nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
                                                  Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
@@ -222,11 +214,15 @@ namespace Rope {
                 VerletNode node = nodes[i];
                 Vector2 temp = node.position;
                 Vector2 velocity = node.position - node.oldPosition;
+                float accMagnitude = velocity.magnitude - node.oldVelocity.magnitude;
+                Vector2 accDirection = velocity.normalized - node.oldVelocity.normalized;
 
-                Vector2 newVelocity = node.oldVelocity + (velocity - node.oldVelocity) / 150.0f;
+                //Vector2 newVelocity = node.oldVelocity + (velocity - node.oldVelocity) * .46f;// (5000 * (i+1));
 
-                node.position += newVelocity.normalized * Mathf.Min(newVelocity.magnitude, .15f) * .7f; 
-                node.oldVelocity = node.position - node.oldPosition;
+                Vector2 newVelocity = (node.oldVelocity.normalized + accDirection * .1f).normalized * (node.oldVelocity.magnitude + accMagnitude * .1f); 
+
+                node.position += newVelocity;//.normalized * Mathf.Min(newVelocity.magnitude, (.15f));// * (80f + 1f)) / (i + 80));// * .49f; 
+                node.oldVelocity = newVelocity;
                 node.oldPosition = temp;
             }
         }
@@ -264,10 +260,8 @@ namespace Rope {
                 float baseAngle = Vector2.SignedAngle(axis, new Vector2(0, 1)) * -1;
 
                 if (Math.Abs(angle) > nodeAngle) {
-                    float worldAngle = baseAngle + (angle >= 0 ? nodeAngle : -nodeAngle) + 90;
+                    float worldAngle = baseAngle + angle + ((angle >= 0 ? nodeAngle - angle : Mathf.Abs(angle + nodeAngle)) / 30.0f) + 90;
                     node2.position = node1.position + new Vector2(Mathf.Cos(worldAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(worldAngle * Mathf.Deg2Rad) * dist);
-                    node2.oldAngleVelocity = 0;
-                    node2.oldAngle = angle > 0 ? nodeAngle : -nodeAngle;
                 }
 
                 axis = node1.position;

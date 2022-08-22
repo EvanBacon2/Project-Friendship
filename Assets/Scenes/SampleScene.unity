@@ -2217,14 +2217,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea7ddb039b9ba5d4c971a5dd377ee81d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  totalNodes: 8
-  iterations: 800
+  totalNodes: 20
+  iterations: 200
   nodeDistance: 0.5
   nodeAngle: 12
-  stepTime: 0.01
-  maxStep: 0.1
-  drawWidth: 0.025
-  gravity: {x: 0, y: 0}
   collisionRadius: 0.5
   grappleChain: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
 --- !u!4 &1026296163

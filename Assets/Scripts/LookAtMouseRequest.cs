@@ -3,6 +3,9 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 public class LookAtMouseRequest : Request {
+
+    public float maxAngleDiff = 20;
+
     public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         Vector2 mousePos = Camera.main.ScreenToViewportPoint(args.mouseInput);
         Vector2 playerPos = distort(Camera.main.WorldToViewportPoint(args.shipModel.position));
@@ -11,15 +14,8 @@ public class LookAtMouseRequest : Request {
     }
 
     private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos, float currentRotation) {
-        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
-        float angDiff = (turnAngle < 0 ? 360 + turnAngle : turnAngle) - currentRotation;
-        if (Mathf.Abs(angDiff) > 180) 
-            angDiff = (360 - Mathf.Abs(angDiff)) * (angDiff > 0 ? -1 : 1);
-
-        if (Mathf.Abs(angDiff) > 20)
-            return Quaternion.AngleAxis(currentRotation + (20 * (angDiff > 0 ? 1 : -1)), Vector3.forward);
-        else
-            return Quaternion.AngleAxis(turnAngle, Vector3.forward);
+        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90; 
+        return Quaternion.AngleAxis(turnAngle, Vector3.forward);
     }
 
     //adjusts viewport coordinates of playerShip to account for LensDistortion

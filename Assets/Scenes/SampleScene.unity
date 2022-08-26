@@ -1015,6 +1015,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da83077357ad8e5478f65cd22cd3a38d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxAngleDiff: 10
 --- !u!114 &356274352
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2218,10 +2219,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   totalNodes: 20
-  iterations: 200
+  iterations: 800
   nodeDistance: 0.5
-  nodeAngle: 12
+  nodeAngle: 25
   collisionRadius: 0.5
+  linearInertia: 4
+  rotationalInertia: 16
+  linearScaling: 1.1
+  rotationalScaling: 0.95
+  spring: 0
   grappleChain: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
 --- !u!4 &1026296163
 Transform:

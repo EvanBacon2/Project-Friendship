@@ -133,8 +133,8 @@ ConfigurableJoint:
     bounciness: 0
     contactDistance: 0
   m_AngularXLimitSpring:
-    spring: 3000
-    damper: 500
+    spring: 0
+    damper: 0
   m_LowAngularXLimit:
     limit: -12
     bounciness: 0

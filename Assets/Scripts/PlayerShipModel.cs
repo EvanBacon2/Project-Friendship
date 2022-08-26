@@ -16,6 +16,7 @@ public class PlayerShipModel : MonoBehaviour {
 
     private float newMagValue = -1;
     private (Vector3, ForceMode)? newForce = null;
+    private Quaternion newRotation;
 
     public float acceleration { get; set; }
     [SerializeField] public float maxSpeed { get; set; }
@@ -25,7 +26,7 @@ public class PlayerShipModel : MonoBehaviour {
     }
     public Quaternion rotation {
         get { return transform.rotation; }
-        set { transform.rotation = value; }
+        set { newRotation = value; }
     }
 
     public Vector3 position {
@@ -40,15 +41,19 @@ public class PlayerShipModel : MonoBehaviour {
 
         acceleration = baseAcceleration;
         maxSpeed = baseMaxSpeed;
+
+        newRotation = transform.rotation;
     }
 
+	public void Update() {
+        transform.rotation = Quaternion.Slerp(transform.rotation, newRotation, Time.deltaTime * 8);
+	}
+
 	public void FixedUpdate() {
-        //Debug.Log("before " + rigidBody.velocity.magnitude);
         if (newForce.HasValue) {
             rigidBody.AddForce(newForce.Value.Item1, newForce.Value.Item2);
             newForce = null;
         }
-        //Debug.Log("after " + rigidBody.velocity.magnitude);
 
         if (newMagValue >= 0) {
             rigidBody.velocity = rigidBody.velocity.normalized * newMagValue;

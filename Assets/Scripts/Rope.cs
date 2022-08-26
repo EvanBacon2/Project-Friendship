@@ -75,8 +75,6 @@ namespace Rope {
         public float rotationalScaling = 1;
         public float spring = 30;
 
-        private Vector2 oldBase = new Vector2(0,1);
-
         private VerletNode[] nodes;
         private CollisionInfo[] collisionInfos;
         private int numCollisions;
@@ -211,46 +209,20 @@ namespace Rope {
         }
 
         private void Simulate() {
-            Vector2 newBase = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad), Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad));
-            Vector2 baseVelocity = newBase - oldBase;
-            nodes[0].oldPosition = nodes[0].position;
-            nodes[0].position = new Vector2(newBase.x + transform.position.x, newBase.y + transform.position.y);
-
-            //float radius = 1.5f;
-            //Debug.Log(transform.rotation.eulerAngles.z);
             for (int i = 1; i < nodes.Length; i++) {
                 VerletNode node = nodes[i];
                 Vector2 temp = node.position;
-                //if (i == 1)
-                    //Debug.Log("old: " + (node.oldPosition - nodes[0].position).normalized + " " + "new: " + (node.position - nodes[0].position).normalized);
-                //radius += nodeDistance;
-                //node.position += baseVelocity * (radius / 1.5f) * .2f * nodes.Length / i;
-                Vector2 velocity = node.position - node.oldPosition;
-                //float magChange = velocity.magnitude - node.oldVelocity.magnitude;
-                //Vector2 dirChange = velocity.normalized - node.oldVelocity.normalized;
-
-                //Vector2 newVelocity = (node.oldVelocity.normalized + dirChange /* (rotationalInertia* (i/10f))*/).normalized * (node.oldVelocity.magnitude + magChange /*/ (linearInertia * (i/5f))*/) * .996f; 
-
-                node.position += velocity + new Vector2(0, 0) * Time.fixedDeltaTime * Time.fixedDeltaTime;
-
-                //node.oldVelocity = newVelocity;
+                node.position += node.position - node.oldPosition;
                 node.oldPosition = temp;
-
-                //if (i == 1)
-                    //Debug.Log("uncon" + node.position);
-                
             }
-
-            oldBase = newBase;
         }
 
         private void ApplyConstraints() {
-            //Vector2 axis = transform.position;
-
             nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
                                             Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
 
             for (int i = 0; i < nodes.Length - 1; i++) {
+                //****Distance****//
                 VerletNode node1 = nodes[i];
                 VerletNode node2 = nodes[i + 1];
 
@@ -269,6 +241,7 @@ namespace Rope {
                 node1.position += translate;
                 node2.position -= translate;
 
+                //****Angle****//
                 Vector2 point1 = i == 0 ? (Vector2)transform.position : nodes[i - 1].position;
                 Vector2 point2 = nodes[i + 1].position;
 
@@ -291,111 +264,6 @@ namespace Rope {
                         nodes[i - 1].position += bridgeTranslate;
                     nodes[i + 1].position -= bridgeTranslate;
                 }
-
-                    /*Vector2 minusOne = nodes[i - 1].position - nodes[i].position;
-                    Vector2 plusOne = nodes[i + 1].position - nodes[i].position;
-
-                    float angle = Vector2.SignedAngle(minusOne, plusOne);
-                    float angleDiff = 180 - Mathf.Abs(angle) - nodeAngle;
-
-                    if (angleDiff > 0) {
-                        Vector2 arm = nodes[i].position - nodes[i - 1].position;
-                        Vector2 bridge = (nodes[i + 1].position - nodes[i - 1].position) / 2f; 
-                        Vector2 midPoint = nodes[i - 1].position + bridge;
-                        float length = Mathf.Tan(nodeAngle / 2 * Mathf.Deg2Rad) * bridge.magnitude;
-
-                        bool quad1or3 = (bridge.x >= 0 && bridge.y >= 0) || (bridge.x <= 0 && bridge.y <= 0);
-                        bool bridgeAhead = Vector2.SignedAngle(arm, bridge) > 0;
-                        Vector2 normal = new Vector2(bridge.y, bridge.x).normalized;
-                        
-                        if (quad1or3 ^ bridgeAhead) 
-                            normal.x *= -1;
-                        else 
-                            normal.y *= -1;
-
-                        Debug.Log("old " + nodes[i].position);
-                        nodes[i].position = midPoint + normal * length;
-                        Debug.Log("new " + nodes[i].position);
-                    }*/
-                /*} else {
-                    Vector2 axis = nodes[0].position - (Vector2)transform.position;
-                    Vector2 diff = node2.position - node1.position;
-                    dist = Vector2.Distance(node2.position, node1.position);
-                    float angle = Vector2.SignedAngle(axis, diff);
-                    float baseAngle = Vector2.SignedAngle(new Vector2(1, 0), axis);
-                    float angleDiff = (angle >= 0 ? nodeAngle - angle : Mathf.Abs(angle + nodeAngle)) / (spring > 0 ? spring : 1);
-
-                    if (Math.Abs(angle) > nodeAngle) {
-                        float worldAngle = baseAngle + angle + angleDiff;
-                        Vector2 newPosition = node1.position + new Vector2(Mathf.Cos(worldAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(worldAngle * Mathf.Deg2Rad) * dist);
-                        Vector2 posChange = (newPosition - node2.position).normalized;
-                        nodes[1].position = newPosition;
-
-
-                        (for (int j = 1; j < nodes.Length; j++) {
-                            posChange *= (nodes[j].position - nodes[j - 1].position).magnitude / posChange.magnitude;
-                            nodes[j].position += posChange;
-                        }
-                    }
-                }*/
-
-                
-                /*Vector2 minusOne = (i == 0 ? (Vector2)transform.position : nodes[i - 1].position) - nodes[i].position;
-                Vector2 plusOne = nodes[i + 1].position - nodes[i].position;
-
-                float angle = Vector2.SignedAngle(minusOne, plusOne);
-                float angleDiff = 180 - Mathf.Abs(angle) - nodeAngle;
-
-                float minusAngle = Vector2.SignedAngle(new Vector2(1, 0), minusOne);
-                float plusAngle = Vector2.SignedAngle(new Vector2(1, 0), plusOne);
-
-                //if (i == 0)
-                //Debug.Log(angleDiff);
-
-                if (angleDiff > 0) {
-                    //if (i == 1)
-                    //  Debug.Log("no diff " + plusAngle + " " + minusAngle);
-
-                    angleDiff = (angle >= 0 ? 1 : -1) * .5f;
-
-                    minusAngle = (minusAngle - angleDiff) * Mathf.Deg2Rad;
-
-                    //if (i == 0)
-                        //plusAngle = (plusAngle + 2 * angleDiff) * Mathf.Deg2Rad;
-                    //else
-                        plusAngle = (plusAngle + angleDiff) * Mathf.Deg2Rad;
-
-
-
-                    /*if (i == 1) {
-                        Debug.Log("diff " + plusAngle * Mathf.Rad2Deg + " " + minusAngle * Mathf.Rad2Deg);
-                        Debug.Log("oldPos " + plusOne.normalized);
-                    }
-
-                    if (i > 0)
-                        nodes[i - 1].position = nodes[i].position + new Vector2(Mathf.Cos(minusAngle), Mathf.Sin(minusAngle)) * minusOne.magnitude;
-                    nodes[i + 1].position = nodes[i].position + new Vector2(Mathf.Cos(plusAngle), Mathf.Sin(plusAngle)) * plusOne.magnitude;
-
-                    //if (i == 1)
-                    //Debug.Log("newPos " + (nodes[i + 1].position - nodes[i].position).normalized);
-                }*/
-                
-
-                /*axis = node1.position - axis;
-
-                Vector2 diff = node2.position - node1.position;
-                dist = Vector2.Distance(node1.position, node2.position);
-                float angle = Vector2.SignedAngle(axis, diff);
-                float baseAngle = Vector2.SignedAngle(new Vector2(1, 0), axis);
-                float angleDiff = (angle >= 0 ? nodeAngle - angle : Mathf.Abs(angle + nodeAngle)) / (spring > 0 ? spring : 1);
-
-                if (Math.Abs(angle) > nodeAngle) {
-                    angle += angleDiff;
-                    float worldAngle = baseAngle + angle;
-                    node2.position = node1.position + new Vector2(Mathf.Cos(worldAngle * Mathf.Deg2Rad) * dist, Mathf.Sin(worldAngle * Mathf.Deg2Rad) * dist);
-                }
-
-                axis = node1.position;*/
             }
         }
 

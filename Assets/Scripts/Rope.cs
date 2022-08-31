@@ -12,16 +12,21 @@ namespace Rope {
             set { newPosition = value; }
         }
         public GameObject sprite;
-        private Vector2 newPosition;
+        public Vector2 newPosition;
         public Vector2 oldPosition;
+        private float spriteHeight = 0;
 
         public VerletNode(GameObject sprite) {
             this.sprite = sprite;
+            this.position = sprite.transform.position;
             this.oldPosition = sprite.transform.position;
+            if (sprite.GetComponent<SpriteRenderer>() != null)
+                this.spriteHeight = sprite.GetComponent<SpriteRenderer>().bounds.size.y / 2;
         }
 
         public void updateSpritePosition() {
-            sprite.transform.position = newPosition;
+            sprite.transform.position = newPosition - new Vector2(Mathf.Cos((sprite.transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * spriteHeight, 
+                                                                  Mathf.Sin((sprite.transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * spriteHeight);
         }
     }
 
@@ -69,11 +74,9 @@ namespace Rope {
         public float nodeDistance = 0.1f;
         public float nodeAngle = 30;
         public float collisionRadius = 0.5f;    // Collision radius around each node.  Set high to avoid tunneling.
-        public float linearInertia = 10;
-        public float rotationalInertia = 10;
-        public float linearScaling = 1;
-        public float rotationalScaling = 1;
-        public float spring = 30;
+
+        private float angleDistance;
+        private float angleDistance2;
 
         private VerletNode[] nodes;
         private CollisionInfo[] collisionInfos;
@@ -95,7 +98,8 @@ namespace Rope {
             colliderBuffer = new Collider2D[COLLIDER_BUFFER_SIZE];
 
             // Spawn nodes starting from the transform position and working down.
-            Vector2 pos = transform.position;
+            Vector2 pos = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * .6f + transform.position.x,
+                                                Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * .6f + transform.position.y);
 
             nodes[0] = new VerletNode(new GameObject("ChainStart"));
             nodes[0].position = pos;
@@ -108,6 +112,9 @@ namespace Rope {
 
             nodes[totalNodes+1] = new VerletNode(new GameObject("ChainEnd"));
             nodes[totalNodes+1].position = pos;
+
+            angleDistance = Mathf.Sin(nodeAngle / 2 * Mathf.Deg2Rad) * nodeDistance;
+            angleDistance2 = Mathf.Cos(nodeAngle / 2 * Mathf.Deg2Rad) * nodeDistance * 2;
         }
 
         private void Update() {
@@ -119,21 +126,192 @@ namespace Rope {
         private void FixedUpdate() {
             shouldSnapshotCollision = true;
 
+            Vector2 basePosition = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1f + transform.position.x,
+                                                Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1f + transform.position.y);
+
             Simulate();
             for (int i = 0; i < iterations; i++) {
-                ApplyConstraints();
+                ApplyConstraints(basePosition);
                 AdjustCollisions();
+            }
+
+            for (int i = 1; i < nodes.Length - 1; i++) {
+                Vector2 diff = nodes[i].position - nodes[i + 1].position;
+                nodes[i].sprite.transform.RotateAround(nodes[i].position, Vector3.forward, Vector2.SignedAngle(Vector2.up, diff) - nodes[i].sprite.transform.rotation.eulerAngles.z);
             }
 
             for (int i = 0; i < nodes.Length; i++) {
                 nodes[i].updateSpritePosition();
             }
+        }
 
-            Vector2 axis = new Vector2(0, 1);
-            for (int i = 1; i < nodes.Length - 1; i++) {
-                Vector2 diff = nodes[i].position - nodes[i + 1].position;
-                nodes[i].sprite.transform.rotation = Quaternion.AngleAxis(Vector2.SignedAngle(diff, axis) * -1f, Vector3.forward);
+        private void Simulate() {
+            for (int i = 1; i < nodes.Length; i++) {
+                VerletNode node = nodes[i];
+                Vector2 temp = node.position;
+                node.position += (node.position - node.oldPosition) * .996f;
+                node.oldPosition = temp;
             }
+        }
+
+        /*private void ApplyConstraints(Vector2 basePosition) {
+            nodes[0].position = basePosition;
+
+            for (int i = 0; i < nodes.Length - 1; i++) {
+                VerletNode node1 = i == 0 ? null : nodes[i - 1];
+                VerletNode node2 = nodes[i];
+                VerletNode node3 = nodes[i + 1];
+
+                Vector2 pos1 = i == 0 ? (Vector2)transform.position : nodes[i - 1].position;
+                Vector2 pos2 = nodes[i].position;
+                Vector2 pos3 = nodes[i + 1].position;
+
+                for (int j = 0; j < 30; j++) {
+                    Vector2 stickTransform1 = StickConstraint(pos1, pos2);
+                    Vector2 stickTransform2 = StickConstraint(pos2, pos3);
+                    if (i > 0) node1.position += stickTransform1;
+                    node2.position += stickTransform2 - stickTransform1;
+                    node3.position -= stickTransform2;
+
+                    Vector2 angleTransform = AngleConstraint(pos1, pos2, pos3);
+                    if (i > 0) node1.position -= angleTransform;
+                    node2.position += angleTransform;
+                    node3.position -= angleTransform;
+
+                    Vector2 stickTransform3 = StickConstraint(pos1, pos2);
+                    Vector2 stickTransform4 = StickConstraint(pos2, pos3);
+                    if (i > 0) node1.position += stickTransform3;
+                    node2.position += stickTransform4 - stickTransform3;
+                    node3.position -= stickTransform4;
+                }
+            }
+        }*/
+
+        private void ApplyConstraints(Vector2 basePosition) {
+            float angleLimit = 180 - nodeAngle;
+            nodes[0].position = basePosition;
+            for (int i = 0; i < nodes.Length - 1; i++) {
+                for (int k = 0; k < 30; k++) {
+
+                    Vector2 stick1Translate = Vector2.zero;
+                    Vector2 stick2Translate;
+
+                    if (i > 0)
+                        stick1Translate = StickConstraint(nodes[i - 1].position, nodes[i].position);
+                    stick2Translate = StickConstraint(nodes[i].position, nodes[i + 1].position);
+
+                    if (i > 0)
+                        nodes[i - 1].position += stick1Translate;
+                    else
+                        nodes[i - 1].position = basePosition;
+
+                    nodes[i].position += stick2Translate - stick1Translate;
+                    nodes[i + 1].position -= stick2Translate;
+
+                    VerletNode node1 = i == 0 ? null : nodes[i - 1];
+                    VerletNode node2 = nodes[i];
+                    VerletNode node3 = nodes[i + 1];
+
+                    Vector2 pos1 = i == 0 ? (Vector2)transform.position : nodes[i - 1].position;
+                    Vector2 pos2 = nodes[i].position;
+                    Vector2 pos3 = nodes[i + 1].position;
+
+                    /*Vector2 angleTransform = AngleConstraint(pos1, pos2, pos3);
+                    if (i > 0) node1.position -= angleTransform;
+                    node2.position += angleTransform;
+                    node3.position -= angleTransform;*/
+
+                    Vector2 angleTransform2 = AngleConstraint2(pos1, pos3);
+                    if (i > 0) node1.position += angleTransform2;
+                    node3.position -= angleTransform2;
+
+                    /*if (i > 0)
+                        stick1Translate = StickConstraint(nodes[i - 1].position, nodes[i].position);
+                    stick2Translate = StickConstraint(nodes[i].position, nodes[i + 1].position);
+
+                    if (i > 0)
+                        nodes[i - 1].position += stick1Translate;
+                    nodes[i].position += stick2Translate - stick1Translate;
+                    nodes[i + 1].position -= stick2Translate;*/
+
+                        
+                }
+
+                /*Vector2 point1 = i == 0 ? (Vector2)transform.position : nodes[i - 1].position;
+                Vector2 point2 = nodes[i + 1].position;
+
+                if (Mathf.Abs(Vector2.SignedAngle(point2 - nodes[i].position, point1 - nodes[i].position)) < angleLimit) {
+                    Vector2 bridge = point1 - point2;
+
+                    float a1 = Mathf.Abs(Vector2.SignedAngle(-bridge, nodes[i].position - point1));
+                    float a2 = Mathf.Abs(Vector2.SignedAngle(bridge, nodes[i].position - point2));
+                    //fails when a1 == 0 and a2 == 180
+                    float baseMag = Mathf.Sin(a1 * Mathf.Deg2Rad) * (i == 0 ? 1.5f : (nodes[i].position - point1).magnitude);
+                    float bridgeLength1 = baseMag / Mathf.Tan(a1 * Mathf.Deg2Rad);
+                    float bridgeLength2 = baseMag / Mathf.Tan(a2 * Mathf.Deg2Rad);
+
+                    if (a1 != 0 && a2 != 0) {
+                        float angleRatio = nodeAngle / (a1 + a2);
+                        a1 *= angleRatio;
+                        a2 *= angleRatio;
+
+                        float idealBridgeLength1 = baseMag / Mathf.Tan(a1 * Mathf.Deg2Rad);
+                        float idealBridgeLength2 = baseMag / Mathf.Tan(a2 * Mathf.Deg2Rad);
+
+                        float bridgeDiff1 = (idealBridgeLength1 - bridgeLength1) / bridgeLength1;
+                        float bridgeDiff2 = (idealBridgeLength2 - bridgeLength2) / bridgeLength2;
+
+                        Vector2 bridgeTranslate1 = bridge.normalized * bridgeLength1 * bridgeDiff1;
+                        Vector2 bridgeTranslate2 = bridge.normalized * bridgeLength2 * bridgeDiff2;
+
+                        if (i > 0) {
+                            nodes[i - 1].position += bridgeTranslate1 * .8f;
+                            nodes[i + 1].position -= bridgeTranslate2 * .8f;
+                        }
+                        else {
+                            nodes[i + 1].position -= (bridgeTranslate2 + bridgeTranslate1) * .8f;
+                        }
+                    }
+                }*/
+            }
+        }
+
+        private Vector2 StickConstraint(Vector2 node1, Vector2 node2) {
+            Vector2 diff = node1 - node2;
+            float dist = Vector2.Distance(node1, node2);
+            float difference = 0;
+
+            if (dist > 0) 
+                difference = (nodeDistance - dist) / dist;
+
+            return new Vector2(diff.x, diff.y) * (.5f * difference);
+        }
+
+        private Vector2 AngleConstraint(Vector2 node1, Vector2 node2, Vector2 node3) {
+            Vector2 bridge = node3 - node1;
+            Vector2 joint = node2 - node1;
+            float intersectionLength = Mathf.Cos(Vector2.Angle(joint, bridge)) * joint.magnitude;
+
+            Vector2 intersect = node1 + bridge.normalized * intersectionLength;
+            Vector2 diff = node2 - intersect;
+
+            float difference = 0;
+
+            if (diff.magnitude > angleDistance)
+                difference = (angleDistance - diff.magnitude) / diff.magnitude;
+
+            return diff * .5f * difference;
+        }
+
+        private Vector2 AngleConstraint2(Vector2 node1, Vector2 node2) {
+            Vector2 diff = node1 - node2;
+            float dist = Vector2.Distance(node1, node2);
+            float difference = 0;
+
+            if (dist > 0 && dist < angleDistance2)
+                difference = (angleDistance2 - dist) / dist;
+
+            return new Vector2(diff.x, diff.y) * (.5f * difference);
         }
 
         private void SnapshotCollision() {
@@ -206,65 +384,6 @@ namespace Rope {
             shouldSnapshotCollision = false;
 
             Profiler.EndSample();
-        }
-
-        private void Simulate() {
-            for (int i = 1; i < nodes.Length; i++) {
-                VerletNode node = nodes[i];
-                Vector2 temp = node.position;
-                node.position += node.position - node.oldPosition;
-                node.oldPosition = temp;
-            }
-        }
-
-        private void ApplyConstraints() {
-            nodes[0].position = new Vector2(Mathf.Cos((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.x,
-                                            Mathf.Sin((transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad) * 1.5f + transform.position.y);
-
-            for (int i = 0; i < nodes.Length - 1; i++) {
-                //****Distance****//
-                VerletNode node1 = nodes[i];
-                VerletNode node2 = nodes[i + 1];
-
-                //Current distance between rope nodes.
-                float diffX = node1.position.x - node2.position.x;
-                float diffY = node1.position.y - node2.position.y;
-                float dist = Vector2.Distance(node1.position, node2.position);
-                float difference = 0;
-                // Guard against divide by 0.
-                if (dist > 0) {
-                    difference = (nodeDistance - dist) / dist;
-                }
-
-                Vector2 translate = new Vector2(diffX, diffY) * (.5f * difference);
-
-                node1.position += translate;
-                node2.position -= translate;
-
-                //****Angle****//
-                Vector2 point1 = i == 0 ? (Vector2)transform.position : nodes[i - 1].position;
-                Vector2 point2 = nodes[i + 1].position;
-
-                float length1 = i == 0 ? 1.5f : (nodes[i].position - point1).magnitude;
-                float length2 = (point2 - nodes[i].position).magnitude;
-
-                float idealBridgeLength = new Vector2(length2 * .5f, length2 * Mathf.Sqrt(3) * .5f + length1).magnitude;
-                Vector2 bridge = point1 - point2;
-
-                float bridgeLength = bridge.magnitude;
-                float bridgeDiff = 0;
-
-                if (bridgeLength > 0)
-                    bridgeDiff = (idealBridgeLength - bridgeLength) / bridgeLength;
-
-                if (bridgeDiff > 0) {
-                    Vector2 bridgeTranslate = bridge * ((i == 0 ? 1f : .5f) * bridgeDiff);
-
-                    if (i > 0)
-                        nodes[i - 1].position += bridgeTranslate;
-                    nodes[i + 1].position -= bridgeTranslate;
-                }
-            }
         }
 
         private void AdjustCollisions() {

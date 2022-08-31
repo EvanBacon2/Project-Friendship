@@ -426,7 +426,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 125081734}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
   m_Name: 
@@ -2218,16 +2218,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea7ddb039b9ba5d4c971a5dd377ee81d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  totalNodes: 20
-  iterations: 800
+  totalNodes: 10
+  iterations: 30
   nodeDistance: 0.5
-  nodeAngle: 25
+  nodeAngle: 12
   collisionRadius: 0.5
-  linearInertia: 4
-  rotationalInertia: 16
-  linearScaling: 1.1
-  rotationalScaling: 0.95
-  spring: 0
   grappleChain: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
 --- !u!4 &1026296163
 Transform:

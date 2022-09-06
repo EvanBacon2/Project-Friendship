@@ -2196,9 +2196,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1026296163}
-  - component: {fileID: 1026296162}
-  - component: {fileID: 1026296164}
-  - component: {fileID: 1026296165}
+  - component: {fileID: 1026296166}
   m_Layer: 0
   m_Name: Rope
   m_TagString: Untagged
@@ -2206,24 +2204,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1026296162
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1026296161}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea7ddb039b9ba5d4c971a5dd377ee81d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  totalNodes: 10
-  iterations: 30
-  nodeDistance: 0.5
-  nodeAngle: 12
-  collisionRadius: 0.5
-  grappleChain: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
 --- !u!4 &1026296163
 Transform:
   m_ObjectHideFlags: 0
@@ -2239,56 +2219,25 @@ Transform:
   m_Father: {fileID: 356274346}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!23 &1026296164
-MeshRenderer:
+--- !u!114 &1026296166
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1026296161}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 4294967295
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: fc4cc98e5d7163e4ba38b00954f56383, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1026296165
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1026296161}
-  m_Mesh: {fileID: 0}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 680fe811d8e95a743a7241da2eb27b62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  segmentCount: 20
+  segmentLength: 0.5
+  segmentAngleLimit: 30
+  segmentMass: 1
+  segmentInertia: 1
+  substeps: 1
+  iterations: 3
 --- !u!54 &1033195083 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 7503971735436739438, guid: ed3d00cdb8a837946bfd7dffb0041e67, type: 3}
@@ -2372,8 +2321,8 @@ MonoBehaviour:
   m_DeadZoneHeight: 0
   m_DeadZoneDepth: 0
   m_UnlimitedSoftZone: 0
-  m_SoftZoneWidth: 0.4
-  m_SoftZoneHeight: 0.4
+  m_SoftZoneWidth: 0
+  m_SoftZoneHeight: 0
   m_BiasX: 0
   m_BiasY: 0
   m_CenterOnActivate: 1

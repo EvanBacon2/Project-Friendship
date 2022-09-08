@@ -2237,7 +2237,7 @@ MonoBehaviour:
   segmentMass: 1
   segmentInertia: 1
   substeps: 1
-  iterations: 3
+  iterations: 45
 --- !u!54 &1033195083 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 7503971735436739438, guid: ed3d00cdb8a837946bfd7dffb0041e67, type: 3}

@@ -39,7 +39,9 @@ namespace FriendShipRope {
 
 		public Segment(Vector2 position, Vector2 orientation, float mass, float inertia, float length) {
 			this.position = position;
+			this.previousPosition = position;
 			this.orientation = orientation;
+			this.previousOrientation = orientation;
 			this.mass = mass;
 			this.inertia = inertia;
 			this.length = length;
@@ -179,7 +181,7 @@ namespace FriendShipRope {
 				segment.position += h * segment.velocity;
 
 				segment.previousOrientation = segment.orientation;
-				rotateOrientation(segment, segment.angulerVecocity);
+				rotateOrientation(segment, segment.angulerVecocity * h);
 			}
 		}
 
@@ -187,25 +189,35 @@ namespace FriendShipRope {
 			baseConstraint();
 
 			for (int i = 1; i < rope.Length; i++) {
-				//angleConstraint(rope[i - 1], rope[i]);
+				angleConstraint(rope[i - 1], rope[i]);
 				distanceConstraint(rope[i - 1], rope[i]);
 			}
 		}
 
 		private void baseConstraint() {
-			Vector2 difference = basePosition() - rope[0].p1;
-			rope[0].p1 += difference;
+			Vector2 baseOrientation = basePosition() - (Vector2)transform.position;
+			float angle = Vector2.SignedAngle(baseOrientation, rope[0].orientation);
 
-			//float angle = Mathf.Asin(Vector3.Cross(rope[0].p1.normalized, -difference.normalized).z) * Mathf.Rad2Deg;
-			//rotateOrientation(rope[0], angle);
+			if (Mathf.Abs(angle) > segmentAngleLimit) {
+				float diff = angle - (angle > 0 ? segmentAngleLimit : -segmentAngleLimit);
+				rotateOrientation(rope[0], .5f * -diff * Mathf.Deg2Rad);
+			}
+
+			Vector2 difference = basePosition() - rope[0].p1;
+			Vector2 r = rope[0].p1 - rope[0].position;
+			float torque = Vector3.Cross(r, difference).z;
+
+			rope[0].p1 += difference;
+			rotateOrientation(rope[0], .5f * torque);
 		}
 
 		private void angleConstraint(Segment s1, Segment s2) {
-			float angle = Mathf.Asin(Vector3.Cross(s1.orientation, s2.orientation).z) * Mathf.Rad2Deg;
-			if (angle < -segmentAngleLimit || angle > segmentAngleLimit) {
+			float angle = Vector2.SignedAngle(s1.orientation, s2.orientation);
+
+			if (Mathf.Abs(angle) > segmentAngleLimit) {
 				float difference = angle - (angle > 0 ? segmentAngleLimit : -segmentAngleLimit);
-				rotateOrientation(s1, difference);
-				rotateOrientation(s2, -difference);
+				rotateOrientation(s1, .5f * difference * Mathf.Deg2Rad);
+				rotateOrientation(s2, .5f * -difference * Mathf.Deg2Rad);
 			}
 		}
 
@@ -224,24 +236,19 @@ namespace FriendShipRope {
 			Vector2 correction1 = direction * magnitude * ratio;
 			Vector2 correction2 = direction * magnitude * (1 - ratio);
 
+			float torque1 = Vector3.Cross(r1, correction1).z;
+			float torque2 = Vector3.Cross(r2, correction2).z;
+
 			s1.p2 += correction1;
 			s2.p1 -= correction2;
-
-			float angle1 = correction1.magnitude != 0 ? Mathf.Asin(Mathf.Clamp(Vector3.Cross(r1, correction1).z / (r1.magnitude * correction1.magnitude), -1, 1)) : 0;
-			float angle2 = correction2.magnitude != 0 ? Mathf.Asin(Mathf.Clamp(Vector3.Cross(r2, correction2).z / (r2.magnitude * correction2.magnitude), -1, 1)) : 0;
-
-			Debug.Log(Vector3.Cross(r1, correction1).z / (r1.magnitude * correction1.magnitude));
-
-			s1.orientation = new Vector2(Mathf.Cos(angle1), Mathf.Sin(angle1));
-			s2.orientation = new Vector2(Mathf.Cos(angle2), Mathf.Sin(angle2));
-			//rotateOrientation(s1, angle1);
-			//rotateOrientation(s2, angle2);
+			rotateOrientation(s1, .5f * torque1);
+			rotateOrientation(s2, .5f * -torque2);
 		}
 
 		private void adjustVelocities(float h) {
 			for (int i = 0; i < rope.Length; i++) {
 				rope[i].velocity = (rope[i].position - rope[i].previousPosition) / h;
-				rope[i].angulerVecocity = (Mathf.Atan(rope[i].orientation.y / rope[i].orientation.x) - Mathf.Atan(rope[i].previousOrientation.y / rope[i].previousOrientation.x)) * Mathf.Rad2Deg / h;
+				rope[i].angulerVecocity = Vector2.SignedAngle(rope[i].previousOrientation, rope[i].orientation) * Mathf.Deg2Rad / h;
 			}
 		}
 
@@ -251,7 +258,7 @@ namespace FriendShipRope {
 
 		private Vector2 basePosition() {
 			float baseRotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
-			return (Vector2)transform.position + new Vector2(Mathf.Cos(baseRotation), Mathf.Sin(baseRotation)) * .6f;
+			return (Vector2)transform.position + new Vector2(Mathf.Cos(baseRotation), Mathf.Sin(baseRotation)) * 1.2f;
 		}
 
 		private void rotateOrientation(Segment s, float rotation) {

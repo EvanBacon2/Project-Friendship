@@ -426,7 +426,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 125081734}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
   m_Name: 
@@ -2231,13 +2231,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680fe811d8e95a743a7241da2eb27b62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  segmentCount: 20
-  segmentLength: 0.5
-  segmentAngleLimit: 30
-  segmentMass: 1
-  segmentInertia: 1
-  substeps: 1
-  iterations: 45
+  count: 35
+  length: 0.65
+  angleLimit: 35
+  mass: 1
+  inertia: 1
+  stiffness: 0.8
+  maxSpeed: 6
+  linearDrag: 0.9998
+  angulerDrag: 0.995
+  substeps: 20
+  iterations: 1
 --- !u!54 &1033195083 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 7503971735436739438, guid: ed3d00cdb8a837946bfd7dffb0041e67, type: 3}

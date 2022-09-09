@@ -113,23 +113,25 @@ namespace SegmentRope {
 	}
 
 	public class SegmentRope : MonoBehaviour {
-		public int count = 20;
-		public double length = .5f;
-		public double angleLimit = 30;
+		public int count = 35;
+		public double length = .65;
+		public double angleLimit = 6;
 		public double mass = 1;
 		public double inertia = 1;
-		public double stiffness = 1;
-		public double maxSpeed = 5.5f;
-		public double linearDrag = .993f;
-		public double angulerDrag = .96f;
+		public double stiffness = .8;
+		public double maxSpeed = 6;
+		public double linearDrag = .9985;
+		public double angulerDrag = .985;
 
 		public int substeps = 20;
 		public int iterations = 1;
 
+		public bool flexible = false;
+
 		private Segment[] rope;
 		private Vector2d basePos;
 
-		private void Awake() {
+		private void Start() {
 			rope = new Segment[count];
 
 			//collision stuff
@@ -140,17 +142,34 @@ namespace SegmentRope {
 				rope[i] = new Segment(new Vector2d(currentPosition.x, currentPosition.y), Vector2d.up, mass, inertia, length);
 				currentPosition.y += length;
 			}
+		}
 
-			//rope[rope.Length - 1] = new Segment(currentPosition, Vector2d.up, mass * 3, inertia, length);
+		private void modeStiff() {
+			angleLimit = 6;
+			linearDrag = .9985;
+			angulerDrag = .985;
+		}
+
+		private void modeFlexible() {
+			angleLimit = 35;
+			linearDrag = .9998;
+			angulerDrag = .995;
 		}
 
 		private void Update() {
 			//more collision stuff
+			if (Input.GetKeyDown(KeyCode.F)) {
+				if (angleLimit == 35)
+					modeStiff();
+				else
+					modeFlexible();
+			}
 		}
 
 		private void FixedUpdate() {
 			double h = Time.fixedDeltaTime / substeps;
 			basePos = basePosition();
+
 			for (int i = 0; i < substeps; i++) {
 				Simulate(h);
 				for (int j = 0; j < iterations; j++) {
@@ -183,7 +202,7 @@ namespace SegmentRope {
 		}
 
 		private void baseConstraint() {
-			Vector2d baseOrientation = basePos - new Vector2d(transform.position.x, transform.position.y);
+			Vector2d baseOrientation = basePos - new Vector2d(transform.position.x, transform.position.y);//**
 			double angle = Vector2d.SignedAngle(baseOrientation, rope[0].orientation);
 			double limit = angleLimit * Mathf.Deg2Rad;
 
@@ -192,17 +211,20 @@ namespace SegmentRope {
 				rotateOrientation(rope[0], .5f * -diff);
 			}
 
-			Vector2d difference = basePos - rope[0].p1;
-			Vector2d r = rope[0].p1 - rope[0].position;
+			Vector2d difference = basePos - rope[0].p1;//**
+			Vector2d r = rope[0].p1 - rope[0].position;//**
 			double torque = Vector2d.cross(r, difference);
 
 			rope[0].p1 += difference;
 			rotateOrientation(rope[0], .5f * torque * stiffness);
 		}
 
+		private double angle = 0;
+		private double limit = 0;
+
 		private void angleConstraint(Segment s1, Segment s2) {
-			double angle = Vector2d.SignedAngle(s1.orientation, s2.orientation);
-			double limit = angleLimit * Mathf.Deg2Rad;
+			angle = Vector2d.SignedAngle(s1.orientation, s2.orientation);
+			limit = angleLimit * Mathf.Deg2Rad;
 
 			if (System.Math.Abs(angle) > limit) {
 				double difference = angle - (angle > 0 ? limit : -limit);
@@ -211,9 +233,15 @@ namespace SegmentRope {
 			}
 		}
 
+		private Vector2d s1p2 = Vector2d.zero;
+		private Vector2d s2p1 = Vector2d.zero;
+
 		private void distanceConstraint(Segment s1, Segment s2) {
-			Vector2d s1p2 = s1.p2;
-			Vector2d s2p1 = s2.p1;
+			s1p2.x = s1.p2.x;
+			s1p2.y = s1.p2.y;
+
+			s2p1.x = s2.p1.x;
+			s2p1.y = s2.p1.y;
 
 			Vector2d direction = s1p2 - s2p1;
 			double magnitude = -direction.magnitude;
@@ -226,8 +254,8 @@ namespace SegmentRope {
 			double inverseMass2 = 1 + System.Math.Pow(Vector2d.cross(r2, direction), 2);
 			double ratio = inverseMass1 / (inverseMass1 + inverseMass2);
 			
-			Vector2d correction1 = direction * magnitude * ratio;
-			Vector2d correction2 = direction * magnitude * (1 - ratio);
+			Vector2d correction1 = direction * magnitude * ratio;//**
+			Vector2d correction2 = direction * magnitude * (1 - ratio);//**
 
 			double torque1 = Vector2d.cross(r1, correction1);
 			double torque2 = Vector2d.cross(r2, correction2);
@@ -283,9 +311,6 @@ namespace SegmentRope {
  * 
  * Angle Limit - 6
  * 
- * Mass - 1
- * Inertia - 1
- * 
  * Stiffness - .8
  * Max Speed - 6
  * Linear Drag - .9985
@@ -296,9 +321,6 @@ namespace SegmentRope {
  * Meant for swinging around asteroids/ pulling things.   
  * 
  * Angle Limit - 35
- * 
- * Mass - 1
- * Inertia - 10
  * 
  * Stiffness - .8
  * Max Speed - 6

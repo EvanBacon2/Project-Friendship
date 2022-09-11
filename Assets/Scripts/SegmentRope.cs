@@ -31,6 +31,8 @@ namespace SegmentRope {
 
 		public static Vector2d operator +(Vector2d v1, Vector2d v2) => new Vector2d(v1.x + v2.x, v1.y + v2.y);
 		public static Vector2d operator -(Vector2d v1, Vector2d v2) => new Vector2d(v1.x - v2.x, v1.y - v2.y);
+		public static Vector2d operator -(Vector2d v, double d) => new Vector2d(v.x - d, v.y - d);
+		public static Vector2d operator -(double d, Vector2d v) => new Vector2d(v.x - d, v.y - d);
 
 		public static Vector2d operator *(Vector2d v, double d) => new Vector2d(v.x * d, v.y * d);
 		public static Vector2d operator *(double d, Vector2d v) => new Vector2d(v.x * d, v.y * d);
@@ -113,34 +115,33 @@ namespace SegmentRope {
 	}
 
 	public class SegmentRope : MonoBehaviour {
-		public int count = 35;
+		public int maxSegments = 35;
 		public double length = .65;
 		public double angleLimit = 6;
 		public double mass = 1;
 		public double inertia = 1;
-		public double stiffness = .8;
+		public double stiffness = 1;
 		public double maxSpeed = 6;
 		public double linearDrag = .9985;
 		public double angulerDrag = .985;
 
+		private double[] maxSpeeds = new double[] {3, 3, 4, 6};
+
 		public int substeps = 20;
 		public int iterations = 1;
 
-		public bool flexible = false;
-
 		private Segment[] rope;
 		private Vector2d basePos;
+		private int extendedSegments = 0;
 
 		private void Start() {
-			rope = new Segment[count];
+			rope = new Segment[maxSegments];
+			modeFlexible();
+			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 
-			//collision stuff
-
-			Vector2d currentPosition = basePosition();
-			currentPosition.y += length / 2;
-			for (int i = 0; i < rope.Length; i++) {
-				rope[i] = new Segment(new Vector2d(currentPosition.x, currentPosition.y), Vector2d.up, mass, inertia, length);
-				currentPosition.y += length;
+			Vector2d initPos = basePosition();
+			for (int i = 0; i < maxSegments; i++) {
+				rope[i] = new Segment(new Vector2d(initPos.x, initPos.y), Vector2d.up, mass, inertia, length);
 			}
 		}
 
@@ -157,33 +158,46 @@ namespace SegmentRope {
 		}
 
 		private void Update() {
-			//more collision stuff
 			if (Input.GetKeyDown(KeyCode.F)) {
 				if (angleLimit == 35)
 					modeStiff();
 				else
 					modeFlexible();
 			}
+
+			if (Input.GetKeyDown(KeyCode.E) && extendedSegments < maxSegments) {
+				extendedSegments += 1;
+				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
+			}
+
+			if (Input.GetKeyDown(KeyCode.Q) && extendedSegments > 0) {
+				extendedSegments -= 1;
+				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
+			}
 		}
+
+		private bool newFrame = false;
 
 		private void FixedUpdate() {
 			double h = Time.fixedDeltaTime / substeps;
 			basePos = basePosition();
-
+			newFrame = true;
 			for (int i = 0; i < substeps; i++) {
 				Simulate(h);
 				for (int j = 0; j < iterations; j++) {
-					ApplyConstraints();
+					ApplyConstraints(basePos);
 				}
 				adjustVelocities(h);
 				solveVelocities();
+
+				newFrame = false;
 			}
 		}
 
 		private void Simulate(double h) {
-			for (int i = 0; i < rope.Length; i++) {
+			for (int i = 0; i < extendedSegments; i++) {
 				Segment segment = rope[i];
-		
+				
 				segment.previousPosition = segment.position;
 				segment.position += h * segment.velocity;
 
@@ -192,31 +206,43 @@ namespace SegmentRope {
 			}
 		}
 
-		private void ApplyConstraints() {
-			baseConstraint();
+		private void ApplyConstraints(Vector2d basePos) {
+			Vector2d baseOrientation = basePos - new Vector2d(transform.position.x, transform.position.y);
 
-			for (int i = 1; i < rope.Length; i++) {
-				angleConstraint(rope[i - 1], rope[i]);
+			if (extendedSegments > 0)
+				baseConstraint(baseOrientation);
+
+			for (int i = 1; i < extendedSegments; i++) {
 				distanceConstraint(rope[i - 1], rope[i]);
+				angleConstraint(rope[i - 1], rope[i]);
+			}
+
+			for (int i = extendedSegments; i < rope.Length; i++) {
+				rope[i].p2 = basePos;
+				rope[i].orientation = baseOrientation;
 			}
 		}
 
-		private void baseConstraint() {
-			Vector2d baseOrientation = basePos - new Vector2d(transform.position.x, transform.position.y);//**
-			double angle = Vector2d.SignedAngle(baseOrientation, rope[0].orientation);
-			double limit = angleLimit * Mathf.Deg2Rad;
-
-			if (System.Math.Abs(angle) > limit) {
-				double diff = angle - (angle > 0 ? limit : -limit);
-				rotateOrientation(rope[0], .5f * -diff);
-			}
-
-			Vector2d difference = basePos - rope[0].p1;//**
-			Vector2d r = rope[0].p1 - rope[0].position;//**
+		private void baseConstraint(Vector2d baseOrientation) {
+			Vector2d difference = basePos - rope[0].p1;
+			Vector2d r = rope[0].p1 - rope[0].position;
 			double torque = Vector2d.cross(r, difference);
 
 			rope[0].p1 += difference;
-			rotateOrientation(rope[0], .5f * torque * stiffness);
+			rotateOrientation(rope[0], torque);
+
+			double angle = Vector2d.SignedAngle(baseOrientation, rope[0].orientation);
+			double limit = angleLimit * Mathf.Deg2Rad;
+
+			if (System.Math.Abs(angle) >= limit) {
+				double diff = angle - (angle > 0 ? limit : -limit);
+				rotateOrientation(rope[0], -diff);
+			}
+
+			rope[0].velocity = (rope[0].position - rope[0].previousPosition) / Time.fixedDeltaTime;
+			rope[0].angulerVelocity = Vector2d.SignedAngle(rope[0].previousOrientation, rope[0].orientation) / Time.fixedDeltaTime;
+			rope[0].previousPosition = rope[0].position;
+			rope[0].previousOrientation = rope[0].orientation;
 		}
 
 		private double angle = 0;
@@ -254,8 +280,8 @@ namespace SegmentRope {
 			double inverseMass2 = 1 + System.Math.Pow(Vector2d.cross(r2, direction), 2);
 			double ratio = inverseMass1 / (inverseMass1 + inverseMass2);
 			
-			Vector2d correction1 = direction * magnitude * ratio;//**
-			Vector2d correction2 = direction * magnitude * (1 - ratio);//**
+			Vector2d correction1 = direction * magnitude * ratio;
+			Vector2d correction2 = direction * magnitude * (1 - ratio);
 
 			double torque1 = Vector2d.cross(r1, correction1);
 			double torque2 = Vector2d.cross(r2, correction2);
@@ -267,14 +293,18 @@ namespace SegmentRope {
 		}
 
 		private void adjustVelocities(double h) {
-			for (int i = 0; i < rope.Length; i++) {
+			for (int i = 0; i < extendedSegments; i++) {
 				rope[i].velocity = (rope[i].position - rope[i].previousPosition) / h;
 				rope[i].angulerVelocity = Vector2d.SignedAngle(rope[i].previousOrientation, rope[i].orientation) / h;
 			}
 		}
 
 		private void solveVelocities() {
-			for (int i = 0; i < rope.Length; i++) {
+			rope[0].velocity = rope[0].velocity.normalized * System.Math.Clamp(rope[0].velocity.magnitude, 0, maxSpeed);
+			rope[0].velocity *= linearDrag;
+			rope[0].angulerVelocity *= 1;
+			
+			for (int i = 1; i < extendedSegments; i++) {
 				rope[i].velocity = rope[i].velocity.normalized * System.Math.Clamp(rope[i].velocity.magnitude, 0, maxSpeed * (i + 1));
 				rope[i].velocity *= linearDrag;
 				rope[i].angulerVelocity *= angulerDrag;
@@ -283,7 +313,7 @@ namespace SegmentRope {
 
 		private Vector2d basePosition() {
 			double baseRotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
-			return new Vector2d(transform.position.x, transform.position.y) + new Vector2d(System.Math.Cos(baseRotation), System.Math.Sin(baseRotation)) * 1.2;
+			return new Vector2d(transform.position.x, transform.position.y) + new Vector2d(System.Math.Cos(baseRotation), System.Math.Sin(baseRotation)) * 1.3;
 		}
 
 		private void rotateOrientation(Segment s, double rotation) {
@@ -296,7 +326,7 @@ namespace SegmentRope {
 			if (!Application.isPlaying) 
 				return;
 
-			for (int i = 0; i < rope.Length; i++) {
+			for (int i = 0; i < maxSegments; i++) {
 				Gizmos.color = i % 2 == 0 ? Color.green : Color.white;
 				Gizmos.DrawLine(new Vector2((float)rope[i].p1.x, (float)rope[i].p1.y), new Vector2((float)rope[i].p2.x, (float)rope[i].p2.y));
 			}
@@ -312,7 +342,6 @@ namespace SegmentRope {
  * Angle Limit - 6
  * 
  * Stiffness - .8
- * Max Speed - 6
  * Linear Drag - .9985
  * Anguler Drag - .985
  **/
@@ -323,7 +352,6 @@ namespace SegmentRope {
  * Angle Limit - 35
  * 
  * Stiffness - .8
- * Max Speed - 6
  * Linear Drag - .9998
  * Anguler Drag - .995
  **/

@@ -2237,7 +2237,7 @@ MonoBehaviour:
   mass: 1
   inertia: 1
   stiffness: 0.8
-  maxSpeed: 70
+  maxSpeed: 3
   linearDrag: 0.9985
   angulerDrag: 0.985
   substeps: 18

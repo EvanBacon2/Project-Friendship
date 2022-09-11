@@ -133,16 +133,19 @@ namespace SegmentRope {
 		private Segment[] rope;
 		private Vector2d basePos;
 		private int extendedSegments = 0;
+		private double h;
 
 		private void Start() {
-			rope = new Segment[maxSegments];
-			modeFlexible();
 			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
+			h = Time.fixedDeltaTime / substeps;
 
+			rope = new Segment[maxSegments];
 			Vector2d initPos = basePosition();
 			for (int i = 0; i < maxSegments; i++) {
 				rope[i] = new Segment(new Vector2d(initPos.x, initPos.y), Vector2d.up, mass, inertia, length);
 			}
+
+			modeFlexible();
 		}
 
 		private void modeStiff() {
@@ -179,22 +182,20 @@ namespace SegmentRope {
 		private bool newFrame = false;
 
 		private void FixedUpdate() {
-			double h = Time.fixedDeltaTime / substeps;
 			basePos = basePosition();
 			newFrame = true;
 			for (int i = 0; i < substeps; i++) {
-				Simulate(h);
+				Simulate();
 				for (int j = 0; j < iterations; j++) {
 					ApplyConstraints(basePos);
 				}
-				adjustVelocities(h);
+				adjustVelocities();
 				solveVelocities();
-
 				newFrame = false;
 			}
 		}
 
-		private void Simulate(double h) {
+		private void Simulate() {
 			for (int i = 0; i < extendedSegments; i++) {
 				Segment segment = rope[i];
 				
@@ -239,8 +240,10 @@ namespace SegmentRope {
 				rotateOrientation(rope[0], -diff);
 			}
 
-			rope[0].velocity = (rope[0].position - rope[0].previousPosition) / Time.fixedDeltaTime;
-			rope[0].angulerVelocity = Vector2d.SignedAngle(rope[0].previousOrientation, rope[0].orientation) / Time.fixedDeltaTime;
+			double h = Time.fixedDeltaTime / substeps;
+
+			rope[0].velocity = (rope[0].position - rope[0].previousPosition) / (newFrame ? Time.fixedDeltaTime : h);
+			rope[0].angulerVelocity = Vector2d.SignedAngle(rope[0].previousOrientation, rope[0].orientation) / (newFrame ? Time.fixedDeltaTime : h);
 			rope[0].previousPosition = rope[0].position;
 			rope[0].previousOrientation = rope[0].orientation;
 		}
@@ -292,16 +295,19 @@ namespace SegmentRope {
 			rotateOrientation(s2, .5f * -torque2);
 		}
 
-		private void adjustVelocities(double h) {
-			for (int i = 0; i < extendedSegments; i++) {
+		private void adjustVelocities() {
+			rope[0].velocity += (rope[0].position - rope[0].previousPosition) / h;
+			rope[0].angulerVelocity += Vector2d.SignedAngle(rope[0].previousOrientation, rope[0].orientation) / h;
+
+			for (int i = 1; i < extendedSegments; i++) {
 				rope[i].velocity = (rope[i].position - rope[i].previousPosition) / h;
 				rope[i].angulerVelocity = Vector2d.SignedAngle(rope[i].previousOrientation, rope[i].orientation) / h;
 			}
 		}
 
 		private void solveVelocities() {
-			rope[0].velocity = rope[0].velocity.normalized * System.Math.Clamp(rope[0].velocity.magnitude, 0, maxSpeed);
-			rope[0].velocity *= linearDrag;
+			rope[0].velocity = rope[0].velocity.normalized * System.Math.Clamp(rope[0].velocity.magnitude, 0, 3 * maxSpeed);
+			rope[0].velocity *= 1;
 			rope[0].angulerVelocity *= 1;
 			
 			for (int i = 1; i < extendedSegments; i++) {

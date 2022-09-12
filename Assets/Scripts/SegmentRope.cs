@@ -72,7 +72,7 @@ namespace SegmentRope {
 		public Vector2d velocity;
 		public double mass;
 
-		private Vector2d _orientation;//only update via rotateOrientation to guarentee normalized magnitude
+		private Vector2d _orientation;//should be a unit vector
 		public Vector2d previousOrientation;
 		public double angulerVelocity;
 		public double inertia;
@@ -117,13 +117,13 @@ namespace SegmentRope {
 	public class SegmentRope : MonoBehaviour {
 		public int maxSegments = 35;
 		public double length = .65;
-		public double angleLimit = 6;
+		public double angleLimit;
 		public double mass = 1;
 		public double inertia = 1;
 		public double stiffness = 1;
 		public double maxSpeed = 6;
-		public double linearDrag = .9985;
-		public double angulerDrag = .985;
+		public double linearDrag;
+		public double angulerDrag;
 
 		private double[] maxSpeeds = new double[] {3, 3, 4, 6};
 
@@ -131,13 +131,18 @@ namespace SegmentRope {
 		public int iterations = 1;
 
 		private Segment[] rope;
-		private Vector2d basePos;
 		private int extendedSegments = 0;
+		private int baseSegment = -1;
 		private double h;
+
+		private Vector2d basePos;
+		private Vector2d nextBasePos;
+		private Vector2d baseVelocity;
 
 		private void Start() {
 			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 			h = Time.fixedDeltaTime / substeps;
+			basePos = basePosition();
 
 			rope = new Segment[maxSegments];
 			Vector2d initPos = basePosition();
@@ -170,33 +175,35 @@ namespace SegmentRope {
 
 			if (Input.GetKeyDown(KeyCode.E) && extendedSegments < maxSegments) {
 				extendedSegments += 1;
+				baseSegment += 1;
 				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 			}
 
 			if (Input.GetKeyDown(KeyCode.Q) && extendedSegments > 0) {
 				extendedSegments -= 1;
+				baseSegment -= 1;
 				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 			}
 		}
 
-		private bool newFrame = false;
-
 		private void FixedUpdate() {
-			basePos = basePosition();
-			newFrame = true;
+			nextBasePos = basePosition();
+			baseVelocity = (nextBasePos - basePos) / substeps;
+
 			for (int i = 0; i < substeps; i++) {
+				basePos += baseVelocity;
+
 				Simulate();
 				for (int j = 0; j < iterations; j++) {
 					ApplyConstraints(basePos);
 				}
 				adjustVelocities();
 				solveVelocities();
-				newFrame = false;
 			}
 		}
 
 		private void Simulate() {
-			for (int i = 0; i < extendedSegments; i++) {
+			for (int i = extendedSegments - 1; i >= 0; i--) {
 				Segment segment = rope[i];
 				
 				segment.previousPosition = segment.position;
@@ -213,9 +220,9 @@ namespace SegmentRope {
 			if (extendedSegments > 0)
 				baseConstraint(baseOrientation);
 
-			for (int i = 1; i < extendedSegments; i++) {
-				distanceConstraint(rope[i - 1], rope[i]);
-				angleConstraint(rope[i - 1], rope[i]);
+			for (int i = extendedSegments -  2; i >= 0; i--) {
+				distanceConstraint(rope[i + 1], rope[i]);
+				angleConstraint(rope[i + 1], rope[i]);
 			}
 
 			for (int i = extendedSegments; i < rope.Length; i++) {
@@ -225,27 +232,20 @@ namespace SegmentRope {
 		}
 
 		private void baseConstraint(Vector2d baseOrientation) {
-			Vector2d difference = basePos - rope[0].p1;
-			Vector2d r = rope[0].p1 - rope[0].position;
+			Vector2d difference = basePos - rope[baseSegment].p1;
+			Vector2d r = rope[baseSegment].p1 - rope[baseSegment].position;
 			double torque = Vector2d.cross(r, difference);
 
-			rope[0].p1 += difference;
-			rotateOrientation(rope[0], torque);
+			rope[baseSegment].p1 += difference;
+			rotateOrientation(rope[baseSegment], torque);
 
-			double angle = Vector2d.SignedAngle(baseOrientation, rope[0].orientation);
+			double angle = Vector2d.SignedAngle(baseOrientation, rope[baseSegment].orientation);
 			double limit = angleLimit * Mathf.Deg2Rad;
 
 			if (System.Math.Abs(angle) >= limit) {
 				double diff = angle - (angle > 0 ? limit : -limit);
-				rotateOrientation(rope[0], -diff);
+				rotateOrientation(rope[baseSegment], -diff);
 			}
-
-			double h = Time.fixedDeltaTime / substeps;
-
-			rope[0].velocity = (rope[0].position - rope[0].previousPosition) / (newFrame ? Time.fixedDeltaTime : h);
-			rope[0].angulerVelocity = Vector2d.SignedAngle(rope[0].previousOrientation, rope[0].orientation) / (newFrame ? Time.fixedDeltaTime : h);
-			rope[0].previousPosition = rope[0].position;
-			rope[0].previousOrientation = rope[0].orientation;
 		}
 
 		private double angle = 0;
@@ -296,22 +296,15 @@ namespace SegmentRope {
 		}
 
 		private void adjustVelocities() {
-			rope[0].velocity += (rope[0].position - rope[0].previousPosition) / h;
-			rope[0].angulerVelocity += Vector2d.SignedAngle(rope[0].previousOrientation, rope[0].orientation) / h;
-
-			for (int i = 1; i < extendedSegments; i++) {
+			for (int i = extendedSegments - 1; i >= 0; i--) {
 				rope[i].velocity = (rope[i].position - rope[i].previousPosition) / h;
 				rope[i].angulerVelocity = Vector2d.SignedAngle(rope[i].previousOrientation, rope[i].orientation) / h;
 			}
 		}
 
 		private void solveVelocities() {
-			rope[0].velocity = rope[0].velocity.normalized * System.Math.Clamp(rope[0].velocity.magnitude, 0, 3 * maxSpeed);
-			rope[0].velocity *= 1;
-			rope[0].angulerVelocity *= 1;
-			
-			for (int i = 1; i < extendedSegments; i++) {
-				rope[i].velocity = rope[i].velocity.normalized * System.Math.Clamp(rope[i].velocity.magnitude, 0, maxSpeed * (i + 1));
+			for (int i = extendedSegments - 1; i >= 0; i--) {
+				rope[i].velocity = rope[i].velocity.normalized * System.Math.Clamp(rope[i].velocity.magnitude, 0, maxSpeed * (extendedSegments - i));
 				rope[i].velocity *= linearDrag;
 				rope[i].angulerVelocity *= angulerDrag;
 			}

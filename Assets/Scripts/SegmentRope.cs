@@ -67,7 +67,7 @@ namespace SegmentRope {
 	}
 
 	class Segment {
-		public Vector2d position;
+		public Vector2d _position;
 		public Vector2d previousPosition;
 		public Vector2d velocity;
 		public double mass;
@@ -83,13 +83,30 @@ namespace SegmentRope {
 		private Vector2d _p1;
 		private Vector2d _p2;
 
+		public Vector2d position {
+			get { return _position; }
+			set {
+				_position = value;
+				_p1 = value - _orientation * length / 2;
+				_p2 = value + _orientation * length / 2;
+			}
+		}
+
 		public Vector2d p1 { 
 			get { return _p1; }
-			set { position = value + _orientation * length / 2; }
+			set {
+				_p1 = value;
+				_p2 = value + _orientation * length;
+				_position = value + _orientation * length / 2; 
+			}
 		}
 		public Vector2d p2 { 
 			get { return _p2; }
-			set { position = value - _orientation * length / 2; }
+			set {
+				_p1 = value - _orientation * length;
+				_p2 = value;
+				_position = value - _orientation * length / 2; 
+			}
 		}
 
 		public Vector2d orientation {
@@ -102,7 +119,7 @@ namespace SegmentRope {
 		}
 
 		public Segment(Vector2d position, Vector2d orientation, double mass, double inertia, double length) {
-			this.position = position;
+			this._position = position;
 			this.previousPosition = position;
 			this.velocity = new Vector2d(0, 0);
 			this.orientation = orientation;
@@ -127,7 +144,7 @@ namespace SegmentRope {
 
 		private double[] maxSpeeds = new double[] {3, 3, 4, 6};
 
-		public int substeps = 20;
+		public int substeps = 18;
 		public int iterations = 1;
 
 		private Segment[] rope;
@@ -135,17 +152,22 @@ namespace SegmentRope {
 		private int baseSegment = 0;
 		private double h;
 
-		private double winchForce = 1;
+		private double winchForce = 3.5;
 		private double winchOffset = 0;
 		private bool extended = false;
 		private bool extending = false;
+		private bool retracting = false;
 
 		private double baseOffset = .65;
 		private Vector2d basePos;
 		private Vector2d nextBasePos;
 		private Vector2d baseVelocity;
 
+		private Rigidbody shipRigidbody;
+		private double shipCorrection = .4;
+
 		private void Start() {
+			shipRigidbody = transform.parent.GetComponent<Rigidbody>();
 			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 			h = Time.fixedDeltaTime / substeps;
 			basePos = basePosition();
@@ -179,18 +201,26 @@ namespace SegmentRope {
 					modeFlexible();
 			}
 
-			if (Input.GetKeyDown(KeyCode.E) && !extended) {
+			if (Input.GetMouseButtonDown(1) && !extended && !retracting) {
 				extended = true;
 				extending = true;
+				shipCorrection = 1;
 			}
 
-			if (Input.GetKeyDown(KeyCode.Q) && extended)
+			if (Input.GetMouseButtonDown(1) && extended && !extending) {
 				extended = false;
+				retracting = true;
+			}
 		}
 
 		private void FixedUpdate() {
 			nextBasePos = basePosition();
 			baseVelocity = (nextBasePos - basePos) / substeps;
+
+			for (int i = extendedSegments - 1; i >= 0; i--) {
+				rope[i].position.x += shipRigidbody.velocity.x * Time.fixedDeltaTime * shipCorrection;
+				rope[i].position.y += shipRigidbody.velocity.y * Time.fixedDeltaTime * shipCorrection;
+			}
 
 			for (int i = 0; i < substeps; i++) {
 				basePos += baseVelocity;
@@ -203,21 +233,23 @@ namespace SegmentRope {
 				solveVelocities();
 			}
 
-			if (extended && extendedSegments < maxSegments) {
+			if (extending) {
 				winchOffset += winchForce;
 				if (winchOffset >= length) {
-					extendedSegments += (int)(winchOffset / length);
-					baseSegment += (int)(winchOffset / length);
-					extendedSegments = System.Math.Min(extendedSegments, maxSegments);
-					baseSegment = System.Math.Min(baseSegment, maxSegments);
+					int segmentIncrease = (int)(winchOffset / length);
+					extendedSegments = System.Math.Min(extendedSegments + segmentIncrease, maxSegments);
+					baseSegment = System.Math.Min(baseSegment + segmentIncrease, maxSegments - 1);
 					winchOffset = winchOffset % length;
 					maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 				}
-			}
-			else if (extended & extendedSegments == maxSegments) 
-				extending = false;
 
-			if (!extended && extendedSegments >= 1) {
+				if (extendedSegments == maxSegments) {
+					extending = false;
+					shipCorrection = .4;
+				}
+			}
+
+			if (retracting) {
 				winchOffset -= winchForce;
 				if (winchOffset <= 0) {
 					baseSegment -= 1;
@@ -225,9 +257,16 @@ namespace SegmentRope {
 					winchOffset = length;
 					maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 				}
+
+				if (extendedSegments == 1) {
+					modeFlexible();
+					retracting = false;
+					winchOffset = 0;
+				}
 			}
 		}
 
+		//integrate position and orientation of segments by timestep of h
 		private void Simulate() {
 			for (int i = extendedSegments - 1; i >= 0; i--) {
 				Segment segment = rope[i];
@@ -244,7 +283,7 @@ namespace SegmentRope {
 			Vector2d orientation = baseOrientation();
 
 			if (extendedSegments > 0)
-				baseConstraint(orientation);
+				anchorConstraint(orientation, basePos + winchAddition(), baseSegment, winchOffset / length);
 
 			for (int i = extendedSegments -  2; i >= 0; i--) {
 				distanceConstraint(rope[i + 1], rope[i]);
@@ -252,7 +291,7 @@ namespace SegmentRope {
 			}
 
 			if (extendedSegments > 1 && extending)
-				hookConstraint(orientation);
+				anchorConstraint(orientation, hookPosition(), 0, 1);
 
 			for (int i = extendedSegments; i < rope.Length; i++) {
 				rope[i].p1 = basePos;
@@ -260,42 +299,25 @@ namespace SegmentRope {
 			}
 		}
 
-		private void baseConstraint(Vector2d orientation) {
-			Vector2d winchPos = winchPosition();
-			Vector2d difference = winchPos - rope[baseSegment].p1;
-			Vector2d r = rope[baseSegment].p1 - rope[baseSegment].position;
+		//A constraint which anchors a segment to a point with infinite mass/inertia.
+		private void anchorConstraint(Vector2d orientation, Vector2d anchor, int segmentIndex, double limiter) {
+			Vector2d difference = anchor - rope[segmentIndex].p1;
+			Vector2d r = rope[segmentIndex].p1 - rope[segmentIndex].position;
 			double torque = Vector2d.cross(r, difference);
 
-			rope[baseSegment].p1 += difference;
-			rotateOrientation(rope[baseSegment], torque);
+			rope[segmentIndex].p1 += difference;
+			rotateOrientation(rope[segmentIndex], torque);
 
-			double angle = Vector2d.SignedAngle(orientation, rope[baseSegment].orientation);
-			double limit = angleLimit * Mathf.Deg2Rad * (winchOffset / length);
+			double angle = Vector2d.SignedAngle(orientation, rope[segmentIndex].orientation);
+			double limit = angleLimit * Mathf.Deg2Rad * limiter;
 
 			if (System.Math.Abs(angle) >= limit) {
 				double diff = angle - (angle > 0 ? limit : -limit);
-				rotateOrientation(rope[baseSegment], -diff);
+				rotateOrientation(rope[segmentIndex], -diff);
 			}
 		}
 
-		private void hookConstraint(Vector2d orientation) {
-			Vector2d hookPos = hookPosition();
-			Vector2d difference = hookPos - rope[0].p1;
-			Vector2d r = rope[0].p1 - rope[0].position;
-			double torque = Vector2d.cross(r, difference);
-
-			rope[0].p1 += difference;
-			rotateOrientation(rope[0], torque);
-
-			double angle = Vector2d.SignedAngle(orientation, rope[0].orientation);
-			double limit = angleLimit * Mathf.Deg2Rad;
-
-			if (System.Math.Abs(angle) >= limit) {
-				double diff = angle - (angle > 0 ? limit : -limit);
-				rotateOrientation(rope[0], -diff);
-			}
-		}
-
+		//constrains mutual orientation between two segemnts
 		private void angleConstraint(Segment s1, Segment s2) {
 			double angle = Vector2d.SignedAngle(s1.orientation, s2.orientation);
 			double limit = angleLimit * Mathf.Deg2Rad;
@@ -311,6 +333,7 @@ namespace SegmentRope {
 		private Vector2d s1p2 = Vector2d.zero;
 		private Vector2d s2p1 = Vector2d.zero;
 
+		//constrains distance between two segments
 		private void distanceConstraint(Segment s1, Segment s2) {
 			s1p2.x = s1.p2.x;
 			s1p2.y = s1.p2.y;
@@ -341,6 +364,7 @@ namespace SegmentRope {
 			rotateOrientation(s2, .5f * -torque2);
 		}
 
+		//update velocities to account for constraints
 		private void adjustVelocities() {
 			for (int i = extendedSegments - 1; i >= 0; i--) {
 				rope[i].velocity = (rope[i].position - rope[i].previousPosition) / h;
@@ -348,36 +372,41 @@ namespace SegmentRope {
 			}
 		}
 
+		//clamp velocity and apply drag
 		private void solveVelocities() {
-			//clamp velocity and apply drag
 			for (int i = extendedSegments - 1; i >= 0; i--) {
 				rope[i].velocity = rope[i].velocity.normalized * System.Math.Clamp(rope[i].velocity.magnitude, 0, maxSpeed * (extendedSegments - i));
 				rope[i].velocity *= linearDrag;
 				rope[i].angulerVelocity *= angulerDrag;
 			}
 		}
+		
+		//rotates segment s by the rotation r given in radians
+		private void rotateOrientation(Segment s, double r) {
+			Vector2d real = System.Math.Cos(r) * s.orientation;
+			Vector2d complex = System.Math.Sin(r) * s.orientation;
+			s.orientation = new Vector2d(real.x - complex.y, real.y + complex.x).normalized;
+		}
 
 		private Vector2d basePosition() {
-			return new Vector2d(transform.position.x, transform.position.y) + baseOrientation() * baseOffset;
+			return new Vector2d(shipRigidbody.position.x, shipRigidbody.position.y) + new Vector2d(PlayerShipModel.impendingVelocity.x, PlayerShipModel.impendingVelocity.y) * Time.fixedDeltaTime + baseOrientation() * baseOffset;
 		}
 
 		private Vector2d winchPosition() {
-			return new Vector2d(transform.position.x, transform.position.y) + baseOrientation() * (baseOffset + winchOffset);
+			return new Vector2d(shipRigidbody.position.x, shipRigidbody.position.y) + new Vector2d(PlayerShipModel.impendingVelocity.x, PlayerShipModel.impendingVelocity.y) * Time.fixedDeltaTime + baseOrientation() * (baseOffset + winchOffset);
+		}
+
+		private Vector2d winchAddition() {
+			return baseOrientation() * winchOffset;
 		}
 
 		private Vector2d hookPosition() {
-			return winchPosition() + baseOrientation() * (length * .92 * (extendedSegments - 1));
+			return winchPosition() + baseOrientation() * (length * .85 * (extendedSegments - 1));
 		}
-
+		
 		private Vector2d baseOrientation() {
 			double rotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
 			return new Vector2d(System.Math.Cos(rotation), System.Math.Sin(rotation));
-		}
-
-		private void rotateOrientation(Segment s, double rotation) {
-			Vector2d real = System.Math.Cos(rotation) * s.orientation;
-			Vector2d complex = System.Math.Sin(rotation) * s.orientation;
-			s.orientation = new Vector2d(real.x - complex.y, real.y + complex.x).normalized;
 		}
 
 		private void OnDrawGizmos() {
@@ -386,7 +415,8 @@ namespace SegmentRope {
 
 			for (int i = 0; i < maxSegments; i++) {
 				Gizmos.color = i % 2 == 0 ? Color.green : Color.white;
-				Gizmos.DrawLine(new Vector2((float)rope[i].p1.x, (float)rope[i].p1.y), new Vector2((float)rope[i].p2.x, (float)rope[i].p2.y));
+				Gizmos.DrawLine(new Vector2((float)rope[i].p1.x, (float)rope[i].p1.y), 
+								new Vector2((float)rope[i].p2.x, (float)rope[i].p2.y));
 			}
 		}
 	}
@@ -405,7 +435,7 @@ namespace SegmentRope {
  **/
 
 /**-- Flexible --
- * Meant for swinging around asteroids/ pulling things.   
+ * Meant for swinging around obstacles/ pulling things.   
  * 
  * Angle Limit - 35
  * 

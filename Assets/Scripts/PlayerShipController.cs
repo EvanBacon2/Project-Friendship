@@ -73,8 +73,3 @@ public class PlayerShipController : MonoBehaviour {
         }
     }
 }
-
-/**
- * Todo
- *  - finish implementing BoostRequest.
- */

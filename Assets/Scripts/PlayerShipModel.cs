@@ -18,6 +18,8 @@ public class PlayerShipModel : MonoBehaviour {
     private (Vector3, ForceMode)? newForce = null;
     private Quaternion newRotation;
 
+    public static Vector2 impendingVelocity = Vector2.zero;
+
     public float acceleration { get; set; }
     [SerializeField] public float maxSpeed { get; set; }
     public float magnitude {
@@ -45,15 +47,19 @@ public class PlayerShipModel : MonoBehaviour {
         newRotation = transform.rotation;
     }
 
-	public void Update() {
-       
-    }
-
 	public void FixedUpdate() {
         transform.rotation = Quaternion.Slerp(transform.rotation, newRotation, Time.fixedDeltaTime * 8);
-
+        
+        Vector2 acceleration = Vector2.zero;
         if (newForce.HasValue) {
             rigidBody.AddForce(newForce.Value.Item1, newForce.Value.Item2);
+
+            Vector2 newForceVector = newForce.Value.Item1;
+            ForceMode newForceMode = newForce.Value.Item2;
+            if (newForceMode == ForceMode.Force || newForceMode == ForceMode.Acceleration)
+                newForceVector *= Time.fixedDeltaTime;
+            acceleration = newForceVector;
+
             newForce = null;
         }
 
@@ -61,9 +67,11 @@ public class PlayerShipModel : MonoBehaviour {
             rigidBody.velocity = rigidBody.velocity.normalized * newMagValue;
             newMagValue = -1;
         }
-
+        
         if (magnitude > maxSpeed)
             rigidBody.velocity = rigidBody.velocity.normalized * maxSpeed;
+
+        impendingVelocity = (Vector2)rigidBody.velocity + acceleration;
     }
 
 	public void addForce((Vector3, ForceMode) force) {

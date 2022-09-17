@@ -131,6 +131,11 @@ namespace SegmentRope {
 		}
 	}
 
+	public enum RopeMode {
+		FLEXIBLE,
+		STIFF,
+	}
+
 	public class SegmentRope : MonoBehaviour {
 		public int maxSegments = 35;
 		public double length = .65;
@@ -150,10 +155,13 @@ namespace SegmentRope {
 		private Segment[] rope;
 		private int extendedSegments = 1;
 		private int baseSegment = 0;
+		private RopeMode mode = RopeMode.FLEXIBLE;
 		private double h;
 
 		private double winchForce = 3.5;
 		private double winchOffset = 0;
+		private double winchAdjustment = 0;
+		private double winchScrollBuffer = 0;
 		private bool extended = false;
 		private bool extending = false;
 		private bool retracting = false;
@@ -195,10 +203,13 @@ namespace SegmentRope {
 
 		private void Update() {
 			if (Input.GetKeyDown(KeyCode.F)) {
-				if (angleLimit == 35)
+				if (mode == RopeMode.FLEXIBLE) {
 					modeStiff();
-				else
+					mode = RopeMode.STIFF;
+				} else {
 					modeFlexible();
+					mode = RopeMode.FLEXIBLE;
+				}
 			}
 
 			if (Input.GetMouseButtonDown(1) && !extended && !retracting) {
@@ -210,6 +221,13 @@ namespace SegmentRope {
 			if (Input.GetMouseButtonDown(1) && extended && !extending) {
 				extended = false;
 				retracting = true;
+			}
+
+			if (extended && Input.mouseScrollDelta.y != 0 && winchScrollBuffer == 0) {
+				if (extendedSegments < maxSegments || Input.mouseScrollDelta.y < 0)
+					winchScrollBuffer = 4 * System.Math.Sign(Input.mouseScrollDelta.y);
+				//winchAdjustment = Mathf.Clamp(Input.mouseScrollDelta.y, (float)-length, (float)length);
+				//adjustWinch(Mathf.Clamp(Input.mouseScrollDelta.y, (float)-length, (float)length));
 			}
 		}
 
@@ -232,6 +250,12 @@ namespace SegmentRope {
 				adjustVelocities();
 				solveVelocities();
 			}
+
+			if (winchScrollBuffer != 0) {
+				adjustWinch(length / 4 * System.Math.Sign(winchScrollBuffer));
+				winchScrollBuffer -= winchScrollBuffer > 0 ? 1 : -1;
+			}
+			
 
 			if (extending) {
 				winchOffset += winchForce;
@@ -283,7 +307,7 @@ namespace SegmentRope {
 			Vector2d orientation = baseOrientation();
 
 			if (extendedSegments > 0)
-				anchorConstraint(orientation, basePos + winchAddition(), baseSegment, winchOffset / length);
+				anchorConstraint(orientation, basePos + winchAddition(), baseSegment, winchOffset / length, true);
 
 			for (int i = extendedSegments -  2; i >= 0; i--) {
 				distanceConstraint(rope[i + 1], rope[i]);
@@ -291,7 +315,7 @@ namespace SegmentRope {
 			}
 
 			if (extendedSegments > 1 && extending)
-				anchorConstraint(orientation, hookPosition(), 0, 1);
+				anchorConstraint(orientation, hookPosition(), 0, 1, false);
 
 			for (int i = extendedSegments; i < rope.Length; i++) {
 				rope[i].p1 = basePos;
@@ -300,12 +324,22 @@ namespace SegmentRope {
 		}
 
 		//A constraint which anchors a segment to a point with infinite mass/inertia.
-		private void anchorConstraint(Vector2d orientation, Vector2d anchor, int segmentIndex, double limiter) {
-			Vector2d difference = anchor - rope[segmentIndex].p1;
-			Vector2d r = rope[segmentIndex].p1 - rope[segmentIndex].position;
+		private void anchorConstraint(Vector2d orientation, Vector2d anchor, int segmentIndex, double limiter, bool point1) {
+			Vector2d difference;
+			Vector2d r;
+			if (point1) {
+				difference = anchor - rope[segmentIndex].p1;
+				r = rope[segmentIndex].p1 - rope[segmentIndex].position;
+			} else {
+				difference = anchor - rope[segmentIndex].p2;
+				r = rope[segmentIndex].p2 - rope[segmentIndex].position;
+			}
 			double torque = Vector2d.cross(r, difference);
 
-			rope[segmentIndex].p1 += difference;
+			if (point1)
+				rope[segmentIndex].p1 += difference;
+			else
+				rope[segmentIndex].p2 += difference;
 			rotateOrientation(rope[segmentIndex], torque);
 
 			double angle = Vector2d.SignedAngle(orientation, rope[segmentIndex].orientation);
@@ -327,7 +361,7 @@ namespace SegmentRope {
 				double difference = angle - (angle > 0 ? limit : -limit);
 				rotateOrientation(s1, .5f * difference * stiffness * ratio);
 				rotateOrientation(s2, .5f * -difference * stiffness * (1 - ratio));
-			}
+			} 
 		}
 
 		private Vector2d s1p2 = Vector2d.zero;
@@ -379,6 +413,32 @@ namespace SegmentRope {
 				rope[i].velocity *= linearDrag;
 				rope[i].angulerVelocity *= angulerDrag;
 			}
+		}
+
+		private void adjustWinch(double adjustment) {
+			winchOffset += adjustment;
+			if (winchOffset >= length || winchOffset < 0) {
+				int segmentIncrease = (int)(winchOffset / length);
+				if (winchOffset < 0) segmentIncrease -= 1;
+				extendedSegments = System.Math.Clamp(extendedSegments + segmentIncrease, 1, maxSegments);
+				baseSegment = System.Math.Clamp(baseSegment + segmentIncrease, 0, maxSegments - 1);
+				if (winchOffset < 0) {
+					 if (extendedSegments >1)
+						winchOffset = length + winchOffset;
+					else
+						winchOffset = 0;
+				}
+				winchOffset = winchOffset % length;
+				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
+			}
+
+			if (extendedSegments ==1)
+				extended = false;
+			Debug.Log(extendedSegments);
+			//if (extendedSegments == maxSegments) {
+			//	extending = false;
+			//	shipCorrection = .4;
+			//}
 		}
 		
 		//rotates segment s by the rotation r given in radians
@@ -443,3 +503,23 @@ namespace SegmentRope {
  * Linear Drag - .9998
  * Anguler Drag - .995
  **/
+
+/** TODO **/
+/**
+ * Feaures
+ * - add collision to segments
+ * - add ability to grab objects with rope
+ * - add ability to wind/unwind the rope via mousewheel
+ * - add ship correction to rope wheen swinging it around in stiff mode
+ * - add slight restitution force to rope when in flexible mode
+ * 
+ * Performance
+ * - reduce gc time
+ * - change underlying representation to be that of particles rather than segments
+ * 
+ * Bugs
+ * - elimnate jitteriness that at occurs when <= 2 segments are unwound
+ */
+
+
+//extended == extendedSegments > 1

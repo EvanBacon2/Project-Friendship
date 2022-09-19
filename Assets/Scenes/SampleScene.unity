@@ -2240,7 +2240,7 @@ MonoBehaviour:
   maxSpeed: 3
   linearDrag: 0.9985
   angulerDrag: 0.985
-  substeps: 18
+  substeps: 35
   iterations: 1
 --- !u!54 &1033195083 stripped
 Rigidbody:

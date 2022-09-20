@@ -52,6 +52,9 @@ namespace SegmentRope {
 
 	//A line segment representing a single link of rope.
 	class Segment {
+		public GameObject sprite;
+		private Vector3 spritePos = new Vector3(0, 0, 70);
+
 		public readonly Vector2d p1;
 		public readonly Vector2d p2;
 
@@ -68,7 +71,9 @@ namespace SegmentRope {
 		public double length;
 		private double halfLength;
 
-		public Segment(Vector2d position, Vector2d orientation, double mass, double inertia, double length) {
+		public Segment(GameObject sprite, Vector2d position, Vector2d orientation, double mass, double inertia, double length) {
+			this.sprite = sprite;
+			
 			this.p1 = new Vector2d(position.x - orientation.x * halfLength, position.y - orientation.y * halfLength);
 			this.p2 = new Vector2d(position.x + orientation.x * halfLength, position.y + orientation.y * halfLength);
 
@@ -85,6 +90,15 @@ namespace SegmentRope {
 
 			this.length = length;
 			this.halfLength = length / 2;
+		}
+
+		public void updateSprite() {
+			spritePos.x = (float)position.x;
+			spritePos.y = (float)position.y;
+			sprite.transform.position = spritePos;
+
+			float angle = Mathf.Atan2((float)orientation.y, (float)orientation.x) * Mathf.Rad2Deg - 90;
+			sprite.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 		}
 
 		public void setPosition(double x, double y) {
@@ -148,10 +162,17 @@ namespace SegmentRope {
 		public int iterations = 1;
 		private double h;
 
+		public GameObject segmentSprite;
+		public GameObject hook;
+		private HookSegment hookSegment;
+
 		private Segment[] rope;
 		private int extendedSegments = 0;
 		private int baseSegment = -1;
 		private RopeMode mode = RopeMode.FLEXIBLE;
+
+		private Rigidbody shipRigidbody;
+		private double shipCorrection = .4;// reduces the effect of playerShip's translational movement on rope segments, 1 == no effect, 0 == normal
 
 		private double baseOffset = .65;
 		private Vector2d baseOrientation = Vector2d.zero;
@@ -168,44 +189,29 @@ namespace SegmentRope {
 		private bool autoExtend = false;
 		private bool autoRetract = false;
 
-		private Rigidbody shipRigidbody;
-		private double shipCorrection = .4;// reduces the effect of playerShip's translational movement on rope segments, 1 == no effect, 0 == normal
-
 		private void Start() {
 			rope = new Segment[maxSegments];
 			for (int i = 0; i < maxSegments; i++) {
-				rope[i] = new Segment(new Vector2d(basePosition.x, basePosition.y), Vector2d.up, mass, inertia, length);
+				GameObject sprite = Instantiate(segmentSprite);
+				rope[i] = new Segment(sprite, new Vector2d(basePosition.x, basePosition.y), Vector2d.up, mass, inertia, length);
 			}
+
+			GameObject hookObj = Instantiate(hook, new Vector3((float)rope[0].position.x, (float)rope[0].position.y, 0), Quaternion.identity);
+			hookObj.AddComponent<HookSegment>();
+			hookSegment = hookObj.GetComponent<HookSegment>();
+			hookSegment.s = rope[0];
 
 			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments, 0, 3)];
 			h = Time.fixedDeltaTime / substeps;
+
+			shipRigidbody = transform.parent.GetComponent<Rigidbody>();
 
 			updateBaseOrientation();
 			updateBasePosition();
 			updateWinchPosition();
 			updateHookPosition();
 
-			shipRigidbody = transform.parent.GetComponent<Rigidbody>();
-
 			modeFlexible();
-		}
-
-		private void modeStiff() {
-			angleLimit = 6;
-			_angleLimit = angleLimit * Mathf.Deg2Rad;
-			linearDrag = .9985;
-			angulerDrag = .985;
-
-			mode = RopeMode.STIFF;
-		}
-
-		private void modeFlexible() {
-			angleLimit = 35;
-			_angleLimit = angleLimit * Mathf.Deg2Rad;
-			linearDrag = .9998;
-			angulerDrag = .995;
-
-			mode = RopeMode.FLEXIBLE;
 		}
 
 		private void Update() {
@@ -219,13 +225,19 @@ namespace SegmentRope {
 			if (Input.GetMouseButtonDown(1) && !extended && !autoRetract) {//auto extend rope
 				autoExtend = true;
 				shipCorrection = 1;
+				hookSegment.active = true;
 			}
 
-			if (Input.GetMouseButtonDown(1) && extended && !autoExtend)//auto retract rope
+			if (Input.GetMouseButtonDown(1) && extended && !autoExtend) {//auto retract rope
 				autoRetract = true;
+				hookSegment.active = false;
+			}
 			
 			if (extended && Input.mouseScrollDelta.y != 0 && winchScrollBuffer == 0 && (extendedSegments < maxSegments || Input.mouseScrollDelta.y < 0))//wind/unwind rope 
 				winchScrollBuffer = 4 * System.Math.Sign(Input.mouseScrollDelta.y);
+
+			if (Input.GetKeyDown(KeyCode.E))
+				hookSegment.unHook();
 		}
 
 		private void FixedUpdate() {
@@ -246,6 +258,10 @@ namespace SegmentRope {
 				}
 				adjustVelocities();
 				solveVelocities();
+			}
+
+			for (int i = 0; i < rope.Length; i++) {
+				rope[i].updateSprite();
 			}
 
 			if (winchScrollBuffer != 0) {//apply scroll wind
@@ -269,6 +285,11 @@ namespace SegmentRope {
 					modeFlexible();
 					autoRetract = false;
 				}
+			}
+
+			if (extendedSegments == 0) {
+				hookSegment.active = false;
+				hookSegment.unHook();
 			}
 		}
 
@@ -481,6 +502,24 @@ namespace SegmentRope {
 		private void updateHookPosition() {
 			hookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
 			hookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);
+		}
+
+		private void modeStiff() {
+			angleLimit = 6;
+			_angleLimit = angleLimit * Mathf.Deg2Rad;
+			linearDrag = .9985;
+			angulerDrag = .985;
+
+			mode = RopeMode.STIFF;
+		}
+
+		private void modeFlexible() {
+			angleLimit = 35;
+			_angleLimit = angleLimit * Mathf.Deg2Rad;
+			linearDrag = .9998;
+			angulerDrag = .995;
+
+			mode = RopeMode.FLEXIBLE;
 		}
 
 		private Vector2 giz1 = Vector2.zero;

@@ -878,7 +878,7 @@ GameObject:
   - component: {fileID: 356274355}
   m_Layer: 0
   m_Name: Player Ship
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2231,7 +2231,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680fe811d8e95a743a7241da2eb27b62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSegments: 35
+  maxSegments: 55
   length: 0.65
   angleLimit: 6
   mass: 1
@@ -2240,7 +2240,7 @@ MonoBehaviour:
   maxSpeed: 3
   linearDrag: 0.9985
   angulerDrag: 0.985
-  substeps: 35
+  substeps: 45
   iterations: 1
   segmentSprite: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
   hook: {fileID: 4789747752933701531, guid: 035c70fe06af43640985de32a67f7804, type: 3}
@@ -2316,8 +2316,8 @@ MonoBehaviour:
   m_LookaheadTime: 0.3
   m_LookaheadSmoothing: 14.8
   m_LookaheadIgnoreY: 0
-  m_XDamping: 0
-  m_YDamping: 0
+  m_XDamping: 0.4
+  m_YDamping: 0.4
   m_ZDamping: 1
   m_TargetMovementOnly: 1
   m_ScreenX: 0.5
@@ -2327,8 +2327,8 @@ MonoBehaviour:
   m_DeadZoneHeight: 0
   m_DeadZoneDepth: 0
   m_UnlimitedSoftZone: 0
-  m_SoftZoneWidth: 0
-  m_SoftZoneHeight: 0
+  m_SoftZoneWidth: 0.4
+  m_SoftZoneHeight: 0.4
   m_BiasX: 0
   m_BiasY: 0
   m_CenterOnActivate: 1

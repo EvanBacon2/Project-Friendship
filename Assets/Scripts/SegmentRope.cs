@@ -183,7 +183,8 @@ namespace SegmentRope {
 		private double winchForce = 3.5;
 		private double winchOffset = 0;
 		private double winchScrollBuffer = 0;
-		private double hookLag = .85;
+		private double winchBrakeBuffer = 0;
+		private double hookLag = .92;
 
 		private bool extended = false;
 		private bool autoExtend = false;
@@ -241,6 +242,8 @@ namespace SegmentRope {
 		}
 
 		private void FixedUpdate() {
+			winchBrakeBuffer -= 1;
+
 			updateBaseOrientation();
 			updateBasePosition();
 			updateWinchPosition();
@@ -264,6 +267,11 @@ namespace SegmentRope {
 				rope[i].updateSprite();
 			}
 
+			if (winchBrakeBuffer == 1) {
+				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
+				winchBrakeBuffer = 0;
+			}
+
 			if (winchScrollBuffer != 0) {//apply scroll wind
 				adjustWinch(length / 4 * System.Math.Sign(winchScrollBuffer));
 				winchScrollBuffer -= winchScrollBuffer > 0 ? 1 : -1;
@@ -272,9 +280,11 @@ namespace SegmentRope {
 			if (autoExtend) {//apply auto extention
 				adjustWinch(winchForce);
 
-				if (extendedSegments == maxSegments) {
+				if (extendedSegments == maxSegments || hookSegment.isHooked) {
 					autoExtend = false;
 					shipCorrection = .4;
+					maxSpeed = 1;
+					winchBrakeBuffer = 4;
 				}
 			}
 			
@@ -324,6 +334,11 @@ namespace SegmentRope {
 			for (int i = extendedSegments; i < rope.Length; i++) {//constrain unextended segments
 				rope[i].setP1(basePosition.x, basePosition.y);
 				rope[i].setOrientation(baseOrientation.x, baseOrientation.y);
+				rope[i].previousPosition.x = rope[i].position.x;
+				rope[i].previousPosition.y = rope[i].position.y;
+				rope[i].velocity.x = 0;
+				rope[i].velocity.y = 0;
+				rope[i].angulerVelocity = 0;
 			}
 		}
 
@@ -522,8 +537,8 @@ namespace SegmentRope {
 			mode = RopeMode.FLEXIBLE;
 		}
 
-		private Vector2 giz1 = Vector2.zero;
-		private Vector2 giz2 = Vector2.zero;
+		private Vector2 giz1 = new Vector3(0, 0, 70);
+		private Vector2 giz2 = new Vector3(0, 0, 70);
 
 		private void OnDrawGizmos() {
 			if (!Application.isPlaying) 

@@ -3,18 +3,17 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 public class LookAtMouseRequest : Request {
-
     public float maxAngleDiff = 20;
 
     public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
-        Vector2 mousePos = Camera.main.ScreenToViewportPoint(args.mouseInput);
-        Vector2 playerPos = distort(Camera.main.WorldToViewportPoint(args.shipModel.position));
+        Vector2 mousePos = args.mouseInput;
+        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(args.shipModel.position)));
 
-        args.shipController.makeRequest(this, RequestType.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos, args.shipModel.transform.rotation.eulerAngles.z));
+        args.shipController.makeRequest(this, RequestType.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos));
     }
 
-    private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos, float currentRotation) {
-        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90; 
+    private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
+        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
         return Quaternion.AngleAxis(turnAngle, Vector3.forward);
     }
 

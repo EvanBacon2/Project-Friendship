@@ -12,6 +12,7 @@ class HookSegment : MonoBehaviour {
 	private Vector3 hookedPos = new Vector3(0, 0, 70);
 
 	public bool active;
+	public bool isHooked;
 
 	private void FixedUpdate() {
 		hookPos.x = (float)s.position.x;
@@ -30,11 +31,16 @@ class HookSegment : MonoBehaviour {
 	}
 
 	private void OnTriggerEnter(Collider other) {
-		if (active)
+		if (active && other.tag != "Player") {
 			hooked = other.gameObject;
+			isHooked = true;
+		}
 	}
 
 	public void unHook() {
+		if (hooked != null)
+			hooked.GetComponent<Rigidbody>().velocity = new Vector3((float)s.velocity.x, (float)s.velocity.y, 0);
 		hooked = null;
+		isHooked = false;
 	}
 }

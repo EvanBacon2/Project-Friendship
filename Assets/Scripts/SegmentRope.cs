@@ -151,6 +151,7 @@ namespace SegmentRope {
 		public double mass = 1;
 		public double inertia = 1;
 		public double stiffness = 1;
+		public double stretchiness = 1;
 		public double maxSpeed = 6;
 		public double linearDrag;
 		public double angulerDrag;
@@ -180,11 +181,21 @@ namespace SegmentRope {
 		private Vector2d winchPosition = Vector2d.zero;
 		private Vector2d hookPosition = Vector2d.zero;
 
-		private double winchForce = 3.5;
+		private Vector2d nextBasePosition = Vector2d.zero;
+		private Vector2d nextWinchPosition = Vector2d.zero;
+		private Vector2d nextHookPosition = Vector2d.zero;
+
+		private Vector2d baseVelocity = Vector2d.zero;
+		private Vector2d winchVelocity = Vector2d.zero;
+		private Vector2d hookVelocity = Vector2d.zero;
+
+		private double winchForce = 3;
 		private double winchOffset = 0;
 		private double winchScrollBuffer = 0;
 		private double winchBrakeBuffer = 0;
 		private double hookLag = .92;
+
+		private Vector2d hookSnapshot = Vector2d.zero;
 
 		private bool extended = false;
 		private bool autoExtend = false;
@@ -261,6 +272,8 @@ namespace SegmentRope {
 				}
 				adjustVelocities();
 				solveVelocities();
+
+				incrementPositions();
 			}
 
 			for (int i = 0; i < rope.Length; i++) {
@@ -286,6 +299,12 @@ namespace SegmentRope {
 					maxSpeed = 1;
 					winchBrakeBuffer = 4;
 				}
+
+				if (hookSegment.justHooked) {
+					tightenRope();
+					hookSnapshot.x = rope[0].position.x;
+					hookSnapshot.y = rope[0].position.y;
+				}
 			}
 			
 			if (autoRetract) {//apply auto retraction
@@ -300,6 +319,19 @@ namespace SegmentRope {
 			if (extendedSegments == 0) {
 				hookSegment.active = false;
 				hookSegment.unHook();
+			}
+
+			if (tightLength > 0) {
+				if (looseLength - tightLength > winchForce * .25) {
+					adjustWinch(-winchForce * .25);
+					looseLength -= winchForce * .25;
+				}
+				else {
+					adjustWinch(-(looseLength - tightLength));
+					looseLength = 0;
+					tightLength = 0;
+					modeStiff();
+				}
 			}
 		}
 
@@ -330,6 +362,9 @@ namespace SegmentRope {
 
 			if (extendedSegments > 0 && autoExtend)//constrain hook
 				anchorConstraint(hookPosition, 0, 1, false);
+
+			if (tightLength > 0)
+				anchorConstraint(hookSnapshot, 0, 1, false);
 
 			for (int i = extendedSegments; i < rope.Length; i++) {//constrain unextended segments
 				rope[i].setP1(basePosition.x, basePosition.y);
@@ -362,9 +397,9 @@ namespace SegmentRope {
 			double torque = Vector2d.cross(anchor_r, anchorDiff);
 
 			if (point1) 
-				rope[segmentIndex].setP1(rope[segmentIndex].p1.x + anchorDiff.x, rope[segmentIndex].p1.y + anchorDiff.y);
+				rope[segmentIndex].setP1(rope[segmentIndex].p1.x + anchorDiff.x * stretchiness, rope[segmentIndex].p1.y + anchorDiff.y * stretchiness);
 			else 
-				rope[segmentIndex].setP2(rope[segmentIndex].p2.x + anchorDiff.x, rope[segmentIndex].p2.y + anchorDiff.y);
+				rope[segmentIndex].setP2(rope[segmentIndex].p2.x + anchorDiff.x * stretchiness, rope[segmentIndex].p2.y + anchorDiff.y * stretchiness);
 			
 			rotateOrientation(rope[segmentIndex], torque);
 
@@ -433,8 +468,8 @@ namespace SegmentRope {
 			double torque1 = Vector2d.cross(r1, correction1);
 			double torque2 = Vector2d.cross(r2, correction2);
 
-			s1.setP2(s1.p2.x + correction1.x, s1.p2.y + correction1.y);
-			s2.setP1(s2.p1.x - correction2.x, s2.p1.y - correction2.y);
+			s1.setP2(s1.p2.x + correction1.x * stretchiness, s1.p2.y + correction1.y * stretchiness);
+			s2.setP1(s2.p1.x - correction2.x * stretchiness, s2.p1.y - correction2.y * stretchiness);
 
 			rotateOrientation(s1, .5f * torque1);
 			rotateOrientation(s2, .5f * -torque2);
@@ -464,6 +499,18 @@ namespace SegmentRope {
 
 				rope[i].angulerVelocity *= angulerDrag;
 			}
+		}
+
+		private Vector2d hook2Base = Vector2d.zero;
+		private double tightLength = 0;
+		private double looseLength = 0;
+
+		private void tightenRope() {
+			hook2Base.x = rope[0].position.x - winchPosition.x;
+			hook2Base.y = rope[0].position.y - winchPosition.y;
+
+			looseLength = extendedSegments * length;
+			tightLength = hook2Base.magnitude;
 		}
 
 		//winds/unwinds rope based on adjustment
@@ -505,18 +552,47 @@ namespace SegmentRope {
 		}
 
 		private void updateBasePosition() {
-			basePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * baseOffset;
-			basePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * baseOffset;
+			//basePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * baseOffset;
+			//basePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * baseOffset;
+
+			nextBasePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * baseOffset;
+			nextBasePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * baseOffset;
+
+			baseVelocity.x = (nextBasePosition.x - basePosition.x) / substeps;
+			baseVelocity.y = (nextBasePosition.y - basePosition.y) / substeps;
 		}
 
 		private void updateWinchPosition() {
-			winchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * (baseOffset + winchOffset);
-			winchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * (baseOffset + winchOffset);
+			//winchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * (baseOffset + winchOffset);
+			//winchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * (baseOffset + winchOffset);
+
+			nextWinchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * (baseOffset + winchOffset);
+			nextWinchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * (baseOffset + winchOffset);
+
+			winchVelocity.x = (nextWinchPosition.x - winchPosition.x) / substeps;
+			winchVelocity.y = (nextWinchPosition.y - winchPosition.y) / substeps;
 		}
 
 		private void updateHookPosition() {
-			hookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
-			hookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);
+			//hookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
+			//hookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);
+
+			nextHookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
+			nextHookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);
+
+			hookVelocity.x = (nextHookPosition.x - hookPosition.x) / substeps;
+			hookVelocity.y = (nextHookPosition.y - hookPosition.y) / substeps;
+		}
+
+		private void incrementPositions() {
+			basePosition.x += baseVelocity.x;
+			basePosition.y += baseVelocity.y;
+
+			winchPosition.x += winchVelocity.x;
+			winchPosition.y += winchVelocity.y;
+
+			hookPosition.x += hookVelocity.x;
+			hookPosition.y += hookVelocity.y;
 		}
 
 		private void modeStiff() {
@@ -593,4 +669,14 @@ namespace SegmentRope {
  * 
  * Bugs
  * - elimnate base segment jitteriness
+ * 
+ * Rope improvements
+ * - Retract and stiffen rope when hooking enemies(in progress)
+ * - Add ability to hook structures
+ * - improve collision detection of hook
+ * - increase mass of hook when hooking an object to prevent bounce back and other eratic movements
+ * 
+ * Feel
+ * - Hooking is too jittering and janky.  Hooking an enemy should only result in them being pushed back lightly
+ * - throwing enemies around feels sluggish and slow
  */

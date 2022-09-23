@@ -48,7 +48,7 @@ public class PlayerShipModel : MonoBehaviour {
     }
 
 	public void FixedUpdate() {
-        transform.rotation = Quaternion.Slerp(transform.rotation, newRotation, Time.fixedDeltaTime * 8);
+        transform.rotation = Quaternion.Slerp(transform.rotation, newRotation, Time.fixedDeltaTime * 14);
 
         Vector2 acceleration = Vector2.zero;
         if (newForce.HasValue) {

@@ -176,15 +176,18 @@ namespace SegmentRope {
 		private double shipCorrection = .4;// reduces the effect of playerShip's translational movement on rope segments, 1 == no effect, 0 == normal
 
 		private double baseOffset = .65;
+
 		private Vector2d baseOrientation = Vector2d.zero;
 		private Vector2d basePosition = Vector2d.zero;
 		private Vector2d winchPosition = Vector2d.zero;
 		private Vector2d hookPosition = Vector2d.zero;
 
+		private Vector2d nextBaseOrientation = Vector2d.zero;
 		private Vector2d nextBasePosition = Vector2d.zero;
 		private Vector2d nextWinchPosition = Vector2d.zero;
 		private Vector2d nextHookPosition = Vector2d.zero;
 
+		private Vector2d orientationVelocity = Vector2d.zero;
 		private Vector2d baseVelocity = Vector2d.zero;
 		private Vector2d winchVelocity = Vector2d.zero;
 		private Vector2d hookVelocity = Vector2d.zero;
@@ -547,44 +550,41 @@ namespace SegmentRope {
 
 		private void updateBaseOrientation() {
 			double rotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
-			baseOrientation.x = System.Math.Cos(rotation);
-			baseOrientation.y = System.Math.Sin(rotation);
+			nextBaseOrientation.x = System.Math.Cos(rotation);
+			nextBaseOrientation.y = System.Math.Sin(rotation);
+
+			orientationVelocity.x = (nextBaseOrientation.x - baseOrientation.x) / substeps;
+			orientationVelocity.y = (nextBaseOrientation.y - baseOrientation.y) / substeps;
 		}
 
 		private void updateBasePosition() {
-			//basePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * baseOffset;
-			//basePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * baseOffset;
-
-			nextBasePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * baseOffset;
-			nextBasePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * baseOffset;
+			nextBasePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + nextBaseOrientation.x * baseOffset;
+			nextBasePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + nextBaseOrientation.y * baseOffset;
 
 			baseVelocity.x = (nextBasePosition.x - basePosition.x) / substeps;
 			baseVelocity.y = (nextBasePosition.y - basePosition.y) / substeps;
 		}
 
 		private void updateWinchPosition() {
-			//winchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * (baseOffset + winchOffset);
-			//winchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * (baseOffset + winchOffset);
-
-			nextWinchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * (baseOffset + winchOffset);
-			nextWinchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * (baseOffset + winchOffset);
+			nextWinchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + nextBaseOrientation.x * (baseOffset + winchOffset);
+			nextWinchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + nextBaseOrientation.y * (baseOffset + winchOffset);
 
 			winchVelocity.x = (nextWinchPosition.x - winchPosition.x) / substeps;
 			winchVelocity.y = (nextWinchPosition.y - winchPosition.y) / substeps;
 		}
 
 		private void updateHookPosition() {
-			//hookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
-			//hookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);
-
-			nextHookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
-			nextHookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);
+			nextHookPosition.x = winchPosition.x + nextBaseOrientation.x * (length * hookLag * extendedSegments);
+			nextHookPosition.y = winchPosition.y + nextBaseOrientation.y * (length * hookLag * extendedSegments);
 
 			hookVelocity.x = (nextHookPosition.x - hookPosition.x) / substeps;
 			hookVelocity.y = (nextHookPosition.y - hookPosition.y) / substeps;
 		}
 
 		private void incrementPositions() {
+			baseOrientation.x += orientationVelocity.x;
+			baseOrientation.y += orientationVelocity.y;
+
 			basePosition.x += baseVelocity.x;
 			basePosition.y += baseVelocity.y;
 

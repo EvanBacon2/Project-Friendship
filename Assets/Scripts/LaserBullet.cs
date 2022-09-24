@@ -18,6 +18,12 @@ public class LaserBullet : MonoBehaviour {
         transform.Translate(direction * speed, Space.World);
         
         if (Time.time > lifeStart + lifeTime)
-            Destroy(this, 0);
+            Destroy(gameObject);
+    }
+
+	private void OnTriggerEnter(Collider other) {
+        Debug.Log(other.tag);
+        if (!other.CompareTag("Player") && !other.CompareTag("Rope"))
+            Destroy(gameObject);
     }
 }

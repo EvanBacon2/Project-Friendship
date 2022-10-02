@@ -41,7 +41,7 @@ class HookSegment : MonoBehaviour {
 	}
 
 	private void OnTriggerEnter(Collider other) {
-		if (active && other.tag != "Player" && other.tag != "Wall") {
+		if (active && other.tag != "Player" && other.tag != "Wall" && other.GetComponent<Throwable>().hookable) {
 			hooked = other.gameObject;
 			hookOffset.x = hooked.transform.position.x - (float)s.p2.x;
 			hookOffset.y = hooked.transform.position.y - (float)s.p2.y;
@@ -51,8 +51,11 @@ class HookSegment : MonoBehaviour {
 	}
 
 	public void unHook() {
-		if (hooked != null)
+		if (hooked != null) {
 			hooked.GetComponent<Rigidbody>().velocity = new Vector3((float)s.velocity.x, (float)s.velocity.y, 0);
+			hooked.GetComponent<Throwable>().unHook();
+			ThrowOffset.tracked = hooked;
+		}
 		hooked = null;
 		isHooked = false;
 	}

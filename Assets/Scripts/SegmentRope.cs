@@ -246,13 +246,14 @@ namespace SegmentRope {
 			if (Input.GetMouseButtonDown(1) && extended && !autoExtend) {//auto retract rope
 				autoRetract = true;
 				hookSegment.active = false;
+				hookSegment.unHook();
 			}
 			
 			if (extended && Input.mouseScrollDelta.y != 0 && winchScrollBuffer == 0 && (extendedSegments < maxSegments || Input.mouseScrollDelta.y < 0))//wind/unwind rope 
 				winchScrollBuffer = 4 * System.Math.Sign(Input.mouseScrollDelta.y);
 
-			if (Input.GetKeyDown(KeyCode.E))
-				hookSegment.unHook();
+			//if (Input.GetKeyDown(KeyCode.E))
+				//hookSegment.unHook();
 		}
 
 		private void FixedUpdate() {
@@ -669,6 +670,7 @@ namespace SegmentRope {
  * 
  * Bugs
  * - elimnate base segment jitteriness
+ * - update velocity of hooked objects to fix collision
  * 
  * Rope improvements
  * - Retract and stiffen rope when hooking enemies(in progress)
@@ -679,4 +681,12 @@ namespace SegmentRope {
  * Feel
  * - Hooking is too jittering and janky.  Hooking an enemy should only result in them being pushed back lightly
  * - throwing enemies around feels sluggish and slow
+ * 
+ * Camera
+ * - have camera follow a thrown enemy, and possible zoom out as well to ensure that it stays on screen, offset/zoom out should be enough to enemy in frame until they come to a rest.
+ *
+ * Random Ideas
+ * - After hooking an enemy, spinning the ship around could but the ship into an auto spin state.  Exiting this state would require releasing the hooked enemy, or retracting the rope
+ * - Rope could automatically retract win spinning to avoid any obstacles
+ * - Could add some sort of auto spin button that would automatically spin the ship 180 or 360 degrees around
  */

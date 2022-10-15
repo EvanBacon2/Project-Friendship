@@ -33,7 +33,6 @@ class Throwable : MonoBehaviour {
 				hookable = false;
 			}
 		}
-		Debug.Log(collision.impulse.magnitude);
 	}
 
 	public void unHook() {

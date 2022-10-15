@@ -8,8 +8,6 @@ public class ThrowOffset : MonoBehaviour {
     public static GameObject tracked;
 
     private CinemachineFramingTransposer cam;
-    private Vector2 playerViewport;
-    private Vector2 trackedViewport;
 
 	private void Start() {
         cam = GetComponent<CinemachineVirtualCamera>().GetCinemachineComponent<CinemachineFramingTransposer>();
@@ -18,26 +16,30 @@ public class ThrowOffset : MonoBehaviour {
     }
 
     void Update() {
-        playerViewport = Camera.main.WorldToViewportPoint(player.transform.position);
-
         if (tracked != null) {
-            Vector2 trackedVelocity = tracked.GetComponent<Rigidbody>().velocity.normalized * 1;
-            Vector2 offset = Camera.main.WorldToViewportPoint(new Vector2(player.transform.position.x - trackedVelocity.x, player.transform.position.y + trackedVelocity.y));
-            Debug.Log(trackedVelocity);
+            Vector2 trackedVelocity = (tracked.GetComponent<Rigidbody>().velocity - player.GetComponent<Rigidbody>().velocity).normalized * 25;
+            Vector2 offset = Camera.main.WorldToViewportPoint(new Vector3(player.transform.position.x - trackedVelocity.x, player.transform.position.y + trackedVelocity.y, 70));
+            Debug.Log(Camera.main.transform.position);
+            Debug.Log(player.transform.position);
+            Debug.Log(Camera.main.WorldToViewportPoint(player.transform.position));
+            Debug.Log("pos " + new Vector2(player.transform.position.x - trackedVelocity.x, player.transform.position.y + trackedVelocity.y));
+            Debug.Log("vel " + trackedVelocity);
+            Debug.Log("off " + offset);
 
             cam.m_ScreenX = offset.x;
             cam.m_ScreenY = offset.y;
 
+            StartCoroutine(reCenter());
+
             tracked = null;
         }
+    }
 
-        if (Mathf.Clamp01(playerViewport.x) != playerViewport.x || Mathf.Clamp01(playerViewport.y) != playerViewport.y)
-            tracked = null;
+    private IEnumerator reCenter() {
+        yield return new WaitForSeconds(.7f);
 
-        if (tracked == null) {
-            //cam.m_ScreenX = .5f;
-            //cam.m_ScreenY = .5f;
-        }
+        cam.m_ScreenX = .5f;
+        cam.m_ScreenY = .5f;
     }
 }
 

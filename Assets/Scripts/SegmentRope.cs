@@ -214,7 +214,7 @@ namespace SegmentRope {
 			GameObject hookObj = Instantiate(hook, new Vector3((float)rope[0].position.x, (float)rope[0].position.y, 0), Quaternion.identity);
 			hookObj.AddComponent<HookSegment>();
 			hookSegment = hookObj.GetComponent<HookSegment>();
-			hookSegment.s = rope[0];
+			//hookSegment.s = rope[0];
 
 			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments, 0, 3)];
 			h = Time.fixedDeltaTime / substeps;
@@ -616,7 +616,7 @@ namespace SegmentRope {
 		private Vector2 giz1 = new Vector3(0, 0, 70);
 		private Vector2 giz2 = new Vector3(0, 0, 70);
 
-		private void OnDrawGizmos() {
+		/*private void OnDrawGizmos() {
 			if (!Application.isPlaying) 
 				return;
 
@@ -630,7 +630,7 @@ namespace SegmentRope {
 
 				Gizmos.DrawLine(giz1, giz2);
 			}
-		}
+		}*/
 	}
 }
 

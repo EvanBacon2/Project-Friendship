@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 
+//Offsets camera in direction of thrown object when released from the HookSegment
+
 public class ThrowOffset : MonoBehaviour {
     public GameObject player;
     public static GameObject tracked;
@@ -18,7 +20,7 @@ public class ThrowOffset : MonoBehaviour {
     void Update() {
         if (tracked != null) {
             Vector2 trackedVelocity = (tracked.GetComponent<Rigidbody>().velocity - player.GetComponent<Rigidbody>().velocity).normalized * 25;
-            Vector2 offset = Camera.main.WorldToViewportPoint(new Vector3(player.transform.position.x - trackedVelocity.x, player.transform.position.y + trackedVelocity.y, 70));
+            Vector2 offset = Camera.main.WorldToViewportPoint(new Vector3(player.transform.position.x - trackedVelocity.x, player.transform.position.y + trackedVelocity.y, 0));
             Debug.Log(Camera.main.transform.position);
             Debug.Log(player.transform.position);
             Debug.Log(Camera.main.WorldToViewportPoint(player.transform.position));

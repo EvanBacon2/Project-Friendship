@@ -56,3 +56,5 @@ public static class PlayerShipRequestPriorities {
 		return propertyMap[property].ContainsKey(request) ? propertyMap[property][request] : (int)RequestType.NoRequest;
 	}
 }
+
+

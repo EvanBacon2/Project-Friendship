@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Allows for objects to be grabbed and thrown by a rope
+
 class Throwable : MonoBehaviour {
     public float health;
 	public bool hookable = true;

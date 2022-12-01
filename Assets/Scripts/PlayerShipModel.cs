@@ -1,5 +1,6 @@
 using UnityEngine;
 
+//List of properties that can be modified through Requests
 public class PlayerShipProperties {
 	public const string Acceleration = "acceleration";
 	public const string MaxSpeed = "maxSpeed";

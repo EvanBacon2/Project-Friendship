@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace SegmentRope {
+	//An implmentation of a Vector2 that uses doubles instead of floats
 	class Vector2d {
 		public double x;
 		public double y;
@@ -53,7 +54,7 @@ namespace SegmentRope {
 	//A line segment representing a single link of rope.
 	class Segment {
 		public GameObject sprite;
-		private Vector3 spritePos = new Vector3(0, 0, 70);
+		private Vector3 spritePos = new Vector3(0, 0, 0);
 
 		public readonly Vector2d p1;
 		public readonly Vector2d p2;
@@ -139,15 +140,17 @@ namespace SegmentRope {
 		}
 	}
 
+	//Defines the physical characteristics of the rope
 	public enum RopeMode {
 		FLEXIBLE,
 		STIFF,
 	}
 
+	//A physically simulated rope that is constructed by linking together a series of line segments
 	public class SegmentRope : MonoBehaviour {
 		public int maxSegments = 35;
-		public double length = .65;
-		public double angleLimit;
+		public double length = .65;//length of an individual segment
+		public double angleLimit;//max difference, in degrees, between the rotations, in relation to the origin, of two segments
 		public double mass = 1;
 		public double inertia = 1;
 		public double stiffness = 1;
@@ -205,16 +208,18 @@ namespace SegmentRope {
 		private bool autoRetract = false;
 
 		private void Start() {
+			//create rope segments
 			rope = new Segment[maxSegments];
 			for (int i = 0; i < maxSegments; i++) {
 				GameObject sprite = Instantiate(segmentSprite);
 				rope[i] = new Segment(sprite, new Vector2d(basePosition.x, basePosition.y), Vector2d.up, mass, inertia, length);
 			}
 
+			//create hook segment
 			GameObject hookObj = Instantiate(hook, new Vector3((float)rope[0].position.x, (float)rope[0].position.y, 0), Quaternion.identity);
 			hookObj.AddComponent<HookSegment>();
 			hookSegment = hookObj.GetComponent<HookSegment>();
-			//hookSegment.s = rope[0];
+			hookSegment.s = rope[0];
 
 			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments, 0, 3)];
 			h = Time.fixedDeltaTime / substeps;
@@ -230,26 +235,30 @@ namespace SegmentRope {
 		}
 
 		private void Update() {
-			if (Input.GetKeyDown(KeyCode.F)) {//change rope mode
+			//change rope mode
+			if (Input.GetKeyDown(KeyCode.F)) {
 				if (mode == RopeMode.FLEXIBLE) 
 					modeStiff();
 				else 
 					modeFlexible();
 			}
 
-			if (Input.GetMouseButtonDown(1) && !extended && !autoRetract) {//auto extend rope
+			//auto extend rope
+			if (Input.GetMouseButtonDown(1) && !extended && !autoRetract) {
 				autoExtend = true;
 				shipCorrection = 1;
 				hookSegment.active = true;
 			}
 
-			if (Input.GetMouseButtonDown(1) && extended && !autoExtend) {//auto retract rope
+			//auto retract rope
+			if (Input.GetMouseButtonDown(1) && extended && !autoExtend) {
 				autoRetract = true;
 				hookSegment.active = false;
 				hookSegment.unHook();
 			}
-			
-			if (extended && Input.mouseScrollDelta.y != 0 && winchScrollBuffer == 0 && (extendedSegments < maxSegments || Input.mouseScrollDelta.y < 0))//wind/unwind rope 
+
+			//wind/unwind rope 
+			if (extended && Input.mouseScrollDelta.y != 0 && winchScrollBuffer == 0 && (extendedSegments < maxSegments || Input.mouseScrollDelta.y < 0))
 				winchScrollBuffer = 4 * System.Math.Sign(Input.mouseScrollDelta.y);
 		}
 
@@ -261,12 +270,14 @@ namespace SegmentRope {
 			updateWinchPosition();
 			updateHookPosition();
 
-			for (int i = baseSegment; i >= 0; i--) {//apply ship correction
+			//apply ship correction
+			for (int i = baseSegment; i >= 0; i--) {
 				rope[i].setPosition(rope[i].position.x + shipRigidbody.velocity.x * Time.fixedDeltaTime * shipCorrection, 
 									rope[i].position.y + shipRigidbody.velocity.y * Time.fixedDeltaTime * shipCorrection);
 			}
 
-			for (int i = 0; i < substeps; i++) {//main loop
+			//main loop
+			for (int i = 0; i < substeps; i++) {
 				Simulate();
 				for (int j = 0; j < iterations; j++) {
 					ApplyConstraints();
@@ -286,12 +297,14 @@ namespace SegmentRope {
 				winchBrakeBuffer = 0;
 			}
 
-			if (winchScrollBuffer != 0) {//apply scroll wind
+			//apply scroll wind
+			if (winchScrollBuffer != 0) {
 				adjustWinch(length / 4 * System.Math.Sign(winchScrollBuffer));
 				winchScrollBuffer -= winchScrollBuffer > 0 ? 1 : -1;
 			}
 
-			if (autoExtend) {//apply auto extention
+			//apply auto extention
+			if (autoExtend) {
 				adjustWinch(winchForce);
 
 				if (extendedSegments == maxSegments || hookSegment.isHooked) {
@@ -307,8 +320,9 @@ namespace SegmentRope {
 					hookSnapshot.y = rope[0].position.y;
 				}
 			}
-			
-			if (autoRetract) {//apply auto retraction
+
+			//apply auto retraction
+			if (autoRetract) {
 				adjustWinch(-length);
 
 				if (!extended) {
@@ -353,21 +367,26 @@ namespace SegmentRope {
 
 		//apply various positional and anguler constraints
 		private void ApplyConstraints() {
-			if (extendedSegments > 0)//contrain base
+			//contrain base
+			if (extendedSegments > 0)
 				anchorConstraint(winchPosition, baseSegment, winchOffset / length, true);
 
-			for (int i = baseSegment; i >= 1; i--) {//constrain extended segments between base and hook
+			//constrain extended segments between base and hook
+			for (int i = baseSegment; i >= 1; i--) {
 				distanceConstraint(rope[i], rope[i - 1]);
 				angleConstraint(rope[i], rope[i - 1]);
 			}
 
-			if (extendedSegments > 0 && autoExtend)//constrain hook
+			//constrain hook while auto extending
+			if (extendedSegments > 0 && autoExtend)
 				anchorConstraint(hookPosition, 0, 1, false);
 
+			//constrain hook while tightening rope
 			if (tightLength > 0)
 				anchorConstraint(hookSnapshot, 0, 1, false);
 
-			for (int i = extendedSegments; i < rope.Length; i++) {//constrain unextended segments
+			//constrain unextended segments
+			for (int i = extendedSegments; i < rope.Length; i++) {
 				rope[i].setP1(basePosition.x, basePosition.y);
 				rope[i].setOrientation(baseOrientation.x, baseOrientation.y);
 				rope[i].previousPosition.x = rope[i].position.x;
@@ -516,7 +535,7 @@ namespace SegmentRope {
 			tightLength = hook2Base.magnitude;
 		}
 
-		//winds/unwinds rope based on adjustment
+		//winds and unwinds rope based on adjustment
 		private void adjustWinch(double adjustment) {
 			winchOffset += adjustment;
 			if (winchOffset >= length || winchOffset < 0) {
@@ -613,10 +632,10 @@ namespace SegmentRope {
 			mode = RopeMode.FLEXIBLE;
 		}
 
-		private Vector2 giz1 = new Vector3(0, 0, 70);
-		private Vector2 giz2 = new Vector3(0, 0, 70);
+		private Vector2 giz1 = new Vector3(0, 0, 0);
+		private Vector2 giz2 = new Vector3(0, 0, 0);
 
-		/*private void OnDrawGizmos() {
+		private void OnDrawGizmos() {
 			if (!Application.isPlaying) 
 				return;
 
@@ -630,7 +649,7 @@ namespace SegmentRope {
 
 				Gizmos.DrawLine(giz1, giz2);
 			}
-		}*/
+		}
 	}
 }
 
@@ -685,7 +704,7 @@ namespace SegmentRope {
  * - have camera follow a thrown enemy, and possible zoom out as well to ensure that it stays on screen, offset/zoom out should be enough to enemy in frame until they come to a rest.
  *
  * Random Ideas
- * - After hooking an enemy, spinning the ship around could but the ship into an auto spin state.  Exiting this state would require releasing the hooked enemy, or retracting the rope
+ * - After hooking an enemy, spinning the ship around could put the ship into an auto spin state.  Exiting this state would require releasing the hooked enemy, or retracting the rope
  * - Rope could automatically retract win spinning to avoid any obstacles
  * - Could add some sort of auto spin button that would automatically spin the ship 180 or 360 degrees around
  */

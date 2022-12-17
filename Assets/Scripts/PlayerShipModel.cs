@@ -19,7 +19,7 @@ public class PlayerShipModel : MonoBehaviour {
     private (Vector3, ForceMode)? newForce = null;
     private Quaternion newRotation;
 
-    public static Vector2 impendingVelocity = Vector2.zero;
+    public static Vector2 impendingVelocity = Vector2.zero;//what the velocity of the ship will be after FixedUpdate has run
 
     public float acceleration { get; set; }
     [SerializeField] public float maxSpeed { get; set; }

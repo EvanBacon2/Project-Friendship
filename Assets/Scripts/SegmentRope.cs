@@ -176,20 +176,23 @@ namespace SegmentRope {
 		private RopeMode mode = RopeMode.FLEXIBLE;
 
 		private Rigidbody shipRigidbody;
-		private double shipCorrection = .4;// reduces the effect of playerShip's translational movement on rope segments, 1 == no effect, 0 == normal
+		public double shipCorrection = .4;// reduces the effect of playerShip's translational movement on rope segments, 1 == no effect, 0 == normal
 
 		private double baseOffset = .65;
 
+		private double prevRotation = 0;
 		private Vector2d baseOrientation = Vector2d.zero;
 		private Vector2d basePosition = Vector2d.zero;
 		private Vector2d winchPosition = Vector2d.zero;
 		private Vector2d hookPosition = Vector2d.zero;
 
+		private double nextRotation = 0;
 		private Vector2d nextBaseOrientation = Vector2d.zero;
 		private Vector2d nextBasePosition = Vector2d.zero;
 		private Vector2d nextWinchPosition = Vector2d.zero;
 		private Vector2d nextHookPosition = Vector2d.zero;
 
+		private double rotationVelocity = 0;
 		private Vector2d orientationVelocity = Vector2d.zero;
 		private Vector2d baseVelocity = Vector2d.zero;
 		private Vector2d winchVelocity = Vector2d.zero;
@@ -226,6 +229,7 @@ namespace SegmentRope {
 
 			shipRigidbody = transform.parent.GetComponent<Rigidbody>();
 
+			prevRotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
 			updateBaseOrientation();
 			updateBasePosition();
 			updateWinchPosition();
@@ -284,7 +288,6 @@ namespace SegmentRope {
 				}
 				adjustVelocities();
 				solveVelocities();
-
 				incrementPositions();
 			}
 
@@ -367,7 +370,7 @@ namespace SegmentRope {
 
 		//apply various positional and anguler constraints
 		private void ApplyConstraints() {
-			//contrain base
+			//constrain base
 			if (extendedSegments > 0)
 				anchorConstraint(winchPosition, baseSegment, winchOffset / length, true);
 
@@ -508,18 +511,23 @@ namespace SegmentRope {
 
 		//clamp velocity and apply drag
 		private void solveVelocities() {
+			double correctedLinearDrag = System.Math.Pow(linearDrag, 1.0 / substeps);
+			double correctedAngulerDrag = System.Math.Pow(angulerDrag, 1.0 / substeps);
+
 			for (int i = extendedSegments - 1; i >= 0; i--) {
 				double newMaxSpeed = System.Math.Clamp(rope[i].velocity.magnitude, 0, maxSpeed * (extendedSegments - i));
 				double mag = rope[i].velocity.magnitude;
+
 				if (mag > 0) {
-					rope[i].velocity.x = rope[i].velocity.x / mag * newMaxSpeed * linearDrag;
-					rope[i].velocity.y = rope[i].velocity.y / mag * newMaxSpeed * linearDrag;
+					rope[i].velocity.x = rope[i].velocity.x / mag * newMaxSpeed * correctedLinearDrag;
+					rope[i].velocity.y = rope[i].velocity.y / mag * newMaxSpeed * correctedLinearDrag;
 				} else {
 					rope[i].velocity.x = 0;
 					rope[i].velocity.y = 0;
 				}
 
-				rope[i].angulerVelocity *= angulerDrag;
+				rope[i].angulerVelocity *= correctedAngulerDrag;
+				//rope[i].angulerVelocity = System.Math.Clamp(rope[i].angulerVelocity, -16, 16) * correctedAngulerDrag;
 			}
 		}
 
@@ -559,16 +567,33 @@ namespace SegmentRope {
 
 		//rotates segment s by the rotation r given in radians
 		private void rotateOrientation(Segment s, double r) {
-			real.x = System.Math.Cos(r) * s.orientation.x;
-			real.y = System.Math.Cos(r) * s.orientation.y;
-			complex.x = System.Math.Sin(r) * s.orientation.x;
-			complex.y = System.Math.Sin(r) * s.orientation.y;
+			double cosR = System.Math.Cos(r);
+			double sinR = System.Math.Sin(r);
+
+			real.x = cosR * s.orientation.x;
+			real.y = cosR * s.orientation.y;
+			complex.x = sinR * s.orientation.x;
+			complex.y = sinR * s.orientation.y;
 
 			s.setOrientation(real.x - complex.y, real.y + complex.x);
 		}
 
-		private void updateBaseOrientation() {
+		private void updateBaseOrientation() {//TODO: currently moves baseOrientation along a linear line, when it should be moved along an arc.
+			double doublePI = 2 * System.Math.PI;
+			double PI = System.Math.PI;
+			double halfPI = .5 * System.Math.PI;
+
 			double rotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
+			prevRotation = nextRotation;
+			nextRotation = rotation;
+
+			if (System.Math.Clamp(prevRotation, doublePI, doublePI + halfPI) == prevRotation && System.Math.Clamp(rotation, halfPI, PI) == rotation)
+				prevRotation -= doublePI;
+			if (System.Math.Clamp(prevRotation, halfPI, PI) == prevRotation && System.Math.Clamp(rotation, doublePI, doublePI + halfPI) == rotation)
+				prevRotation += doublePI;
+
+			rotationVelocity = (nextRotation - prevRotation) / substeps;
+
 			nextBaseOrientation.x = System.Math.Cos(rotation);
 			nextBaseOrientation.y = System.Math.Sin(rotation);
 
@@ -601,7 +626,9 @@ namespace SegmentRope {
 		}
 
 		private void incrementPositions() {
-			baseOrientation.x += orientationVelocity.x;
+			prevRotation += rotationVelocity;
+
+			/*baseOrientation.x += orientationVelocity.x;
 			baseOrientation.y += orientationVelocity.y;
 
 			basePosition.x += baseVelocity.x;
@@ -611,14 +638,26 @@ namespace SegmentRope {
 			winchPosition.y += winchVelocity.y;
 
 			hookPosition.x += hookVelocity.x;
-			hookPosition.y += hookVelocity.y;
+			hookPosition.y += hookVelocity.y;*/
+			
+			baseOrientation.x = System.Math.Cos(prevRotation);
+			baseOrientation.y = System.Math.Sin(prevRotation);
+
+			basePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * baseOffset;
+			basePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * baseOffset;
+
+			winchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * (baseOffset + winchOffset);
+			winchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * (baseOffset + winchOffset);
+
+			hookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
+			hookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);
 		}
 
 		private void modeStiff() {
 			angleLimit = 6;
 			_angleLimit = angleLimit * Mathf.Deg2Rad;
-			linearDrag = .9985;
-			angulerDrag = .985;
+			linearDrag = 1;
+			angulerDrag = 1;
 
 			mode = RopeMode.STIFF;
 		}
@@ -626,8 +665,8 @@ namespace SegmentRope {
 		private void modeFlexible() {
 			angleLimit = 35;
 			_angleLimit = angleLimit * Mathf.Deg2Rad;
-			linearDrag = .9998;
-			angulerDrag = .995;
+			linearDrag = 1;
+			angulerDrag = 1;
 
 			mode = RopeMode.FLEXIBLE;
 		}

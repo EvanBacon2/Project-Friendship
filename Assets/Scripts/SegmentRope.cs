@@ -230,10 +230,7 @@ namespace SegmentRope {
 			shipRigidbody = transform.parent.GetComponent<Rigidbody>();
 
 			prevRotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
-			updateBaseOrientation();
-			updateBasePosition();
-			updateWinchPosition();
-			updateHookPosition();
+			updateRotation();
 
 			modeFlexible();
 		}
@@ -269,10 +266,7 @@ namespace SegmentRope {
 		private void FixedUpdate() {
 			winchBrakeBuffer -= 1;
 
-			updateBaseOrientation();
-			updateBasePosition();
-			updateWinchPosition();
-			updateHookPosition();
+			updateRotation();
 
 			//apply ship correction
 			for (int i = baseSegment; i >= 0; i--) {
@@ -578,76 +572,35 @@ namespace SegmentRope {
 			s.setOrientation(real.x - complex.y, real.y + complex.x);
 		}
 
-		private void updateBaseOrientation() {//TODO: currently moves baseOrientation along a linear line, when it should be moved along an arc.
-			double doublePI = 2 * System.Math.PI;
-			double PI = System.Math.PI;
-			double halfPI = .5 * System.Math.PI;
+		private double doublePI = 2 * System.Math.PI;
+		private double PI = System.Math.PI;
+		private double halfPI = .5 * System.Math.PI;
 
-			double rotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
+		private void updateRotation() {
 			prevRotation = nextRotation;
-			nextRotation = rotation;
+			nextRotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
 
-			if (System.Math.Clamp(prevRotation, doublePI, doublePI + halfPI) == prevRotation && System.Math.Clamp(rotation, halfPI, PI) == rotation)
+			if (System.Math.Clamp(prevRotation, doublePI, doublePI + halfPI) == prevRotation && System.Math.Clamp(nextRotation, halfPI, PI) == nextRotation)
 				prevRotation -= doublePI;
-			if (System.Math.Clamp(prevRotation, halfPI, PI) == prevRotation && System.Math.Clamp(rotation, doublePI, doublePI + halfPI) == rotation)
+			if (System.Math.Clamp(prevRotation, halfPI, PI) == prevRotation && System.Math.Clamp(nextRotation, doublePI, doublePI + halfPI) == nextRotation)
 				prevRotation += doublePI;
 
 			rotationVelocity = (nextRotation - prevRotation) / substeps;
-
-			nextBaseOrientation.x = System.Math.Cos(rotation);
-			nextBaseOrientation.y = System.Math.Sin(rotation);
-
-			orientationVelocity.x = (nextBaseOrientation.x - baseOrientation.x) / substeps;
-			orientationVelocity.y = (nextBaseOrientation.y - baseOrientation.y) / substeps;
-		}
-
-		private void updateBasePosition() {
-			nextBasePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + nextBaseOrientation.x * baseOffset;
-			nextBasePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + nextBaseOrientation.y * baseOffset;
-
-			baseVelocity.x = (nextBasePosition.x - basePosition.x) / substeps;
-			baseVelocity.y = (nextBasePosition.y - basePosition.y) / substeps;
-		}
-
-		private void updateWinchPosition() {
-			nextWinchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + nextBaseOrientation.x * (baseOffset + winchOffset);
-			nextWinchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + nextBaseOrientation.y * (baseOffset + winchOffset);
-
-			winchVelocity.x = (nextWinchPosition.x - winchPosition.x) / substeps;
-			winchVelocity.y = (nextWinchPosition.y - winchPosition.y) / substeps;
-		}
-
-		private void updateHookPosition() {
-			nextHookPosition.x = winchPosition.x + nextBaseOrientation.x * (length * hookLag * extendedSegments);
-			nextHookPosition.y = winchPosition.y + nextBaseOrientation.y * (length * hookLag * extendedSegments);
-
-			hookVelocity.x = (nextHookPosition.x - hookPosition.x) / substeps;
-			hookVelocity.y = (nextHookPosition.y - hookPosition.y) / substeps;
 		}
 
 		private void incrementPositions() {
 			prevRotation += rotationVelocity;
+			double impendingShipPosX = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime;
+			double impendingShipPosY = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime;
 
-			/*baseOrientation.x += orientationVelocity.x;
-			baseOrientation.y += orientationVelocity.y;
-
-			basePosition.x += baseVelocity.x;
-			basePosition.y += baseVelocity.y;
-
-			winchPosition.x += winchVelocity.x;
-			winchPosition.y += winchVelocity.y;
-
-			hookPosition.x += hookVelocity.x;
-			hookPosition.y += hookVelocity.y;*/
-			
 			baseOrientation.x = System.Math.Cos(prevRotation);
 			baseOrientation.y = System.Math.Sin(prevRotation);
 
-			basePosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * baseOffset;
-			basePosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * baseOffset;
+			basePosition.x = impendingShipPosX + baseOrientation.x * baseOffset;
+			basePosition.y = impendingShipPosY + baseOrientation.y * baseOffset;
 
-			winchPosition.x = shipRigidbody.position.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime + baseOrientation.x * (baseOffset + winchOffset);
-			winchPosition.y = shipRigidbody.position.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime + baseOrientation.y * (baseOffset + winchOffset);
+			winchPosition.x = impendingShipPosX + baseOrientation.x * (baseOffset + winchOffset);
+			winchPosition.y = impendingShipPosY + baseOrientation.y * (baseOffset + winchOffset);
 
 			hookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
 			hookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);

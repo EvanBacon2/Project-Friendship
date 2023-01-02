@@ -1431,7 +1431,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 3
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 1, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -2519,7 +2519,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 680fe811d8e95a743a7241da2eb27b62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSegments: 35
+  maxSegments: 15
   length: 0.65
   angleLimit: 6
   mass: 1
@@ -2529,10 +2529,12 @@ MonoBehaviour:
   maxSpeed: 3
   linearDrag: 0.2
   angulerDrag: 0.2
-  substeps: 45
+  substeps: 35
   iterations: 1
   segmentSprite: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
   hook: {fileID: 4789747752933701531, guid: 035c70fe06af43640985de32a67f7804, type: 3}
+  extendedSegments: 0
+  baseSegment: -1
   shipCorrection: 0
 --- !u!54 &1033195083 stripped
 Rigidbody:

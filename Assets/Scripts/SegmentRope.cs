@@ -155,12 +155,14 @@ namespace SegmentRope {
 		public double inertia = 10;
 		public double stiffness = 1;
 		public double stretchiness = 1;
-		public double maxSpeed = 6;
+		public double maxSpeed = 6;// max speed of baseSegment, maxSpeed for each subsequent segment increases by a factor determined by maxSpeedScale
+		public double maxSpeedScale = 1;// 1 == linear, >1 == exponential, <1 == logarithmic
 		public double linearDrag;
 		public double angulerDrag;
 
 		private double _angleLimit;
-		private double[] maxSpeeds = new double[] {3, 3, 4, 6};
+		private double subLinDrag;
+		private double subAngDrag;
 
 		public int substeps = 18;
 		public int iterations = 1;
@@ -219,13 +221,12 @@ namespace SegmentRope {
 			hookSegment = hookObj.GetComponent<HookSegment>();
 			hookSegment.s = rope[0];
 
-			maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments, 0, 3)];
 			h = Time.fixedDeltaTime / substeps;
 
 			shipRigidbody = transform.parent.GetComponent<Rigidbody>();
 
 			prevRotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
-			updateRotation();
+			updateShipInterpolation();
 
 			modeFlexible();
 		}
@@ -261,13 +262,16 @@ namespace SegmentRope {
 		private void FixedUpdate() {
 			winchBrakeBuffer -= 1;
 
-			updateRotation();
+			updateShipInterpolation();
+
+			subLinDrag = System.Math.Pow(linearDrag, substeps);
+			subAngDrag = System.Math.Pow(angulerDrag, substeps);
 
 			//apply ship correction
-			for (int i = baseSegment; i >= 0; i--) {
+			/*for (int i = baseSegment; i >= 0; i--) {
 				rope[i].setPosition(rope[i].position.x + shipRigidbody.velocity.x * Time.fixedDeltaTime * shipCorrection, 
 									rope[i].position.y + shipRigidbody.velocity.y * Time.fixedDeltaTime * shipCorrection);
-			}
+			}*/
 			
 			//main loop
 			for (int i = 0; i < substeps; i++) {
@@ -277,15 +281,14 @@ namespace SegmentRope {
 				}
 				adjustVelocities();
 				solveVelocities();
-				incrementPositions();
+				interpolateShipPositions();
 			}
-
+			
 			for (int i = 0; i < rope.Length; i++) {
 				rope[i].updateSprite();
 			}
 
 			if (winchBrakeBuffer == 1) {
-				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 				winchBrakeBuffer = 0;
 			}
 
@@ -299,10 +302,11 @@ namespace SegmentRope {
 			if (autoExtend) {
 				adjustWinch(winchForce);
 
+				modeFlexible();
+
 				if (extendedSegments == maxSegments || hookSegment.isHooked) {
 					autoExtend = false;
 					shipCorrection = 0;
-					maxSpeed = 1;
 					winchBrakeBuffer = 4;
 				}
 
@@ -316,6 +320,9 @@ namespace SegmentRope {
 			//apply auto retraction
 			if (autoRetract) {
 				adjustWinch(-length);
+				modeFlexible();
+				angulerDrag = .98;
+				maxSpeed = 55;
 
 				if (!extended) {
 					modeFlexible();
@@ -503,14 +510,11 @@ namespace SegmentRope {
 
 		//clamp velocity and apply drag
 		private void solveVelocities() {
-			double linDrag = .0;
-			double angDrag = .007;
-
 			//apply drag to base segment
 			if (extendedSegments >= 1) {
-				linearDiff.x = (rope[baseSegment].velocity.x - shipRigidbody.velocity.x) * linDrag;
-				linearDiff.y = (rope[baseSegment].velocity.y - shipRigidbody.velocity.y) * linDrag;
-				angulerDiff = (rope[baseSegment].angulerVelocity - rotationVelocity / h) * angDrag;
+				linearDiff.x = (rope[baseSegment].velocity.x - shipRigidbody.velocity.x) * subLinDrag;
+				linearDiff.y = (rope[baseSegment].velocity.y - shipRigidbody.velocity.y) * subLinDrag;
+				angulerDiff = (rope[baseSegment].angulerVelocity - rotationVelocity / h) * subAngDrag;
 				
 				rope[baseSegment].velocity.x -= linearDiff.x;
 				rope[baseSegment].velocity.y -= linearDiff.y;
@@ -518,9 +522,9 @@ namespace SegmentRope {
 			}
 
 			//clamp mag and apply drag to all other extended segments
-			for (int i = extendedSegments - 1; i >= 1; i--) {
+			for (int i = extendedSegments - 1; i >= 0; i--) {
 				double mag = rope[i].velocity.magnitude;
-				double clampedMag= System.Math.Min(mag, maxSpeed * (extendedSegments - i));
+				double clampedMag = System.Math.Min(mag, maxSpeed * System.Math.Pow((extendedSegments - i), maxSpeedScale));
 
 				if (mag > 0) {
 					rope[i].velocity.x = rope[i].velocity.x / mag * clampedMag;
@@ -529,10 +533,12 @@ namespace SegmentRope {
 					rope[i].velocity.x = 0;
 					rope[i].velocity.y = 0;
 				}
+			}
 
-				linearDiff.x = (rope[i - 1].velocity.x - rope[i].velocity.x) * linDrag;
-				linearDiff.y = (rope[i - 1].velocity.y - rope[i].velocity.y) * linDrag;
-				angulerDiff = (rope[i - 1].angulerVelocity - rope[i].angulerVelocity) * angDrag;
+			for (int i = extendedSegments - 1; i >= 1; i--) {
+				linearDiff.x = (rope[i - 1].velocity.x - rope[i].velocity.x) * subLinDrag;
+				linearDiff.y = (rope[i - 1].velocity.y - rope[i].velocity.y) * subLinDrag;
+				angulerDiff = (rope[i - 1].angulerVelocity - rope[i].angulerVelocity) * subAngDrag;
 				
 				rope[i].velocity.x += linearDiff.x * .5;
 				rope[i].velocity.y += linearDiff.y * .5;
@@ -569,7 +575,6 @@ namespace SegmentRope {
 					winchOffset = extendedSegments > 0 ? length + winchOffset : 0;	
 
 				winchOffset = winchOffset % length;
-				maxSpeed = maxSpeeds[Mathf.Clamp(extendedSegments - 1, 0, 3)];
 			}
 
 			extended = extendedSegments != 0;
@@ -595,19 +600,18 @@ namespace SegmentRope {
 		private double PI = System.Math.PI;
 		private double halfPI = .5 * System.Math.PI;
 
-		private void updateRotation() {
-			prevRotation = nextRotation;
+		private void updateShipInterpolation() {
 			nextRotation = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
 
+			//When prev and next cross over the 0 degree mark angle goes from doublePI to zero and vice versa.  To ensure angle difference is accurate
+			//prevRotation is adjusted so that both it and nextRotation are either > or < doublePI.    
 			if (System.Math.Clamp(prevRotation, doublePI, doublePI + halfPI) == prevRotation && System.Math.Clamp(nextRotation, halfPI, PI) == nextRotation)
 				prevRotation -= doublePI;
 			if (System.Math.Clamp(prevRotation, halfPI, PI) == prevRotation && System.Math.Clamp(nextRotation, doublePI, doublePI + halfPI) == nextRotation)
 				prevRotation += doublePI;
-			
+
 			rotationVelocity = (nextRotation - prevRotation) / substeps;
 
-			prevPosition.x = shipRigidbody.position.x;
-			prevPosition.y = shipRigidbody.position.y;
 			nextPosition.x = prevPosition.x + PlayerShipModel.impendingVelocity.x * Time.fixedDeltaTime;
 			nextPosition.y = prevPosition.y + PlayerShipModel.impendingVelocity.y * Time.fixedDeltaTime;
 			
@@ -615,7 +619,7 @@ namespace SegmentRope {
 			positionVelocity.y = (nextPosition.y - prevPosition.y) / substeps;
 		}
 
-		private void incrementPositions() {
+		private void interpolateShipPositions() {
 			prevRotation += rotationVelocity;
 			prevPosition.x += positionVelocity.x;
 			prevPosition.y += positionVelocity.y;
@@ -636,8 +640,10 @@ namespace SegmentRope {
 		private void modeStiff() {
 			angleLimit = 6;
 			_angleLimit = angleLimit * Mathf.Deg2Rad;
-			linearDrag = 1;
-			angulerDrag = 1;
+			maxSpeed = 6;
+			maxSpeedScale = 1;
+			linearDrag = .98;
+			angulerDrag = .98;
 
 			mode = RopeMode.STIFF;
 		}
@@ -645,8 +651,10 @@ namespace SegmentRope {
 		private void modeFlexible() {
 			angleLimit = 35;
 			_angleLimit = angleLimit * Mathf.Deg2Rad;
-			linearDrag = 1;
-			angulerDrag = 1;
+			maxSpeed = 25;
+			maxSpeedScale = .1;
+			linearDrag = 0;
+			angulerDrag = .95;
 
 			mode = RopeMode.FLEXIBLE;
 		}
@@ -700,13 +708,8 @@ namespace SegmentRope {
  * - add collision to segments
  * - add ability to grab and release objects with rope
  * - add ship correction to rope wheen swinging it around in stiff mode
- * - add slight restitution force to rope when in flexible mode
- * 
- * Performance
- * - change underlying representation to be that of particles rather than segments
  * 
  * Bugs
- * - elimnate base segment jitteriness
  * - update velocity of hooked objects to fix collision
  * 
  * Rope improvements

@@ -2530,7 +2530,7 @@ MonoBehaviour:
   maxSpeedScale: 0.1
   linearDrag: 0
   angulerDrag: 0.95
-  substeps: 70
+  substeps: 150
   iterations: 1
   segmentSprite: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
   hook: {fileID: 4789747752933701531, guid: 035c70fe06af43640985de32a67f7804, type: 3}

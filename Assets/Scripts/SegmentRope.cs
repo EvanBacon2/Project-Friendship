@@ -43,7 +43,10 @@ namespace SegmentRope {
 			double denominator = System.Math.Sqrt(from.sqrmagnitude * to.sqrmagnitude);
 			if (denominator < 1e-15) return 0;
 			double cos = System.Math.Clamp(dot / denominator, -1, 1);
-			return System.Math.Acos(cos) * System.Math.Sign(cross);
+			if (cross == 0) 
+				return System.Math.Acos(cos);
+			else
+				return System.Math.Acos(cos) * System.Math.Sign(cross);
 		}
 
 		public override string ToString() {
@@ -252,12 +255,20 @@ namespace SegmentRope {
 				autoRetract = true;
 				hookSegment.active = false;
 				hookSegment.unHook();
+
+				modeFlexible();
+				angulerDrag = .99;
+				maxSpeed = 55;
 			}
 
 			//wind/unwind rope 
 			if (extended && Input.mouseScrollDelta.y != 0 && winchScrollBuffer == 0 && (extendedSegments < maxSegments || Input.mouseScrollDelta.y < 0))
 				winchScrollBuffer = 4 * System.Math.Sign(Input.mouseScrollDelta.y);
 		}
+
+		private Vector2d testVect1 = new Vector2d(.5, -.5);
+		private Vector2d testVect2 = new Vector2d(-.3, -.3);
+		private Vector2d testVectBase = new Vector2d(-.3, -.3);
 
 		private void FixedUpdate() {
 			winchBrakeBuffer -= 1;
@@ -272,7 +283,31 @@ namespace SegmentRope {
 				rope[i].setPosition(rope[i].position.x + shipRigidbody.velocity.x * Time.fixedDeltaTime * shipCorrection, 
 									rope[i].position.y + shipRigidbody.velocity.y * Time.fixedDeltaTime * shipCorrection);
 			}*/
-			
+
+			//testVect1.normalize();
+			//testVect2.normalize();
+			//testVectBase.normalize();
+			//double cross1 = Vector2d.cross(testVect1, testVectBase);
+			//double cross2 = Vector2d.cross(testVect2, testVectBase);
+
+			//Debug.Log("cross1 " + cross1);
+			//Debug.Log("cross2 " + cross2);
+			//Debug.Log("cross1: cos " + System.Math.Cos(cross1) + "sin " + System.Math.Sin(cross2));
+			//Debug.Log("cross2: cos " + System.Math.Cos(-cross1) + "sin " + System.Math.Sin(-cross2));
+			//rotateVect(testVect1, .7);
+			//rotateVect(testVect2, cross2);
+			//Debug.Log("rotate1: " + testVect1);
+			//Debug.Log("rotate2: " + testVect2);
+			//testVect1.x = .5;
+			//testVect1.y = -.5;
+			//testVect2.x = -.9;
+			//testVect2.y = -.1;
+
+			//Debug.Log("cross " + Vector2d.cross(testVect1, testVect2));
+			//Debug.Log("dot " + Vector2d.dot(testVect1, testVect2));
+			//Debug.Log(Vector2d.SignedAngle(testVect1, testVect2));
+
+
 			//main loop
 			for (int i = 0; i < substeps; i++) {
 				Simulate();
@@ -303,11 +338,14 @@ namespace SegmentRope {
 				adjustWinch(winchForce);
 
 				modeFlexible();
+				maxSpeed = 40;
 
 				if (extendedSegments == maxSegments || hookSegment.isHooked) {
 					autoExtend = false;
 					shipCorrection = 0;
 					winchBrakeBuffer = 4;
+
+					maxSpeed = 25;
 				}
 
 				if (hookSegment.justHooked) {
@@ -320,10 +358,6 @@ namespace SegmentRope {
 			//apply auto retraction
 			if (autoRetract) {
 				adjustWinch(-length);
-				modeFlexible();
-				angulerDrag = .98;
-				maxSpeed = 55;
-
 				if (!extended) {
 					modeFlexible();
 					autoRetract = false;
@@ -419,7 +453,7 @@ namespace SegmentRope {
 				rope[segmentIndex].setP1(rope[segmentIndex].p1.x + anchorDiff.x * stretchiness, rope[segmentIndex].p1.y + anchorDiff.y * stretchiness);
 			else 
 				rope[segmentIndex].setP2(rope[segmentIndex].p2.x + anchorDiff.x * stretchiness, rope[segmentIndex].p2.y + anchorDiff.y * stretchiness);
-			
+
 			rotateOrientation(rope[segmentIndex], torque);
 
 			double angle = Vector2d.SignedAngle(baseOrientation, rope[segmentIndex].orientation);
@@ -464,10 +498,10 @@ namespace SegmentRope {
 			s2p1.y = s2.p1.y;
 
 			//direction of gap between the ends of each segment
-			direction.x = s1p2.x - s2p1.x;
-			direction.y = s1p2.y - s2p1.y;
-			double magnitude = -direction.magnitude;
-			direction.normalize();
+			direction.x = s2p1.x - s1p2.x;
+			direction.y = s2p1.y - s1p2.y;
+			//double magnitude = direction.magnitude;
+			//direction.normalize();
 
 			//calculate radius
 			r1.x = s1p2.x - s1.position.x;
@@ -479,12 +513,12 @@ namespace SegmentRope {
 			double inverseMass1 = 1 / s1.mass + System.Math.Pow(Vector2d.cross(r1, direction), 2) / s1.inertia;
 			double inverseMass2 = 1 / s2.mass + System.Math.Pow(Vector2d.cross(r2, direction), 2) / s2.inertia;
 			double ratio = inverseMass1 / (inverseMass1 + inverseMass2);
+			
+			correction1.x = direction.x /* magnitude*/ * .5;//ratio;
+			correction1.y = direction.y /* magnitude*/ * .5;//ratio;
 
-			correction1.x = direction.x * magnitude * ratio;
-			correction1.y = direction.y * magnitude * ratio;
-
-			correction2.x = direction.x * magnitude * (1 - ratio);
-			correction2.y = direction.y * magnitude * (1 - ratio);
+			correction2.x = direction.x /* magnitude*/ * .5;//(1 - ratio);
+			correction2.y = direction.y /* magnitude*/ * .5;//(1 - ratio);
 
 			double torque1 = Vector2d.cross(r1, correction1);
 			double torque2 = Vector2d.cross(r2, correction2);
@@ -495,7 +529,7 @@ namespace SegmentRope {
 			rotateOrientation(s1, .5f * torque1);
 			rotateOrientation(s2, .5f * -torque2);
 		}
-
+		
 		//update velocities to account for constraints
 		private void adjustVelocities() {
 			for (int i = extendedSegments - 1; i >= 0; i--) {
@@ -510,6 +544,17 @@ namespace SegmentRope {
 
 		//clamp velocity and apply drag
 		private void solveVelocities() {
+			//clamp magnitude of all extended segments
+			for (int i = extendedSegments - 1; i >= 0; i--) {
+				double mag = rope[i].velocity.magnitude;
+				double clampedMag = System.Math.Min(mag, maxSpeed * System.Math.Pow((extendedSegments - i), maxSpeedScale));
+
+				if (mag > 0) {
+					rope[i].velocity.x = rope[i].velocity.x / mag * clampedMag;
+					rope[i].velocity.y = rope[i].velocity.y / mag * clampedMag;
+				}
+			}
+
 			//apply drag to base segment
 			if (extendedSegments >= 1) {
 				linearDiff.x = (rope[baseSegment].velocity.x - shipRigidbody.velocity.x) * subLinDrag;
@@ -520,21 +565,8 @@ namespace SegmentRope {
 				rope[baseSegment].velocity.y -= linearDiff.y;
 				rope[baseSegment].angulerVelocity -= angulerDiff;
 			}
-
-			//clamp mag and apply drag to all other extended segments
-			for (int i = extendedSegments - 1; i >= 0; i--) {
-				double mag = rope[i].velocity.magnitude;
-				double clampedMag = System.Math.Min(mag, maxSpeed * System.Math.Pow((extendedSegments - i), maxSpeedScale));
-
-				if (mag > 0) {
-					rope[i].velocity.x = rope[i].velocity.x / mag * clampedMag;
-					rope[i].velocity.y = rope[i].velocity.y / mag * clampedMag;
-				} else {
-					rope[i].velocity.x = 0;
-					rope[i].velocity.y = 0;
-				}
-			}
-
+			
+			//apply drag to all other extended segments
 			for (int i = extendedSegments - 1; i >= 1; i--) {
 				linearDiff.x = (rope[i - 1].velocity.x - rope[i].velocity.x) * subLinDrag;
 				linearDiff.y = (rope[i - 1].velocity.y - rope[i].velocity.y) * subLinDrag;
@@ -596,6 +628,19 @@ namespace SegmentRope {
 			s.setOrientation(real.x - complex.y, real.y + complex.x);
 		}
 
+		private void rotateVect(Vector2d orientation, double r) {
+			double cosR = System.Math.Cos(r);
+			double sinR = System.Math.Sin(r);
+
+			real.x = cosR * orientation.x;
+			real.y = cosR * orientation.y;
+			complex.x = sinR * orientation.x;
+			complex.y = sinR * orientation.y;
+
+			orientation.x = real.x - complex.y; 
+			orientation.y = real.y + complex.x;
+		}
+
 		private double doublePI = 2 * System.Math.PI;
 		private double PI = System.Math.PI;
 		private double halfPI = .5 * System.Math.PI;
@@ -609,6 +654,8 @@ namespace SegmentRope {
 				prevRotation -= doublePI;
 			if (System.Math.Clamp(prevRotation, halfPI, PI) == prevRotation && System.Math.Clamp(nextRotation, doublePI, doublePI + halfPI) == nextRotation)
 				prevRotation += doublePI;
+
+			//Debug.Log("prev: " + prevRotation + " next: " + nextRotation);
 
 			rotationVelocity = (nextRotation - prevRotation) / substeps;
 

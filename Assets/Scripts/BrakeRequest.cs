@@ -1,12 +1,12 @@
 using UnityEngine;
 
-public class BrakeRequest : Request {
+public class BrakeRequest : RequestSystem {
     public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         if (args.brakeInput) {
-            args.shipController.makeRequest(this, RequestType.Brake, PlayerShipProperties.Magnitude, slowShip(args.shipModel));
-            args.shipController.blockRequest(this, RequestType.Brake, PlayerShipProperties.Acceleration);
-            args.shipController.blockRequest(this, RequestType.Brake, PlayerShipProperties.MaxSpeed);
-            args.shipController.blockRequest(this, RequestType.Brake, PlayerShipProperties.Force);
+            args.shipController.setRequest(this, RequestClass.Brake, PlayerShipProperties.Magnitude, slowShip(args.shipModel));
+            args.shipController.blockRequest(this, RequestClass.Brake, PlayerShipProperties.Acceleration);
+            args.shipController.blockRequest(this, RequestClass.Brake, PlayerShipProperties.MaxSpeed);
+            args.shipController.blockRequest(this, RequestClass.Brake, PlayerShipProperties.Force);
         }
     }
 

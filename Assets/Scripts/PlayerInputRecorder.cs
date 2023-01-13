@@ -17,9 +17,9 @@ public class PlayerInputRecorder : MonoBehaviour {
     void Start() {
         shipModel = GetComponent<PlayerShipModel>();
         shipController = GetComponent<PlayerShipController>();
-        Request[] subscribers = GetComponents<Request>();
+        RequestSystem[] subscribers = GetComponents<RequestSystem>();
 
-        foreach (Request subscriber in subscribers) {
+        foreach (RequestSystem subscriber in subscribers) {
             PlayerInputRecorded += subscriber.OnPlayerInputRecorded;
         }
     }

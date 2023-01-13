@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BoostRequest : Request {
+public class BoostRequest : RequestSystem {
     private enum BoostState {
         BOOST_START,
         BOOST_ACTIVE,
@@ -52,17 +52,17 @@ public class BoostRequest : Request {
             case BoostState.BOOST_START:
                 boostFrame = true;
                 if (boostLevel < maxBoostLevel) {
-                    args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Acceleration, args.shipModel.acceleration * boostAccelerationMod);
-                    args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.MaxSpeed, args.shipModel.maxSpeed + boostMaxSpeedMod);
+                    args.shipController.setRequest(this, RequestClass.Boost, PlayerShipProperties.Acceleration, args.shipModel.acceleration * boostAccelerationMod);
+                    args.shipController.setRequest(this, RequestClass.Boost, PlayerShipProperties.MaxSpeed, args.shipModel.maxSpeed + boostMaxSpeedMod);
                 }
 
                 boostVelocity = new Vector3(args.horizontalInput, args.verticalInput).normalized * boostMagnitude;
-                args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Force, (boostVelocity * .01f, ForceMode.VelocityChange));//try to remove
+                args.shipController.setRequest(this, RequestClass.Boost, PlayerShipProperties.Force, (boostVelocity * .01f, ForceMode.VelocityChange));//try to remove
                 break;
             case BoostState.BOOST_ACTIVE:
                 float x = (boostTime - (args.time - lastBoostTime)) / boostTime;
                 float boostMagMod = x > .85f ? 0f + (1f * ((1 - x) * (1 - x) / 1f)) : (Mathf.Log10(x * 4) / 3f) + .6f;
-                args.shipController.makeRequest(this, RequestType.Boost, PlayerShipProperties.Force, (boostVelocity * boostMagMod, ForceMode.VelocityChange));
+                args.shipController.setRequest(this, RequestClass.Boost, PlayerShipProperties.Force, (boostVelocity * boostMagMod, ForceMode.VelocityChange));
                 coastStart = float.MaxValue;
                 break;
             case BoostState.RESET_START:
@@ -71,12 +71,12 @@ public class BoostRequest : Request {
                 break;
             case BoostState.RESET_ACTIVE:
                 if (args.shipModel.velocity.magnitude > PlayerShipModel.baseMaxSpeed) {
-                    args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.Magnitude, args.shipModel.velocity.magnitude - brakeStep);
+                    args.shipController.setRequest(this, RequestClass.BoostReset, PlayerShipProperties.Magnitude, args.shipModel.velocity.magnitude - brakeStep);
                     //args.shipController.blockRequest(this, RequestType.BoostReset, PlayerShipProperties.Force);
                 }
                 else {
-                    args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.Acceleration, PlayerShipModel.baseAcceleration);
-                    args.shipController.makeRequest(this, RequestType.BoostReset, PlayerShipProperties.MaxSpeed, PlayerShipModel.baseMaxSpeed);
+                    args.shipController.setRequest(this, RequestClass.BoostReset, PlayerShipProperties.Acceleration, PlayerShipModel.baseAcceleration);
+                    args.shipController.setRequest(this, RequestClass.BoostReset, PlayerShipProperties.MaxSpeed, PlayerShipModel.baseMaxSpeed);
                     boostLevel = 0;
                     resetBoost = false;
                 }

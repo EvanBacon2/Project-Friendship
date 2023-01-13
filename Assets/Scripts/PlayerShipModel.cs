@@ -7,6 +7,8 @@ public class PlayerShipProperties {
     public const string Force = "force";
     public const string Magnitude = "magnitude";
     public const string Rotation = "rotation";
+    //public const string RotationGoal = "rotationGoal";
+    //public const string RotationDrive = "rotationDrive";
 }
 
 public class PlayerShipModel : MonoBehaviour {
@@ -22,7 +24,11 @@ public class PlayerShipModel : MonoBehaviour {
     public static Vector2 impendingVelocity = Vector2.zero;//what the velocity of the ship will be after FixedUpdate has run
 
     public float acceleration { get; set; }
-    [SerializeField] public float maxSpeed { get; set; }
+    public float maxSpeed { get; set; }
+    public (Vector3, ForceMode)? force { 
+        get { return newForce; } 
+        set { newForce = value; }
+    }
     public float magnitude {
         get { return rigidBody.velocity.magnitude; }
         set { newMagValue = value; }
@@ -31,6 +37,9 @@ public class PlayerShipModel : MonoBehaviour {
         get { return transform.rotation; }
         set { newRotation = value; }
     }
+
+    public Quaternion rotationGoal { get; set; }
+    public Quaternion rotationDrive { get; set; }
 
     public Vector3 position {
         get { return transform.position; }

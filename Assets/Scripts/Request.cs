@@ -19,48 +19,42 @@ namespace Request {
     public abstract class Request {
         public RequestSystem system;
         public RequestClass requestClass;
-        public string property;
-        public string id;
+        public readonly Guid id;
 
-        public Request(RequestSystem system, RequestClass requestClass, string property, string id) {
+        public Request(RequestSystem system, RequestClass requestClass) {
             this.system = system;
             this.requestClass = requestClass;
-            this.property = property;
-            this.id = id;
+            this.id = Guid.NewGuid();
         }
     }
 
     /*
-    * A request to set the value of a property.
-    */
+     * A request to set the value of a property.
+     */
     public class SetRequest<T> : Request {
         public T value;
 
-        public SetRequest(RequestSystem system, RequestClass requestClass, string property, string id, T value) 
-                : base(system, requestClass, property, id) {
+        public SetRequest(RequestSystem system, RequestClass requestClass, T value) : base(system, requestClass) {
             this.value = value; 
         }
     }
 
     /*
-    * A request to mutate the value of a property via the mutation function.
-    */
+     * A request to mutate the value of a property via the mutation function.
+     */
     public class MutateRequest<T> : Request {
         public Func<T, T> mutation;
 
-        public MutateRequest(RequestSystem system, RequestClass requestClass, string property, string id, Func<T, T> mutation) 
-                : base(system, requestClass, property, id) {
+        public MutateRequest(RequestSystem system, RequestClass requestClass, Func<T, T> mutation) : base(system, requestClass) {
             this.mutation = mutation; 
         }
     }
 
     /*
-    * A request to raise the priority of a property without affecting its value.  Used to prevent other requests
-    * from changing the given property.
-    */
+     * A request to raise the priority of a property without affecting its value.  Used to prevent other requests
+     * from changing the given property.
+     */
     public class BlockRequest : Request {
-        public BlockRequest(RequestSystem system, RequestClass requestClass, string property, string id) 
-                : base(system, requestClass, property, id) {
-        }
+        public BlockRequest(RequestSystem system, RequestClass requestClass) : base(system, requestClass) {}
     }
 }

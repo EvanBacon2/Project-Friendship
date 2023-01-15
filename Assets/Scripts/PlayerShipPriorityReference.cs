@@ -1,98 +1,95 @@
 using System.Collections.Generic;
 
-public class PlayerShipPriorityReference : PriorityReference {
-	private readonly Dictionary<RequestClass, int> accelerationPriorities = new()
-	{
-		{ RequestClass.Boost, 0 },
-		{ RequestClass.Brake, 1 },
-		{ RequestClass.Move, 2 },
-		{ RequestClass.BoostReset, 3 },
-	};
-	private readonly Dictionary<int, List<RequestClass>> accelerationOrder = new()
-	{
-	};
+public class RequestablePropertyReference {
+	private List<RequestClass> noOrder = new List<RequestClass>();
+	private Dictionary<RequestClass, int> priority;
+	private Dictionary<int, List<RequestClass>> order;
 
-	private readonly Dictionary<RequestClass, int> maxSpeedPriorities = new()
-	{
-		{ RequestClass.Boost, 0 },
-		{ RequestClass.Brake, 1 },
-		{ RequestClass.BoostReset, 2 },
-	};
-	private readonly Dictionary<int, List<RequestClass>> maxSpeedOrder = new() 
-	{
-	};
+	public RequestablePropertyReference(Dictionary<RequestClass, int> priority, Dictionary<int, List<RequestClass>> order) {
+		this.priority = priority;
+		this.order = order;
+	} 
 
-	private readonly Dictionary<RequestClass, int> forcePriorities = new()
-	{
-		{ RequestClass.Move, 0 }, //low priority
-		{ RequestClass.Boost, 1 },
-		{ RequestClass.Brake, 2 }, //high priority
-		{ RequestClass.BoostReset, 3 },
-	};
-	private readonly Dictionary<int, List<RequestClass>> forceOrder = new() 
-	{
-	};
+	public int getPriority(RequestClass request) {
+		return priority.ContainsKey(request) ? priority[request] : (int)RequestClass.NoRequest;
+	}
 
-	private readonly Dictionary<RequestClass, int> magnitudePriorities = new()
-	{
-		{ RequestClass.Brake, 0 },
-		{ RequestClass.Boost, 1 },
-		{ RequestClass.BoostReset, 2 },
-	};
-	private readonly Dictionary<int, List<RequestClass>> magnitudeOrder = new() 
-	{
-	};
+	public IEnumerable<RequestClass> getOrder(int priority) {
+		return order.ContainsKey(priority) ? order[priority] : noOrder;
+	}
+}
 
-	private readonly Dictionary<RequestClass, int> rotationPriorities = new()
-	{
-		{ RequestClass.LookAtMouse, 0 }
-	};
-	private readonly Dictionary<int, List<RequestClass>> rotationOrder = new() 
-	{
-	};
+public interface ShipReference {
+	public RequestablePropertyReference Acceleration { get; } 
+	public RequestablePropertyReference MaxSpeed { get; }
+	public RequestablePropertyReference Force { get; }
+	public RequestablePropertyReference Magnitude { get; }
+	public RequestablePropertyReference Rotation { get; }
+}
 
-	private readonly Dictionary<string, Dictionary<RequestClass, int>> _propertyMap;
+public class PlayerShipPriorityReference : ShipReference {
+	private RequestablePropertyReference _acceleration = new RequestablePropertyReference(
+		new() {
+			{ RequestClass.Boost, 0 },
+			{ RequestClass.Brake, 1 },
+			{ RequestClass.Move, 2 },
+			{ RequestClass.BoostReset, 3 },
+		},
+		new()
+	);
 
-	private readonly Dictionary<string, Dictionary<int, List<RequestClass>>> _orderMap;
+	private RequestablePropertyReference _maxSpeed = new RequestablePropertyReference(
+		new() {
+			{ RequestClass.Boost, 0 },
+			{ RequestClass.Brake, 1 },
+			{ RequestClass.BoostReset, 2 },
+		},
+		new()
+	);
 
-	protected override Dictionary<string, Dictionary<RequestClass, int>> propertyMap {
-        get { return _propertyMap; }
-    }
+	private RequestablePropertyReference _force = new RequestablePropertyReference(
+		new() {
+			{ RequestClass.Move, 0 }, 
+			{ RequestClass.Boost, 1 },
+			{ RequestClass.Brake, 2 }, 
+			{ RequestClass.BoostReset, 3 },
+		},
+		new()
+	);
 
-    protected override Dictionary<string, Dictionary<int, List<RequestClass>>> orderMap {
-        get { return _orderMap; }
-    }
+	private RequestablePropertyReference _magnitude = new RequestablePropertyReference(
+		new() {
+			{ RequestClass.Brake, 0 },
+			{ RequestClass.Boost, 1 },
+			{ RequestClass.BoostReset, 2 },
+		},
+		new()
+	);
 
-    private static PlayerShipPriorityReference _instance;
-    public static PlayerShipPriorityReference instance {
-        get { return _instance == null ? new() : _instance; }
-    }
+	private RequestablePropertyReference _rotation = new RequestablePropertyReference(
+		new() {
+			{ RequestClass.LookAtMouse, 0 }
+		},
+		new()
+	);
 
-	private PlayerShipPriorityReference() {
-        _propertyMap = new()
-	    {
-            { PlayerShipProperties.Acceleration, accelerationPriorities },
-            { PlayerShipProperties.MaxSpeed, maxSpeedPriorities },
-            { PlayerShipProperties.Force, forcePriorities },
-            { PlayerShipProperties.Magnitude, magnitudePriorities },
-            { PlayerShipProperties.Rotation, rotationPriorities }
-	    };
+	public RequestablePropertyReference Acceleration {
+		get { return _acceleration; }
+	}
 
-        _orderMap = new()
-	    {
-            {PlayerShipProperties.Acceleration, accelerationOrder},
-            {PlayerShipProperties.MaxSpeed, maxSpeedOrder},
-            {PlayerShipProperties.Force, forceOrder},
-            {PlayerShipProperties.Magnitude, magnitudeOrder},
-            {PlayerShipProperties.Rotation, rotationOrder},
-	    };
+	public RequestablePropertyReference MaxSpeed {
+		get { return _maxSpeed; }
+	}
 
-		foreach (KeyValuePair<string, Dictionary<RequestClass, int>> entry in propertyMap) {
-			foreach (int priority in entry.Value.Values) {
-				if (!orderMap[entry.Key].ContainsKey(priority)) {
-					orderMap[entry.Key][priority] = new List<RequestClass>();
-				}
-			}
-		}
+	public RequestablePropertyReference Force {
+		get { return _force; }
+	}
+
+	public RequestablePropertyReference Magnitude {
+		get { return _magnitude; }
+	}
+
+	public RequestablePropertyReference Rotation {
+		get { return _rotation; }
 	}
 }

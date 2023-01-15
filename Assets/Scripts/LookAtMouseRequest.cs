@@ -1,23 +1,33 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Request;
 
 public class LookAtMouseRequest : RequestSystem {
+    private ShipModel model;
+
     public float maxAngleDiff = 20;
+
+    public LookAtMouseRequest(ShipModel model) {
+        this.model = model;
+    }
 
     public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
         Vector2 mousePos = args.mouseInput;
         Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(args.shipModel.position)));
+        
+        model.Rotation.takeRequest(new SetRequest<(float, float)>(this, RequestClass.LookAtMouse, (lookAtMouse(mousePos, playerPos), 10.0f)));
 
-        args.shipController.setRequest(this, RequestClass.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos));
+        //args.shipController.setRequest(this, RequestClass.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos));
     }
 
-    private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
-        float turnAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
-        return Quaternion.AngleAxis(turnAngle, Vector3.forward);
+    private float lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
+        return Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
     }
 
-    //adjusts viewport coordinates of playerShip to account for LensDistortion
+    /*
+     * Adjusts viewport coordinates of playerShip to account for LensDistortion
+     */
     public Vector2 distort(Vector2 uv) {
         LensDistortion fisheye;
         GameObject.Find("Fisheye").GetComponent<Volume>().profile.TryGet(out fisheye);

@@ -13,14 +13,14 @@ using Request;
 * property types are known.
 */
 public abstract class RequestController {
-    private PriorityReference reference;//Used to get priorities and orders of execution
+    private RequestReference reference;//Used to get priorities and orders of execution
     protected PlayerShipModel model;//Contains the properties which will be updated by the requests
 
     private Dictionary<string, int> priorities;//Stores a property's priority
     private Dictionary<RequestSystem, Dictionary<string, List<string>>> senders;//Stores the senders of each priority request, seperated by RequestSystem, then by property
     private List<Action> updateChains;//Stores updateChains. 
 
-    public RequestController(PriorityReference reference, PlayerShipModel/*make RequestableModel*/ model) {
+    public RequestController(RequestReference reference, PlayerShipModel/*make RequestableModel*/ model) {
         this.reference = reference;
         this.model = model;
         this.priorities = new();

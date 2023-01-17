@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Request;
 
-public class BoostRequest : RequestSystem {
+public class BoostRequest : RequestSystem<ShipState> {
     private enum BoostState {
         BOOST_START,
         BOOST_ACTIVE,
@@ -12,7 +12,7 @@ public class BoostRequest : RequestSystem {
         INACTIVE
     }
 
-    private PlayerInputArgs lastInputArgs;
+    private ShipState lastShipState;
     private ShipModel model;
 
     [SerializeField] private int boostLevel;
@@ -39,18 +39,13 @@ public class BoostRequest : RequestSystem {
     public BoostRequest(ShipModel model) {
         this.model = model;
 
-        BoostStartAcceleration = Guid.Empty;
-        BoostStartMaxSpeed = Guid.Empty;
-    }
-
-    public void Start() {
         boostLevel = 0;
         maxBoostLevel = 3;
 
         boostCooldown = .1f;
         boostAccelerationMod = 1.3f;
         boostMaxSpeedMod = 3;
-        boostMagnitude = PlayerShipModel.baseMaxSpeed * 2;
+        boostMagnitude = PlayerShipModel.BASE_MAXSPEED * 2;
         
         lastBoostTime = float.MinValue;
         boostTime = .25f;
@@ -58,9 +53,12 @@ public class BoostRequest : RequestSystem {
         coastTime = .5f;
         coastStart = float.MaxValue;
         resetBoost = false;
+
+        BoostStartAcceleration = Guid.Empty;
+        BoostStartMaxSpeed = Guid.Empty;
     }
 
-    public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
+    public override void OnStateReceived(object sender, ShipState args) {
         switch (getState(args)) {
             case BoostState.BOOST_START:
                 boostFrame = true;
@@ -86,18 +84,18 @@ public class BoostRequest : RequestSystem {
                 coastStart = float.MaxValue;
                 break;
             case BoostState.RESET_START:
-                brakeStep = (args.shipModel.velocity.magnitude - PlayerShipModel.baseMaxSpeed) / 80;
+                brakeStep = (args.playerShip.magnitude - PlayerShipModel.BASE_MAXSPEED) / 80;
                 resetBoost = true;
                 break;
             case BoostState.RESET_ACTIVE:
-                if (args.shipModel.velocity.magnitude > PlayerShipModel.baseMaxSpeed) {
+                if (args.playerShip.magnitude > PlayerShipModel.BASE_MAXSPEED) {
                     model.Magnitude.takeRequest(new MutateRequest<float>(this, RequestClass.BoostReset, (float val) => { return val - brakeStep; }));
                     //args.shipController.setRequest(this, RequestClass.BoostReset, PlayerShipProperties.Magnitude, args.shipModel.velocity.magnitude - brakeStep);
                     //args.shipController.blockRequest(this, RequestType.BoostReset, PlayerShipProperties.Force);
                 }
                 else {
-                    model.Acceleration.takeRequest(new SetRequest<float>(this, RequestClass.BoostReset, PlayerShipModel.baseAcceleration));
-                    model.MaxSpeed.takeRequest(new SetRequest<float>(this, RequestClass.Boost, PlayerShipModel.baseMaxSpeed));
+                    model.Acceleration.takeRequest(new SetRequest<float>(this, RequestClass.BoostReset, PlayerShipModel.BASE_ACCELERATION));
+                    model.MaxSpeed.takeRequest(new SetRequest<float>(this, RequestClass.Boost, PlayerShipModel.BASE_MAXSPEED));
                     //args.shipController.setRequest(this, RequestClass.BoostReset, PlayerShipProperties.Acceleration, PlayerShipModel.baseAcceleration);
                     //args.shipController.setRequest(this, RequestClass.BoostReset, PlayerShipProperties.MaxSpeed, PlayerShipModel.baseMaxSpeed);
                     boostLevel = 0;
@@ -105,27 +103,27 @@ public class BoostRequest : RequestSystem {
                 }
                 break;
             case BoostState.INACTIVE:
-                if (!args.isAccelerating && ((lastInputArgs?.isAccelerating ?? false) || coastStart == float.MaxValue))
+                if (!args.isAccelerating && ((lastShipState?.isAccelerating ?? false) || coastStart == float.MaxValue))
                     coastStart = args.time;
                 else if (args.isAccelerating)
                     coastStart = float.MaxValue;
                 break;
         }
 
-        lastInputArgs = args;
+        lastShipState = args;
     }
 
     public override void onRequestsExecuted(HashSet<Guid> executedRequests) {
         base.onRequestsExecuted(executedRequests);
         if (boostFrame) {
-            lastBoostTime = lastInputArgs.time;
+            lastBoostTime = lastShipState.time;
             if (executedRequests.Contains(BoostStartAcceleration) && executedRequests.Contains(BoostStartMaxSpeed))
                 boostLevel += 1;
             boostFrame = false;
         }
 	}
 
-    private BoostState getState(PlayerInputArgs args) {
+    private BoostState getState(ShipState args) {
         if (resetBoost)
             return BoostState.RESET_ACTIVE;
         else if (boostActive(args.time))

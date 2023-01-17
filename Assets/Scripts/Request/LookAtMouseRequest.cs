@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using Request;
 
-public class LookAtMouseRequest : RequestSystem {
+public class LookAtMouseRequest : RequestSystem<ShipState> {
     private ShipModel model;
 
     public float maxAngleDiff = 20;
@@ -12,17 +12,18 @@ public class LookAtMouseRequest : RequestSystem {
         this.model = model;
     }
 
-    public override void OnPlayerInputRecorded(object sender, PlayerInputArgs args) {
-        Vector2 mousePos = args.mouseInput;
-        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(args.shipModel.position)));
+    public override void OnStateReceived(object sender, ShipState args) {
+        Vector2 mousePos = args.lookInput;
+        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(args.playerShip.position)));
         
-        model.Rotation.takeRequest(new SetRequest<(float, float)>(this, RequestClass.LookAtMouse, (lookAtMouse(mousePos, playerPos), 10.0f)));
+        model.Rotation.takeRequest(new SetRequest<Quaternion>(this, RequestClass.LookAtMouse, lookAtMouse(mousePos, playerPos)));
 
         //args.shipController.setRequest(this, RequestClass.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos));
     }
 
-    private float lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
-        return Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
+    private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
+        float lookAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
+        return Quaternion.AngleAxis(lookAngle, Vector3.forward);
     }
 
     /*

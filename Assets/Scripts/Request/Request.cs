@@ -1,6 +1,7 @@
 using System;
+
 /*
-* A Request is an object that can be used to manipulate the property of a RequestableModel
+* A Request is an object that can be used to manipulate the value of a Requestable
 *
 * The base Request class contains all fields necessary to identify a request
 *
@@ -8,7 +9,6 @@ using System;
 *       request was executed
 * requestClass - Determines the priority of the request.  Can be passed to a PriorityReference to 
 *       get an integer priority in return
-* property - The name of the property this request wants to affect.
 * id - Uniquely identifies the Request.  The id of a request will be passed back to its sender to 
 *       to notify it that the request was executed.
 *
@@ -16,12 +16,12 @@ using System;
 * propety
 */
 namespace Request {
-    public abstract class Request {
-        public RequestSystem system;
+    public abstract class RequestBase {
+        public RequestSender system;
         public RequestClass requestClass;
         public readonly Guid id;
 
-        public Request(RequestSystem system, RequestClass requestClass) {
+        public RequestBase(RequestSender system, RequestClass requestClass) {
             this.system = system;
             this.requestClass = requestClass;
             this.id = Guid.NewGuid();
@@ -31,10 +31,11 @@ namespace Request {
     /*
      * A request to set the value of a property.
      */
-    public class SetRequest<T> : Request {
+    public class SetRequest<T> : RequestBase {
         public T value;
 
-        public SetRequest(RequestSystem system, RequestClass requestClass, T value) : base(system, requestClass) {
+        public SetRequest(RequestSender system, RequestClass requestClass, T value) 
+                : base(system, requestClass) {
             this.value = value; 
         }
     }
@@ -42,10 +43,11 @@ namespace Request {
     /*
      * A request to mutate the value of a property via the mutation function.
      */
-    public class MutateRequest<T> : Request {
+    public class MutateRequest<T> : RequestBase {
         public Func<T, T> mutation;
 
-        public MutateRequest(RequestSystem system, RequestClass requestClass, Func<T, T> mutation) : base(system, requestClass) {
+        public MutateRequest(RequestSender system, RequestClass requestClass, Func<T, T> mutation) 
+                : base(system, requestClass) {
             this.mutation = mutation; 
         }
     }
@@ -54,7 +56,8 @@ namespace Request {
      * A request to raise the priority of a property without affecting its value.  Used to prevent other requests
      * from changing the given property.
      */
-    public class BlockRequest : Request {
-        public BlockRequest(RequestSystem system, RequestClass requestClass) : base(system, requestClass) {}
+    public class BlockRequest : RequestBase {
+        public BlockRequest(RequestSender system, RequestClass requestClass) 
+                : base(system, requestClass) {}
     }
 }

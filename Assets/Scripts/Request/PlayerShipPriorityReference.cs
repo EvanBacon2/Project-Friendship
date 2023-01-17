@@ -1,24 +1,3 @@
-using System.Collections.Generic;
-
-public class RequestablePropertyReference {
-	private List<RequestClass> noOrder = new List<RequestClass>();
-	private Dictionary<RequestClass, int> priority;
-	private Dictionary<int, List<RequestClass>> order;
-
-	public RequestablePropertyReference(Dictionary<RequestClass, int> priority, Dictionary<int, List<RequestClass>> order) {
-		this.priority = priority;
-		this.order = order;
-	} 
-
-	public int getPriority(RequestClass request) {
-		return priority.ContainsKey(request) ? priority[request] : (int)RequestClass.NoRequest;
-	}
-
-	public IEnumerable<RequestClass> getOrder(int priority) {
-		return order.ContainsKey(priority) ? order[priority] : noOrder;
-	}
-}
-
 public interface ShipReference {
 	public RequestablePropertyReference Acceleration { get; } 
 	public RequestablePropertyReference MaxSpeed { get; }
@@ -32,7 +11,6 @@ public class PlayerShipPriorityReference : ShipReference {
 		new() {
 			{ RequestClass.Boost, 0 },
 			{ RequestClass.Brake, 1 },
-			{ RequestClass.Move, 2 },
 			{ RequestClass.BoostReset, 3 },
 		},
 		new()

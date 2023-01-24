@@ -1,24 +1,28 @@
+using System;
+using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using Request;
 
 public class LookAtMouseRequest : RequestSystem<ShipState> {
-    private ShipModel model;
+    private RECSRigidBody model;
 
     public float maxAngleDiff = 20;
 
-    public LookAtMouseRequest(ShipModel model) {
+    public LookAtMouseRequest(RECSRigidBody model) {
         this.model = model;
     }
 
-    public override void OnStateReceived(object sender, ShipState args) {
-        Vector2 mousePos = args.lookInput;
-        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(args.playerShip.position)));
+    public void OnStateReceived(object sender, ShipState state) {
+        Vector2 mousePos = state.lookInput;
+        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(state.position)));
         
-        model.Rotation.takeRequest(new SetRequest<Quaternion>(this, RequestClass.LookAtMouse, lookAtMouse(mousePos, playerPos)));
+        model.Rotation.set(RequestClass.LookAtMouse, lookAtMouse(mousePos, playerPos));
+    }
 
-        //args.shipController.setRequest(this, RequestClass.LookAtMouse, PlayerShipProperties.Rotation, lookAtMouse(mousePos, playerPos));
+    public void onRequestsExecuted(HashSet<Guid> executedRequests) {
+    
     }
 
     private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {

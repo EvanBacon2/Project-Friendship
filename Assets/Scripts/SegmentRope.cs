@@ -657,8 +657,8 @@ namespace SegmentRope {
 
 			rotationVelocity = (nextRotation - prevRotation) / substeps;
 
-			nextPosition.x = shipRigidbody.transform.position.x + ShipModel.impendingVelocity.x * Time.fixedDeltaTime;
-			nextPosition.y = shipRigidbody.transform.position.y + ShipModel.impendingVelocity.y * Time.fixedDeltaTime;
+			nextPosition.x = shipRigidbody.transform.position.x + RECSRigidBody.impendingVelocity.x * Time.fixedDeltaTime;
+			nextPosition.y = shipRigidbody.transform.position.y + RECSRigidBody.impendingVelocity.y * Time.fixedDeltaTime;
 			
 			positionVelocity.x = (nextPosition.x - prevPosition.x) / substeps;
 			positionVelocity.y = (nextPosition.y - prevPosition.y) / substeps;

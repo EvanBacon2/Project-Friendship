@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerInputProvider : MonoBehaviour {
-    private PlayerShipModel playerShip;
+    private RECSRigidBody rigidBody;
+
+    public const float BASE_ACCELERATION = 40;
+    public const float BASE_MAXSPEED = 25;
 
     private Vector3 lookInput;
     private float horizontalInput;
@@ -16,13 +19,16 @@ public class PlayerInputProvider : MonoBehaviour {
     public List<RequestSystem<ShipState>> requestSystems;
 
     void Start() {
-        playerShip = new PlayerShipModel(GetComponent<Rigidbody>());
-        
+        rigidBody = new RECSRigidBody(GetComponent<Rigidbody>(), 
+                new PlayerShipRequestReference(), 
+                BASE_ACCELERATION, 
+                BASE_MAXSPEED);
+
         requestSystems = new() {
-            new BoostRequest(playerShip.model),
-            new BrakeRequest(playerShip.model),
-            new LookAtMouseRequest(playerShip.model),
-            new MoveRequest(playerShip.model)
+            new BoostRequest(rigidBody),
+            new BrakeRequest(rigidBody),
+            new LookAtMouseRequest(rigidBody),
+            new MoveRequest(rigidBody)
         };
 
         foreach (RequestSystem<ShipState> system in requestSystems) {
@@ -40,33 +46,39 @@ public class PlayerInputProvider : MonoBehaviour {
 
     void FixedUpdate() {
         OnStateReceived();
-        playerShip.model.executeRequests();
+        rigidBody.executeRequests();
         boostInput = false;
     }
 
     protected virtual void OnStateReceived() {
             StateReceived?.Invoke(this, new ShipState() { 
                 time = Time.time,
-                playerShip = playerShip,
+                rigidBody = rigidBody,
+                position = rigidBody.Position,
                 lookInput = lookInput,
                 horizontalInput = horizontalInput, 
                 verticalInput = verticalInput,
                 brakeInput = brakeInput,
                 boostInput = boostInput,
-                isAccelerating = horizontalInput != 0 || verticalInput != 0 
+                isAccelerating = horizontalInput != 0 || verticalInput != 0,
+                BASE_ACCELERATION = BASE_ACCELERATION,
+                BASE_MAXSPEED = BASE_MAXSPEED
             });
     }
 }
 
 public class ShipState : EventArgs {
     public float time { get; set; }
-    public PlayerShipModel playerShip { get; set; }
+    public RECSRigidBody rigidBody { get; set; }
+    public Vector3 position { get; set; }
     public Vector3 lookInput { get; set; }
     public float horizontalInput { get; set; }
     public float verticalInput { get; set; }
     public bool brakeInput { get; set; }
-    public bool boostInput { get; set;  }
-    public bool isAccelerating { get; set;  }
+    public bool boostInput { get; set; }
+    public bool isAccelerating { get; set; }
+    public float BASE_ACCELERATION { get; set; }
+    public float BASE_MAXSPEED { get; set; }
 }
 
 /**

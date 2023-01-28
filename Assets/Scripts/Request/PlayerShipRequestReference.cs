@@ -4,6 +4,7 @@ public interface ShipReference {
 	public IRequestReference Force { get; }
 	public IRequestReference Magnitude { get; }
 	public IRequestReference Rotation { get; }
+	public IRequestReference Position { get; } 
 }
 
 public class PlayerShipRequestReference : ShipReference {
@@ -51,6 +52,11 @@ public class PlayerShipRequestReference : ShipReference {
 		new()
 	);
 
+	private IRequestReference _position = new RequestReferenceMap(
+		new(),
+		new()
+	);
+
 	public IRequestReference Acceleration {
 		get { return _acceleration; }
 	}
@@ -69,5 +75,9 @@ public class PlayerShipRequestReference : ShipReference {
 
 	public IRequestReference Rotation {
 		get { return _rotation; }
+	}
+
+	public IRequestReference Position {
+		get { return _position; }
 	}
 }

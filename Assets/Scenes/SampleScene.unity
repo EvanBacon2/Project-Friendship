@@ -2495,9 +2495,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSegments: 35
   length: 0.65
-  angleLimit: 0
+  angleLimit: 35
   mass: 1
-  inertia: 10
+  inertia: 1
   stiffness: 1
   stretchiness: 1
   maxSpeed: 6
@@ -2505,11 +2505,9 @@ MonoBehaviour:
   linearDrag: 0
   angulerDrag: 0
   substeps: 150
-  iterations: 1
   segmentSprite: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
   hook: {fileID: 4789747752933701531, guid: 035c70fe06af43640985de32a67f7804, type: 3}
   extendedSegments: 0
-  baseSegment: -1
   shipCorrection: 0.4
 --- !u!54 &1033195083 stripped
 Rigidbody:

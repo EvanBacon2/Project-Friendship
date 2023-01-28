@@ -11,6 +11,7 @@ public class RECSRigidBody {
     private ManagedAnyRequestable<(Vector3, ForceMode)> _force;
     private ManagedAnyRequestable<float> _magnitude;
     private ManagedAnyRequestable<Quaternion> _rotation;
+    private ManagedAnyRequestable<Vector3> _position;
 
     public static Vector2 impendingVelocity = Vector2.zero;//what the velocity of the ship will be after FixedUpdate has run
     private Vector2 forceAcceleration = Vector2.zero;
@@ -82,12 +83,19 @@ public class RECSRigidBody {
         AnyRequestPool<Quaternion> rotPool = new();
         _rotation = new ManagedAnyRequestable<Quaternion>(
             () => { return rb.transform.rotation; }, 
-            (Quaternion r) => { 
-                rb.transform.rotation = Quaternion.Slerp(rb.transform.rotation, r, Time.fixedDeltaTime * 14); 
-            },
+            (Quaternion r) => { rb.transform.rotation = r; },
             reference.Rotation,
             new IncreasingPriority(-1, () => { rotPool.reset(); }),
             rotPool
+        );
+
+        AnyRequestPool<Vector3> posPool = new();
+        _position = new ManagedAnyRequestable<Vector3>(
+            () => { return rb.transform.position; },
+            (Vector3 p) => { rb.transform.position = p; },
+            reference.Position,
+            new IncreasingPriority(-1, () => { posPool.reset(); }),
+            posPool
         );
     }
 
@@ -99,6 +107,7 @@ public class RECSRigidBody {
         _force.executeRequests();
         _magnitude.executeRequests();
         _rotation.executeRequests();
+        _position.executeRequests();
 
         onExecuted();
     }
@@ -109,6 +118,7 @@ public class RECSRigidBody {
         _force.setReference(reference.Force);
         _magnitude.setReference(reference.Magnitude);
         _rotation.setReference(reference.Rotation);
+        _position.setReference(reference.Position);
     }
 
     private void notifySenders() {
@@ -117,6 +127,7 @@ public class RECSRigidBody {
         _force.addSendersTo(senders);
         _magnitude.addSendersTo(senders);
         _rotation.addSendersTo(senders);
+        _position.addSendersTo(senders);
 
         foreach(RequestSender sender in senders.Keys) {
             sender.onRequestsExecuted(senders[sender]);

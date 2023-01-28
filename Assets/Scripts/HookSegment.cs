@@ -45,7 +45,7 @@ class HookSegment : MonoBehaviour {
 			hooked = other.gameObject;
 			hookOffset.x = hooked.transform.position.x - (float)s.p2.x;
 			hookOffset.y = hooked.transform.position.y - (float)s.p2.y;
-			s.mass = 1;
+			s.inverseMass = 1;
 			isHooked = true;
 			justHooked = true;
 		}

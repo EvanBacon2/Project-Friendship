@@ -8,7 +8,8 @@ using UnityEngine.Rendering.Universal;
 public class LookAtMouseRequest : RequestSystem<ShipState> {
     private RECSRigidBody model;
 
-    public float maxAngleDiff = 20;
+    //public float maxAngleDiff = 20;
+    private float rotationDrive = 14;
 
     public LookAtMouseRequest(RECSRigidBody model) {
         this.model = model;
@@ -18,7 +19,10 @@ public class LookAtMouseRequest : RequestSystem<ShipState> {
         Vector2 mousePos = state.lookInput;
         Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(state.position)));
         
-        model.Rotation.set(RequestClass.LookAtMouse, lookAtMouse(mousePos, playerPos));
+        Quaternion rotationGoal = lookAtMouse(mousePos, playerPos);
+        Quaternion rotationStep = Quaternion.Slerp(model.Rotation.value, rotationGoal, Time.fixedDeltaTime * rotationDrive);
+        
+        model.Rotation.set(RequestClass.LookAtMouse, rotationStep);
     }
 
     public void onRequestsExecuted(HashSet<Guid> executedRequests) {

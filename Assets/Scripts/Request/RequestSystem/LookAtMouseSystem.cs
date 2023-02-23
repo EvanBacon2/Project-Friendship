@@ -5,28 +5,21 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class LookAtMouseRequest : RequestSystem<ShipState> {
-    private RECSRigidBody model;
+public class LookAtMouseSystem : RequestSystem<ShipState> {
+    private RECSRigidbody rb;
 
-    //public float maxAngleDiff = 20;
     private float rotationDrive = 14;
 
-    public LookAtMouseRequest(RECSRigidBody model) {
-        this.model = model;
-    }
+    public override void OnStateReceived(object sender, ShipState state) {
+        rb = state.rigidbody;
 
-    public void OnStateReceived(object sender, ShipState state) {
-        Vector2 mousePos = state.lookInput;
-        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(state.position)));
+        Vector2 mousePos = state.lookDirection;
+        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(rb.Position.value)));
         
         Quaternion rotationGoal = lookAtMouse(mousePos, playerPos);
-        Quaternion rotationStep = Quaternion.Slerp(model.Rotation.value, rotationGoal, Time.fixedDeltaTime * rotationDrive);
+        Quaternion rotationStep = Quaternion.Slerp(rb.Rotation.value, rotationGoal, Time.fixedDeltaTime * rotationDrive);
         
-        model.Rotation.set(RequestClass.LookAtMouse, rotationStep);
-    }
-
-    public void onRequestsExecuted(HashSet<Guid> executedRequests) {
-    
+        rb.Rotation.set(RequestClass.LookAtMouse, rotationStep);
     }
 
     private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {

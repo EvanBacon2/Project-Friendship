@@ -1,6 +1,6 @@
 using System;
 
-public class ManagedAnyRequestable<T> : ManagedRequestableBase<T>, IAnyRequest<T>, IUniqueRequest<T>, IRequest<T> {
+public class ManagedAnyRequestable<T> : ManagedRequestableBase<T>, IManagedAnyRequest<T> {
     protected new IAnyRequestManager<T> requestManager;
 
     public ManagedAnyRequestable(Func<T> get, Action<T> set, IRequestReference reference, IPriorityManager priority, 

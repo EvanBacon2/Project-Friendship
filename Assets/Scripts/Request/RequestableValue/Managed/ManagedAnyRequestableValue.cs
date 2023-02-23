@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-public class ManagedAnyRequestableValue<T> : ManagedRequestableValueBase<T>, IAnyRequest<T> {
+public class ManagedAnyRequestableValue<T> : ManagedRequestableValueBase<T>, IManagedAnyRequest<T> {
     protected ManagedAnyRequestable<T> wrapper;
 
     public ManagedAnyRequestableValue(T value, IRequestReference reference, IPriorityManager priorityManager, 
@@ -41,7 +41,15 @@ public class ManagedAnyRequestableValue<T> : ManagedRequestableValueBase<T>, IAn
         wrapper.executeRequests();
     }
 
-    public void addSendersTo(Dictionary<RequestSender, HashSet<Guid>> senders) {
+    public override void notifySenders() {
+        wrapper.notifySenders();
+    }
+
+    public override T pendingValue() {
+        return wrapper.pendingValue();
+    }
+
+    public override void addSendersTo(Dictionary<RequestSender, HashSet<Guid>> senders) {
         wrapper.addSendersTo(senders);
     }
 }

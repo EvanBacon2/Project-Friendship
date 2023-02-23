@@ -9,7 +9,7 @@ class Throwable : MonoBehaviour {
 	public bool hookable = true;
 
     private Rigidbody rigidBody;
-	private HookSegment hook;
+	private Hook hook;
 
 	private void Start() {
 		rigidBody = GetComponent<Rigidbody>();
@@ -24,7 +24,7 @@ class Throwable : MonoBehaviour {
 
 	private void OnTriggerEnter(Collider other) {
 		if (other.gameObject.CompareTag("Rope") && hookable)
-			hook = other.GetComponent<HookSegment>();
+			hook = other.GetComponent<Hook>();
 	}
 
 	private void OnCollisionEnter(Collision collision) {

@@ -2,10 +2,21 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RECSRigidBody {
-    private Rigidbody rb;
+public class RECSRigidbody : MonoBehaviour {
+    public Rigidbody rb;
+    public float acceleration;
+    public float maxSpeed;
+
+    private float _baseAcceleration;
+    private float _baseMaxSpeed;
+    public float BASE_ACCELERATION { get { return _baseAcceleration; } }
+    public float BASE_MAXSPEED { get { return _baseMaxSpeed; } }
+
+    public RigidbodyReference reference;
+    
     private Dictionary<RequestSender, HashSet<Guid>> senders;
 
+    private ManagedAnyRequestable<Vector3> _velocity;
     private ManagedAnyRequestableValue<float> _acceleration;
     private ManagedAnyRequestableValue<float> _maxSpeed;
     private ManagedAnyRequestable<(Vector3, ForceMode)> _force;
@@ -14,37 +25,50 @@ public class RECSRigidBody {
     private ManagedAnyRequestable<Vector3> _position;
 
     public static Vector2 impendingVelocity = Vector2.zero;//what the velocity of the ship will be after FixedUpdate has run
-    private Vector2 forceAcceleration = Vector2.zero;
+    private (Vector3, ForceMode) impendingForce = (Vector3.zero, ForceMode.Force);
  
-    public IAnyRequest<float> Acceleration { 
+    public IManagedAnyRequest<Vector3> Velocity {
+        get { return _velocity; }
+    }
+    public IManagedAnyRequest<float> Acceleration { 
         get { return _acceleration; }
     }
-    public IAnyRequest<float> MaxSpeed { 
+    public IManagedAnyRequest<float> MaxSpeed { 
         get { return _maxSpeed; }
     }
-    public IAnyRequest<(Vector3, ForceMode)> Force {
+    public IManagedAnyRequest<(Vector3, ForceMode)> Force {
         get { return _force; }
     }
-    public IAnyRequest<float> Magnitude {
+    public IManagedAnyRequest<float> Magnitude {
         get { return _magnitude; }
     }
-    public IAnyRequest<Quaternion> Rotation {
+    public IManagedAnyRequest<Quaternion> Rotation {
         get { return _rotation; }
     }
-
-    public Vector3 Position {
-        get { return rb.position; }
+    public IManagedAnyRequest<Vector3> Position {
+        get { return _position; }
     }
 
-    public RECSRigidBody(Rigidbody rb, ShipReference reference, float acceleration = 0, float maxSpeed = 0) {
-        this.rb = rb;
+    void Start() {
+        this._baseAcceleration = acceleration;
+        this._baseMaxSpeed = maxSpeed;
+        this.reference = new PlayerShipRequestReference();
         this.senders = new();
         
+        AnyRequestPool<Vector3> velPool = new();
+        _velocity = new ManagedAnyRequestable<Vector3>(
+            () => { return rb.velocity; },
+            (Vector3 v) => {rb.velocity = v; },
+            reference.Velocity,
+            new IncreasingPriority(() => { velPool.reset(); }),
+            velPool
+        );
+
         AnyRequestPool<float> accPool = new();
         _acceleration = new ManagedAnyRequestableValue<float>(
             acceleration, 
             reference.Acceleration, 
-            new IncreasingPriority(-1, () => { accPool.reset(); }), 
+            new IncreasingPriority(() => { accPool.reset(); }), 
             accPool
         );
 
@@ -52,7 +76,7 @@ public class RECSRigidBody {
         _maxSpeed = new ManagedAnyRequestableValue<float>(
             maxSpeed, 
             reference.MaxSpeed, 
-            new IncreasingPriority(-1, () => { maxPool.reset(); }), 
+            new IncreasingPriority(() => { maxPool.reset(); }), 
             maxPool
         );
 
@@ -62,12 +86,13 @@ public class RECSRigidBody {
             ((Vector3, ForceMode) v) => { 
                 rb.AddForce(v.Item1, v.Item2);
 
-                if (v.Item2 == ForceMode.Force || v.Item2 == ForceMode.Acceleration)
-                    v.Item1 *= Time.fixedDeltaTime;
-                forceAcceleration = v.Item1;
+                //if (v.Item2 == ForceMode.Force || v.Item2 == ForceMode.Acceleration)
+                //    v.Item1 *= Time.fixedDeltaTime;
+                //forceAcceleration = v.Item1;
+                impendingForce = v;
             },
             reference.Force,
-            new IncreasingPriority(-1, () => { forcePool.reset(); }),
+            new IncreasingPriority(() => { forcePool.reset(); }),
             forcePool
         );
 
@@ -76,7 +101,7 @@ public class RECSRigidBody {
             () => { return rb.velocity.magnitude; }, 
             (float m) => { rb.velocity = rb.velocity.normalized * m; },
             reference.Magnitude,
-            new IncreasingPriority(-1, () => { magPool.reset(); }),
+            new IncreasingPriority(() => { magPool.reset(); }),
             magPool
         );
 
@@ -85,7 +110,7 @@ public class RECSRigidBody {
             () => { return rb.transform.rotation; }, 
             (Quaternion r) => { rb.transform.rotation = r; },
             reference.Rotation,
-            new IncreasingPriority(-1, () => { rotPool.reset(); }),
+            new IncreasingPriority(() => { rotPool.reset(); }),
             rotPool
         );
 
@@ -94,7 +119,7 @@ public class RECSRigidBody {
             () => { return rb.transform.position; },
             (Vector3 p) => { rb.transform.position = p; },
             reference.Position,
-            new IncreasingPriority(-1, () => { posPool.reset(); }),
+            new IncreasingPriority(() => { posPool.reset(); }),
             posPool
         );
     }
@@ -112,7 +137,7 @@ public class RECSRigidBody {
         onExecuted();
     }
 
-    public void setReference(ShipReference reference) {
+    public void setReference(RigidbodyReference reference) {
         _acceleration.setReference(reference.Acceleration);
         _maxSpeed.setReference(reference.MaxSpeed);
         _force.setReference(reference.Force);
@@ -130,16 +155,30 @@ public class RECSRigidBody {
         _position.addSendersTo(senders);
 
         foreach(RequestSender sender in senders.Keys) {
+            Debug.Log(sender);
             sender.onRequestsExecuted(senders[sender]);
         }
 
         senders.Clear();
     }
 
+    private void calcNextVelocity() {
+        if (impendingForce.Item2 == ForceMode.Force || impendingForce.Item2 == ForceMode.Impulse) 
+            impendingForce.Item1 /= rb.mass;
+        
+        if (impendingForce.Item2 == ForceMode.Force || impendingForce.Item2 == ForceMode.Acceleration)
+            impendingForce.Item1 *= Time.fixedDeltaTime;
+
+        if (impendingForce.Item2 == ForceMode.VelocityChange)
+            impendingVelocity = impendingForce.Item1;
+        else
+            impendingVelocity = rb.velocity + impendingForce.Item1;
+    }
+
     private void onExecuted() {
         if (rb.velocity.magnitude > MaxSpeed.value)
             rb.velocity = rb.velocity.normalized * MaxSpeed.value;
 
-        impendingVelocity = (Vector2)rb.velocity + forceAcceleration;
+        calcNextVelocity();
     }
 }

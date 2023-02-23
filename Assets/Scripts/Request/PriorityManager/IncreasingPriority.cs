@@ -18,6 +18,8 @@ public class IncreasingPriority : IPriorityManager {
         this.onPriorityChange = onPriorityChange;
     }
 
+    public IncreasingPriority(Action onPriorityChange) : this(-1, onPriorityChange) {}
+
     public IncreasingPriority(int basePriority) : this(basePriority, () => {}) {}
 
     /*

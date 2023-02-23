@@ -32,8 +32,8 @@ namespace SegmentRope {
 		private double h;
 
 		public GameObject segmentSprite;
-		public GameObject hook;
-		private HookSegment hookSegment;
+		//public GameObject hook;
+		//private HookSegment hookSegment;
 
 		private Segment[] rope;
 		public int extendedSegments = 0;
@@ -59,7 +59,6 @@ namespace SegmentRope {
 		private double winchForce = 3;
 		private double winchOffset = 0;
 		private double winchScrollBuffer = 0;
-		private double winchBrakeBuffer = 0;
 		private double hookLag = .92;
 
 		private Vector2d hookSnapshot = Vector2d.zero;
@@ -95,10 +94,19 @@ namespace SegmentRope {
 			}
 
 			//create hook segment
-			GameObject hookObj = Instantiate(hook, new Vector3((float)rope[0].position.x, (float)rope[0].position.y, 0), Quaternion.identity);
+			/*GameObject hookObj = Instantiate(hook, new Vector3((float)rope[0].position.x, (float)rope[0].position.y, 0), Quaternion.identity);
 			hookObj.AddComponent<HookSegment>();
 			hookSegment = hookObj.GetComponent<HookSegment>();
 			hookSegment.s = rope[0];
+			hookSegment.setHookedCallback(() => {
+				autoExtend = false;
+				shipCorrection = 0;
+				maxSpeed = 25;
+
+				tightenRope();
+				hookSnapshot.x = rope[0].position.x;
+				hookSnapshot.y = rope[0].position.y;
+			});*/
 
 			h = Time.fixedDeltaTime / substeps;
 
@@ -125,14 +133,14 @@ namespace SegmentRope {
 			if (Input.GetMouseButtonDown(1) && !extended && !autoRetract) {
 				autoExtend = true;
 				shipCorrection = 1;
-				hookSegment.active = true;
+				//hookSegment.active = true;
 			}
 
 			//auto retract rope
 			if (Input.GetMouseButtonDown(1) && extended && !autoExtend) {
 				autoRetract = true;
-				hookSegment.active = false;
-				hookSegment.unHook();
+				//hookSegment.active = false;
+				//hookSegment.unHook();
 
 				modeFlexible();
 				setAngulerDrag(.99);
@@ -145,8 +153,6 @@ namespace SegmentRope {
 		}
 
 		private void FixedUpdate() {
-			winchBrakeBuffer -= 1;
-
 			updateShipInterpolation();
 
 			//apply ship correction
@@ -157,19 +163,15 @@ namespace SegmentRope {
 
 			//main loop
 			for (int i = 0; i < substeps; i++) {
+				interpolateShipPositions();
 				Simulate();
 				ApplyConstraints();
 				adjustVelocities();
 				solveVelocities();
-				interpolateShipPositions();
 			}
 			
 			for (int i = 0; i < rope.Length; i++) {
 				//rope[i].updateSprite();
-			}
-
-			if (winchBrakeBuffer == 1) {
-				winchBrakeBuffer = 0;
 			}
 
 			//apply scroll wind
@@ -177,7 +179,7 @@ namespace SegmentRope {
 				adjustWinch(length / 4 * System.Math.Sign(winchScrollBuffer));
 				winchScrollBuffer -= winchScrollBuffer > 0 ? 1 : -1;
 			}
-
+			
 			//apply auto extention
 			if (autoExtend) {
 				adjustWinch(winchForce);
@@ -185,18 +187,10 @@ namespace SegmentRope {
 				modeFlexible();
 				maxSpeed = 40;
 
-				if (extendedSegments == maxSegments || hookSegment.isHooked) {//stop extending
+				if (extendedSegments == maxSegments) {//stop extending
 					autoExtend = false;
 					shipCorrection = 0;
-					winchBrakeBuffer = 4;
-
 					maxSpeed = 25;
-				}
-
-				if (hookSegment.justHooked) {//tighten rope after hooking object
-					tightenRope();
-					hookSnapshot.x = rope[0].position.x;
-					hookSnapshot.y = rope[0].position.y;
 				}
 			}
 
@@ -210,8 +204,8 @@ namespace SegmentRope {
 			}
 
 			if (extendedSegments == 0) {
-				hookSegment.active = false;
-				hookSegment.unHook();
+				//hookSegment.active = false;
+				//hookSegment.unHook();
 			}
 
 			if (tightLength > 0) {
@@ -318,7 +312,7 @@ namespace SegmentRope {
 		private void angleConstraint(Segment s1, Segment s2) {
 			double angle = Vector2d.SignedAngle(s1.orientation, s2.orientation);
 			double limit = _angleLimit;
-			double ratio = s2.inverseInertia / (s1.inverseInertia + s2.inverseInertia);
+			double ratio = s1.inverseInertia / (s1.inverseInertia + s2.inverseInertia);
 
 			if (System.Math.Abs(angle) > limit) {		
 				double difference = angle - (angle > 0 ? limit : -limit);
@@ -452,17 +446,17 @@ namespace SegmentRope {
 			winchOffset += adjustment;
 			if (winchOffset >= length || winchOffset < 0) {
 				int segmentChange = (int)(winchOffset / length);
-				if (winchOffset < 0) segmentChange -= 1;
+				if (winchOffset < 0) { 
+					segmentChange -= 1;
+					winchOffset = baseSegment > -1 ? length + winchOffset : 0;	
+				}
 
-				extendedSegments = System.Math.Clamp(extendedSegments + segmentChange, 0, maxSegments);
-				baseSegment = System.Math.Clamp(baseSegment + segmentChange, 0, maxSegments - 1);
-				if (winchOffset < 0) 
-					winchOffset = extendedSegments > 0 ? length + winchOffset : 0;	
+				baseSegment = System.Math.Clamp(baseSegment + segmentChange, -1, maxSegments - 1);
+				extendedSegments = baseSegment + 1;
 
 				winchOffset = winchOffset % length;
+				extended = extendedSegments != 0;
 			}
-
-			extended = extendedSegments != 0;
 		}
 
 		private Vector2d real = Vector2d.zero;
@@ -497,8 +491,8 @@ namespace SegmentRope {
 
 			rotationStep = (nextRotation - interRotation) / substeps;
 
-			double nextPositionX = baseRB.position.x + RECSRigidBody.impendingVelocity.x * Time.fixedDeltaTime;
-			double nextPositionY = baseRB.position.y + RECSRigidBody.impendingVelocity.y * Time.fixedDeltaTime;
+			double nextPositionX = baseRB.position.x + RECSRigidbody.impendingVelocity.x * Time.fixedDeltaTime;
+			double nextPositionY = baseRB.position.y + RECSRigidbody.impendingVelocity.y * Time.fixedDeltaTime;
 
 			positionStep.x = (nextPositionX - interPosition.x) / substeps;
 			positionStep.y = (nextPositionY - interPosition.y) / substeps;
@@ -512,11 +506,11 @@ namespace SegmentRope {
 			baseOrientation.x = System.Math.Cos(interRotation);
 			baseOrientation.y = System.Math.Sin(interRotation);
 
-			basePosition.x = interPosition.x + positionStep.x + baseOrientation.x * baseOffset;
-			basePosition.y = interPosition.y + positionStep.y + baseOrientation.y * baseOffset;
+			basePosition.x = interPosition.x + baseOrientation.x * baseOffset;
+			basePosition.y = interPosition.y + baseOrientation.y * baseOffset;
 
-			winchPosition.x = interPosition.x + positionStep.x + baseOrientation.x * (baseOffset + winchOffset);
-			winchPosition.y = interPosition.y + positionStep.y + baseOrientation.y * (baseOffset + winchOffset);
+			winchPosition.x = interPosition.x + baseOrientation.x * (baseOffset + winchOffset);
+			winchPosition.y = interPosition.y + baseOrientation.y * (baseOffset + winchOffset);
 
 			hookPosition.x = winchPosition.x + baseOrientation.x * (length * hookLag * extendedSegments);
 			hookPosition.y = winchPosition.y + baseOrientation.y * (length * hookLag * extendedSegments);

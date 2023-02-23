@@ -1,4 +1,7 @@
-public interface ShipReference {
+using UnityEngine;
+
+public interface RigidbodyReference {
+	public IRequestReference Velocity { get; }
 	public IRequestReference Acceleration { get; } 
 	public IRequestReference MaxSpeed { get; }
 	public IRequestReference Force { get; }
@@ -7,7 +10,12 @@ public interface ShipReference {
 	public IRequestReference Position { get; } 
 }
 
-public class PlayerShipRequestReference : ShipReference {
+public class PlayerShipRequestReference : RigidbodyReference {
+	private IRequestReference _velocity = new RequestReferenceMap(
+		new(),
+		new()
+	);
+
 	private IRequestReference _acceleration = new RequestReferenceMap(
 		new() {
 			{ RequestClass.Boost, 0 },
@@ -32,6 +40,7 @@ public class PlayerShipRequestReference : ShipReference {
 			{ RequestClass.Boost, 1 },
 			{ RequestClass.Brake, 2 }, 
 			{ RequestClass.BoostReset, 3 },
+			{ RequestClass.Rope, 4 }
 		},
 		new()
 	);
@@ -56,6 +65,10 @@ public class PlayerShipRequestReference : ShipReference {
 		new(),
 		new()
 	);
+
+	public IRequestReference Velocity {
+		get { return _velocity; }
+	}
 
 	public IRequestReference Acceleration {
 		get { return _acceleration; }

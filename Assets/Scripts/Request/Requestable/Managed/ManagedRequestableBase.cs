@@ -14,6 +14,14 @@ public class ManagedRequestableBase<T> : RequestableBase<T> {
         reset();
     }
 
+    public T pendingValue() {
+        return requestManager.pendingValue(value, reference.order(priorityManager.priority));
+    }
+
+    public void notifySenders() {
+        requestManager.notifySenders();
+    }
+
     public void addSendersTo(Dictionary<RequestSender, HashSet<Guid>> senders) {
         requestManager.addSendersTo(senders);
     }

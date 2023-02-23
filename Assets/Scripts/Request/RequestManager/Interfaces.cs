@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public interface IRequestManagerBase<T> {
     public T executeRequests(T baseValue, IEnumerable<RequestClass> order);
+    public T pendingValue(T baseValue, IEnumerable<RequestClass> order);
     public void reset();
 }
 

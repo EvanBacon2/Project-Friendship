@@ -12,11 +12,13 @@ public class Segment {
     public readonly Vector2d position;
     public Vector2d previousPosition;
     public Vector2d velocity;
+    public double mass;
     public double inverseMass;
 
     public readonly Vector2d orientation;//should be a unit vector
     public Vector2d previousOrientation;
     public double angulerVelocity;//radians
+    public double inertia;
     public double inverseInertia;
 
     public double length;
@@ -34,12 +36,16 @@ public class Segment {
         this.previousOrientation = new Vector2d(orientation.x, orientation.y);
         this.angulerVelocity = 0;
 
-        this.inverseMass = mass;
-        this.inverseInertia = inertia;
+        this.mass = mass;
+        this.inverseMass = 1 / mass;
+        this.inertia = inertia;
+        this.inverseInertia = 1 / inertia;
 
         this.length = length;
         this.halfLength = length / 2;
     }
+
+    public Segment(Vector2d position, Vector2d orientation, double length) : this(position, orientation, 1, 1, length) {}
 
     /*public void updateSprite() {
         spritePos.x = (float)position.x;
@@ -87,13 +93,28 @@ public class Segment {
         p2.y = position.y + orientation.y * halfLength;
     }
 
+    /*
+     * Set's p2 position to the given coordinates without changing p1's position
+     */
+    public void stretchP2(double x, double y) {
+        p2.x = x;
+        p2.y = y;
+        orientation.x = p2.x - p1.x;
+        orientation.y = p2.y - p1.y;
+        length = orientation.magnitude;
+        halfLength = length / 2;
+        orientation.normalize();
+        position.x = p1.x + orientation.x * halfLength;
+        position.y = p1.y + orientation.y * halfLength;
+    }
+
     private static Vector2d real = Vector2d.zero;
 	private static Vector2d complex = Vector2d.zero;
 
     /*
      * Rotates segment s by the rotation r given in radians
 	 */
-    public static void rotateOrientation(Segment s, double r) {
+    public static void rotate(Segment s, double r) {
 		double cosR = System.Math.Cos(r);
 		double sinR = System.Math.Sin(r);
 
@@ -101,7 +122,15 @@ public class Segment {
 		real.y = cosR * s.orientation.y;
 		complex.x = sinR * s.orientation.x;
 		complex.y = sinR * s.orientation.y;
-
 		s.setOrientation(real.x - complex.y, real.y + complex.x);
 	}
+
+    private static Vector2d oldP1 = Vector2d.zero;
+
+    public static void rotateAroundP1(Segment s, double r) {
+        oldP1.x = s.p1.x;
+        oldP1.y = s.p1.y;
+        rotate(s, r);
+        s.setP1(oldP1.x, oldP1.y);
+    }
 }

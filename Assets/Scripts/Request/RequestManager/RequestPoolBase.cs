@@ -23,6 +23,15 @@ public abstract class RequestPoolBase<T> : IRequestManagerBase<T> {
      * The pool will be cleared upon execution of all requests.
      */
     public virtual T executeRequests(T baseValue, IEnumerable<RequestClass> order) {
+        T newValue = pendingValue(baseValue, order);
+        reset();
+        return newValue;
+    }
+
+    /*
+     * Applies all priority requests to the baseValue and returns the result
+     */
+    public virtual T pendingValue(T baseValue, IEnumerable<RequestClass> order) {
         T newValue = setFlag ? setValue : baseValue;
     
         //Ordered mutations
@@ -40,8 +49,6 @@ public abstract class RequestPoolBase<T> : IRequestManagerBase<T> {
                 newValue = mutation(newValue);
             }
         }
-
-        reset();
 
         return newValue;
     }

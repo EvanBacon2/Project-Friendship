@@ -17,12 +17,11 @@ public class UniqueRequestPoolBase<T> : RequestPoolBase<T>, IUniqueRequestManage
     public void addSendersTo(Dictionary<RequestSender, HashSet<Guid>> jointSenders) {
         foreach(RequestSender sender in senders.Keys) {
             if (!jointSenders.ContainsKey(sender))
-                jointSenders[sender] = senders[sender];
-            else {
-                foreach(Guid id in senders[sender]) {
-                    jointSenders[sender].Add(id);
-                }
-            }   
+                jointSenders[sender] = new HashSet<Guid>();
+
+            foreach(Guid id in senders[sender]) {
+                jointSenders[sender].Add(id);
+            }
         }
     }
 

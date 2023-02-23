@@ -14,16 +14,14 @@ public class Vector2d {
 
     public static Vector2d zero { get { return new Vector2d(0, 0); } }
     public static Vector2d up { get { return new Vector2d(0, 1); } }
+    public static Vector2d right { get { return new Vector2d(1, 0); } }
 
     public void normalize() {
         if (magnitude > 0) {
-            x = x / magnitude;
-            y = y / magnitude;
-        }
-        else {
-            x = 0;
-            y = 0;
-        }
+            double mag = magnitude;
+            x = x / mag;
+            y = y / mag;
+        } 
     }
 
     public static double dot(Vector2d lhs, Vector2d rhs) {
@@ -34,6 +32,9 @@ public class Vector2d {
         return lhs.x * rhs.y - lhs.y * rhs.x;
     }
 
+    /*
+     * Returns the result in radians
+     */
     public static double SignedAngle(Vector2d from, Vector2d to) {
         double dot = Vector2d.dot(from, to);
         double cross = Vector2d.cross(from, to);
@@ -45,6 +46,19 @@ public class Vector2d {
         else
             return System.Math.Acos(cos) * System.Math.Sign(cross);
     }
+
+    public static void rotateOrientation(Vector2d v, double r) {
+		double cosR = System.Math.Cos(r);
+		double sinR = System.Math.Sin(r);
+
+		double realX = cosR * v.x;
+		double realY = cosR * v.y;
+		double complexX = sinR * v.x;
+		double complexY = sinR * v.y;
+
+		v.x = realX - complexY;
+        v.y = realY + complexX;
+	}
 
     public override string ToString() {
         return "(" + x + ", " + y + ")";

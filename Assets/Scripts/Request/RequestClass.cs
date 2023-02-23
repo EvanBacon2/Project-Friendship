@@ -5,4 +5,5 @@ public enum RequestClass {
 	Boost,
 	BoostReset,
 	LookAtMouse,
+	Rope,
 }

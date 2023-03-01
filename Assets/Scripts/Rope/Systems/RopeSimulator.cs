@@ -1,6 +1,3 @@
-using System;
-using UnityEngine;
-
 /*
  * A base class which defines all of the methods needed to simulate, and apply constraints to, the segments of a 
  * rope.
@@ -18,24 +15,6 @@ public abstract class RopeSimulator {
 		this.segments = rope.segments;
 		this.h = rope.h;
 	}
-
-	/*public override void OnStateReceived(object sender, T state) {
-		//snapshotState(state);
-
-		OnUpdate();
-
-		for (int i = 0; i < rope.substeps; i++) {
-			mainLoop();
-		}
-
-		OnUpdateLate();
-	}*/
-
-	/*protected virtual void snapshotState(T state) {
-		rope = state.rope;
-		segments = state.rope.segments;
-		h = state.rope.h;
-	}*/
 
 	protected virtual void mainLoop() {
 		for (int i = 0; i < rope.substeps; i++) {

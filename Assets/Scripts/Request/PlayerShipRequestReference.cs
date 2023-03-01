@@ -12,7 +12,9 @@ public interface RigidbodyReference {
 
 public class PlayerShipRequestReference : RigidbodyReference {
 	private IRequestReference _velocity = new RequestReferenceMap(
-		new(),
+		new() {
+			{ RequestClass.Rope, 0 },
+		},
 		new()
 	);
 
@@ -62,7 +64,9 @@ public class PlayerShipRequestReference : RigidbodyReference {
 	);
 
 	private IRequestReference _position = new RequestReferenceMap(
-		new(),
+		new() {
+			{ RequestClass.Rope, 0 },
+		},
 		new()
 	);
 

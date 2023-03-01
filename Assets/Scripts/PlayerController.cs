@@ -74,18 +74,13 @@ public class PlayerController : MonoBehaviour {
             rope = this.rope,
             auto = PlayerInputProvider.ropeAutoInput,
             wind = PlayerInputProvider.ropeWindInput,
-            inactivePosition = anchor.position,
-            inactiveOrientation = anchor.orientation,
         });
     }
 
     private void publishAnchorState() {
         AnchorStateReceived?.Invoke(this, new() {
             anchor = this.anchor,
-            attachSegment = rope.baseSegment,
             angleLimit = rope.angleLimitRadians,
-            OffsetX = 0,
-            OffsetY = .65 + rope.winchOffset,
         });
     }
 }
@@ -100,8 +95,6 @@ public class ShipState : EventArgs {
     public bool brake { get; set; }
     public bool boost { get; set; }
     public bool isAccelerating { get; set; }
-    //public float BASE_ACCELERATION { get; set; }
-    //public float BASE_MAXSPEED { get; set; }
 }
 
 public class PlayerRopeState : EventArgs {
@@ -111,16 +104,11 @@ public class PlayerRopeState : EventArgs {
 
 public class AnchorState : EventArgs {
     public Anchor anchor { get; set; }
-    public int attachSegment { get; set; }
     public double angleLimit { get; set; }
-    public double OffsetX { get; set; }
-    public double OffsetY { get; set; }
 }
 
 public class ExtendableState : EventArgs {
     public ExtendableRope rope { get; set; }
     public bool auto { get; set; }
     public float wind { get; set; }
-    public Vector2d inactivePosition { get; set; }
-    public Vector2d inactiveOrientation { get; set; }
 }

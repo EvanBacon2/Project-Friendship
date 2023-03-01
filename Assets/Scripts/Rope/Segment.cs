@@ -12,14 +12,43 @@ public class Segment {
     public readonly Vector2d position;
     public Vector2d previousPosition;
     public Vector2d velocity;
-    public double mass;
-    public double inverseMass;
+
+    private double _mass;
+    private double _inverseMass;
+    public double mass { 
+        get { return _mass; }
+        set { 
+            _mass = value;
+            _inverseMass = value == 0 ? double.PositiveInfinity : 1 / value;
+        }
+    }
+    public double inverseMass {
+        get { return _inverseMass; }
+        set {
+            _mass = value == 0 ? double.PositiveInfinity : 1 / value;
+            _inverseMass = value;
+        }
+    }
 
     public readonly Vector2d orientation;//should be a unit vector
     public Vector2d previousOrientation;
     public double angulerVelocity;//radians
-    public double inertia;
-    public double inverseInertia;
+    private double _inertia;
+    private double _inverseInertia;
+    public double inertia {
+        get { return _inertia; }
+        set { 
+            _inertia = value;
+            _inverseInertia = value == 0 ? double.PositiveInfinity : 1 / value;
+        }
+    }
+    public double inverseInertia {
+        get { return _inverseInertia; }
+        set {
+            _inertia = value == 0 ? double.PositiveInfinity : 1 / value;
+            _inverseInertia = value;
+        }
+    }
 
     public double length;
     private double halfLength;

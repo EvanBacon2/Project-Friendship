@@ -8,7 +8,7 @@ public class PlayerRope : ExtendableRope {
     public Hook hook;
 
 	public void stiff() {
-        configure(6, .98, .98, 6, 1);
+        configure(3, .98, .98, 6, 1);
         mode = RopeMode.STIFF;
     }
 
@@ -31,12 +31,17 @@ public class PlayerRope : ExtendableRope {
 
         addAutoExtendEndCallback(() => {
             anchor.velocityCorrection = 0;
+            anchor.mass = .01;
+            anchor.inertia = .01;
 		    maxSpeed = 25;
         });
 
         addAutoRetractStartCallback(() => {
             hook.active = false;
 		    hook.unHook();
+
+            anchor.mass = double.PositiveInfinity;
+            anchor.inertia = double.PositiveInfinity;
 
 		    flexible();
 		    angulerDrag = .99;

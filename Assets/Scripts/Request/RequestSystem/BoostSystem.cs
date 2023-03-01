@@ -54,12 +54,18 @@ public class BoostSystem : RequestSystem<ShipState> {
                 }
 
                 boostVelocity = new Vector3(state.horizontalMove, state.verticalMove).normalized * rb.BASE_MAXSPEED * 2;
-                BoostStartForce = rb.Force.set(this, RequestClass.Boost, (boostVelocity * .01f, ForceMode.VelocityChange));
+                BoostStartForce = rb.Force.mutate(this, RequestClass.Boost, (List<(Vector3, ForceMode)> forces) => {
+                    forces.Add((boostVelocity * .01f, ForceMode.VelocityChange));
+                    return forces; 
+                });
                 break;
             case BoostState.BOOST_ACTIVE:
                 float x = (manager.boostTime - (state.time - lastBoostTime)) / manager.boostTime;
                 float boostMagMod = x > .85f ? 0f + (1f * ((1 - x) * (1 - x) / 1f)) : (Mathf.Log10(x * 4) / 3f) + .6f;
-                rb.Force.set(RequestClass.Boost, (boostVelocity * boostMagMod, ForceMode.VelocityChange));
+                rb.Force.mutate(RequestClass.Boost, (List<(Vector3, ForceMode)> forces) => {
+                    forces.Add((boostVelocity * boostMagMod, ForceMode.VelocityChange));
+                    return forces; 
+                });
                 coastStart = float.MaxValue;
                 break;
             case BoostState.RESET_START:

@@ -19,7 +19,7 @@ public class RECSRigidbody : MonoBehaviour {
     private ManagedAnyRequestable<Vector3> _velocity;
     private ManagedAnyRequestableValue<float> _acceleration;
     private ManagedAnyRequestableValue<float> _maxSpeed;
-    private ManagedAnyRequestable<(Vector3, ForceMode)> _force;
+    private ManagedAnyRequestable<List<(Vector3, ForceMode)>> _force;
     private ManagedAnyRequestable<float> _magnitude;
     private ManagedAnyRequestable<Quaternion> _rotation;
     private ManagedAnyRequestable<Vector3> _position;
@@ -36,7 +36,7 @@ public class RECSRigidbody : MonoBehaviour {
     public IManagedAnyRequest<float> MaxSpeed { 
         get { return _maxSpeed; }
     }
-    public IManagedAnyRequest<(Vector3, ForceMode)> Force {
+    public IManagedAnyRequest<List<(Vector3, ForceMode)>> Force {
         get { return _force; }
     }
     public IManagedAnyRequest<float> Magnitude {
@@ -58,7 +58,7 @@ public class RECSRigidbody : MonoBehaviour {
         AnyRequestPool<Vector3> velPool = new();
         _velocity = new ManagedAnyRequestable<Vector3>(
             () => { return rb.velocity; },
-            (Vector3 v) => {rb.velocity = v; },
+            (Vector3 v) => { rb.velocity = v; },
             reference.Velocity,
             new IncreasingPriority(() => { velPool.reset(); }),
             velPool
@@ -80,16 +80,13 @@ public class RECSRigidbody : MonoBehaviour {
             maxPool
         );
 
-        AnyRequestPool<(Vector3, ForceMode)> forcePool = new();
-        _force = new ManagedAnyRequestable<(Vector3, ForceMode)>(
-            () => { return (Vector3.zero, ForceMode.Force); }, 
-            ((Vector3, ForceMode) v) => { 
-                rb.AddForce(v.Item1, v.Item2);
-
-                //if (v.Item2 == ForceMode.Force || v.Item2 == ForceMode.Acceleration)
-                //    v.Item1 *= Time.fixedDeltaTime;
-                //forceAcceleration = v.Item1;
-                impendingForce = v;
+        AnyRequestPool<List<(Vector3, ForceMode)>> forcePool = new();
+        _force = new ManagedAnyRequestable<List<(Vector3, ForceMode)>>(
+            () => { return new List<(Vector3, ForceMode)>(); }, 
+            (List<(Vector3, ForceMode)> forces) => { 
+                foreach((Vector3, ForceMode) force in forces) {
+                    rb.AddForce(force.Item1, force.Item2);
+                }
             },
             reference.Force,
             new IncreasingPriority(() => { forcePool.reset(); }),

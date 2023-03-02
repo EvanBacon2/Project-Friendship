@@ -84,9 +84,13 @@ public class RECSRigidbody : MonoBehaviour {
         _force = new ManagedAnyRequestable<List<(Vector3, ForceMode)>>(
             () => { return new List<(Vector3, ForceMode)>(); }, 
             (List<(Vector3, ForceMode)> forces) => { 
+                //Debug.Log("START/////////////////////");
                 foreach((Vector3, ForceMode) force in forces) {
+                    //Debug.Log("before " + rb.velocity);
                     rb.AddForce(force.Item1, force.Item2);
+                    //Debug.Log("after " + rb.velocity);
                 }
+                //Debug.Log("END///////////////////////");
             },
             reference.Force,
             new IncreasingPriority(() => { forcePool.reset(); }),

@@ -33,20 +33,25 @@ public abstract class RequestPoolBase<T> : IRequestManagerBase<T> {
      */
     public virtual T pendingValue(T baseValue, IEnumerable<RequestClass> order) {
         T newValue = setFlag ? setValue : baseValue;
-    
+
+        HashSet<RequestClass> orderedClasses = new();
+
         //Ordered mutations
         foreach (RequestClass entry in order) {
             if (mutations.ContainsKey(entry)) {
                 foreach(Func<T, T> mutation in mutations[entry]) {
                     newValue = mutation(newValue);
                 }
-                mutations.Remove(entry);
+                orderedClasses.Add(entry);
             }
         }
+
         //Unordered mutations
-        foreach (List<Func<T, T>> mutations in mutations.Values) {
-            foreach(Func<T, T> mutation in mutations) {
-                newValue = mutation(newValue);
+        foreach (RequestClass entry in mutations.Keys) {
+            if (!orderedClasses.Contains(entry)) {
+                foreach(Func<T, T> mutation in mutations[entry]) {
+                    newValue = mutation(newValue);
+                }
             }
         }
 

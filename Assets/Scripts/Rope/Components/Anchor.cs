@@ -31,7 +31,6 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 	public Vector2d positionStep;
 	public double rotationStep;
 
-	private List<(Vector3, ForceMode)> pendingForce;
 	private Vector3 pendingVelocity = Vector3.zero;
 	
 	void Start() {
@@ -132,9 +131,9 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 
 	private void calcPendingVelocity() {
         Rigidbody rigid = GetComponent<Rigidbody>();
-        pendingVelocity = rb.Velocity.pendingValue();
+        pendingVelocity.x = rb.Velocity.pendingValue().x;
+        pendingVelocity.y = rb.Velocity.pendingValue().y;
         
-
         foreach((Vector3, ForceMode) force in rb.Force.pendingValue()) {
             float forceX = force.Item1.x;
             float forceY = force.Item1.y;
@@ -153,8 +152,9 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
             pendingVelocity.y += forceY;
         }
 
-        Debug.Log("rigid " + rigid.velocity);
-        Debug.Log("pending " + pendingVelocity);
+        double mag = pendingVelocity.magnitude;
+        if (mag > rb.MaxSpeed.pendingValue())
+            pendingVelocity = pendingVelocity.normalized * (rb.MaxSpeed.pendingValue() + .8f);
     }
 
 	private void correctVelocity() {
@@ -174,36 +174,42 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 
     private Vector3 look = new Vector3();
     private Quaternion rot = new Quaternion();
-    private Vector3 newVelocity = new Vector3();
-    private Vector3 newAcceleration = new Vector3();
-    private Vector3 force = new Vector3();
 
     /*
      * Converts the position change of anchorSegment into a Force that, when applied to the anchor's rigidbody,
      * will result in the same position change
      */
     private void updateAnchor() {
+        Vector3 anchorVC = new Vector3();
+
         look.x = (float)anchorSegment.orientation.x;
         look.y = (float)anchorSegment.orientation.y;
         rot.SetLookRotation(look, Vector3.forward);
 
-        float pendingPosX = rb.Position.value.x + pendingVelocity.x * Time.fixedDeltaTime;
-        float pendingPosY = rb.Position.value.y + pendingVelocity.y * Time.fixedDeltaTime;
+        Rigidbody rigid = GetComponent<Rigidbody>();
 
-        newVelocity.x = ((float)anchorSegment.p1.x - pendingPosX); 
-        newVelocity.y = ((float)anchorSegment.p1.y - pendingPosY);
+        float pendingPosX = rb.Position.pendingValue().x + pendingVelocity.x * Time.fixedDeltaTime;
+        float pendingPosY = rb.Position.pendingValue().y + pendingVelocity.y * Time.fixedDeltaTime;
+
+        anchorVC.x = ((float)anchorSegment.p1.x - pendingPosX) / Time.fixedDeltaTime;
+        anchorVC.y = ((float)anchorSegment.p1.y - pendingPosY) / Time.fixedDeltaTime; 
         
-        /*newAcceleration.x = (newVelocity.x - (float)pendingVelocity.x); 
-        newAcceleration.y = (newVelocity.y - (float)pendingVelocity.y);
+        Debug.Log("START////////////////////////////////////////////////////////////////");
+        Debug.Log("pending Velocity " + pendingVelocity.x + " " + pendingVelocity.y);
+        Debug.Log("anchor rigid " + rigid.position.x + " " + rigid.position.y);
+        Debug.Log("pending rigid " + pendingPosX + " " + pendingPosY);
+        Debug.Log("anchor " + anchorSegment.p1.x + " " + anchorSegment.p1.y);
+        Debug.Log("anchorVC" + anchorVC.x + " " + anchorVC.y);
+        //Debug.Log("actual Pos " + rigid.position.x + " " + rigid.position.y);
 
-        force.x = newAcceleration.x;// / Time.fixedDeltaTime;// * (float)rrb.mass;
-		force.y = newAcceleration.y;// / Time.fixedDeltaTime;// * (float)rrb.mass;*/
-       
-        //Debug.Log(force.x + " " + force.y);
+        //Debug.Log("pending V " + (pendingVelocity.x + anchorVC.x) + " " + (pendingVelocity.y + anchorVC.y));
+        //Debug.Log("actual V " + rigid.velocity.x + " " + rigid.velocity.y);
+
         rb.Force.mutate(RequestClass.Move, (List<(Vector3, ForceMode)> forces) => {
-            forces.Add((newVelocity, ForceMode.Impulse));
+            forces.Add((anchorVC, ForceMode.VelocityChange));
             return forces;
         });
+
         rb.Rotation.set(RequestClass.Rope, rot);
     }
 

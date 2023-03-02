@@ -58,7 +58,7 @@ public class PlayerShipRequestReference : RigidbodyReference {
 
 	private IRequestReference _rotation = new RequestReferenceMap(
 		new() {
-			{ RequestClass.LookAtMouse, 0 }
+			{ RequestClass.LookAtMouse, 0 },
 		},
 		new()
 	);

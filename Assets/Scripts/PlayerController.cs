@@ -38,6 +38,8 @@ public class PlayerController : MonoBehaviour {
         AnchorStateReceived = new AnchorSystem().OnStateReceived;
     }
 
+    private bool fixFlag = false;
+
     void FixedUpdate() {
         publishShipState();
         publishPlayerRopeState();
@@ -46,6 +48,21 @@ public class PlayerController : MonoBehaviour {
         
         simulator.advance();
         rigidBody.executeRequests();
+
+        Rigidbody rigid = GetComponent<Rigidbody>();
+        fixFlag = true;
+        Debug.Log("Fixed anchor Pos " + anchor.anchorSegment.p1.x + " " + anchor.anchorSegment.p1.y);
+        Debug.Log("Fixed actual Pos " + rigid.position.x + " " + rigid.position.y);
+    }
+
+    void LateUpdate() {
+        if (fixFlag) {
+            Rigidbody rigid = GetComponent<Rigidbody>();
+            Debug.Log("Late anchor Pos " + anchor.anchorSegment.p1.x + " " + anchor.anchorSegment.p1.y);
+            Debug.Log("Late actual Pos " + rigid.position.x + " " + rigid.position.y);
+            Debug.Log("END//////////////////////////////////////////////////////////////////");
+            fixFlag = false;
+        }
     }
 
     private void publishShipState() {

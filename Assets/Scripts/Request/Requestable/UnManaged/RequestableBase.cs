@@ -1,15 +1,23 @@
 using System;
 
-public class RequestableBase<T> {
+public class RequestableBase<T> : IRequestBase<T> {
     protected Func<T> _get;
     protected Action<T> _set;
 
     protected IRequestReference reference;
     protected IPriorityManager priorityManager;
 
-    public T value { 
+    public T value {
         get { return _get(); } 
         protected set { _set(value); } 
+    }
+
+    public int priority {
+        get { return priorityManager.priority; }
+    }
+
+    public RequestClass priorityClass {
+        get { return priorityManager.priorityClass; }
     }
 
     public RequestableBase(Func<T> get, Action<T> set, IRequestReference reference, IPriorityManager priority) {

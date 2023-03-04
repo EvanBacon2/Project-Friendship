@@ -3,6 +3,14 @@ using System;
 public class AnyRequestableValue<T> : RequestableValueBase<T>, IAnyRequest<T>, IUniqueRequest<T>, IRequest<T> {
     protected AnyRequestable<T> wrapper;
 
+    public int priority {
+        get { return wrapper.priority; }
+    }
+
+    public RequestClass priorityClass {
+        get { return wrapper.priorityClass; }
+    }
+
     public AnyRequestableValue(T value, IRequestReference reference, IPriorityManager priorityManager) : 
             base(value) {
         wrapper = new(getVal, setVal, reference, priorityManager);

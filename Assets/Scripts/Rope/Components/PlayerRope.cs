@@ -31,8 +31,8 @@ public class PlayerRope : ExtendableRope {
 
         addAutoExtendEndCallback(() => {
             anchor.velocityCorrection = 0;
-            anchor.mass = .01;
-            anchor.inertia = .01;
+            anchor.mass = 1;
+            anchor.inertia = 1;
 		    maxSpeed = 25;
         });
 

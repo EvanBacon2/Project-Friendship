@@ -6,7 +6,7 @@ public class AnyRequestable<T> : RequestableBase<T>, IAnyRequest<T>, IUniqueRequ
     }
 
     public virtual bool set(RequestClass rClass, T value) {
-        return priorityManager.setPriority(reference.priority(rClass), () => {
+        return priorityManager.setPriority(rClass, reference.priority(rClass), () => {
             this.value = value;
         }); 
     }
@@ -16,7 +16,7 @@ public class AnyRequestable<T> : RequestableBase<T>, IAnyRequest<T>, IUniqueRequ
     }
 
     public virtual bool mutate(RequestClass rClass, Func<T, T> mutation) {
-        return priorityManager.setPriority(reference.priority(rClass), () => {
+        return priorityManager.setPriority(rClass, reference.priority(rClass), () => {
             this.value = mutation(this.value);
         });
     }
@@ -26,7 +26,7 @@ public class AnyRequestable<T> : RequestableBase<T>, IAnyRequest<T>, IUniqueRequ
     }
 
     public virtual bool block(RequestClass rClass) {
-        return priorityManager.setPriority(reference.priority(rClass));
+        return priorityManager.setPriority(rClass, reference.priority(rClass));
     }
 
     public virtual Guid block(RequestSender sender, RequestClass rClass) {

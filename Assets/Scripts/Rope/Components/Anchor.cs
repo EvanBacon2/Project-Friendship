@@ -174,43 +174,29 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 
     private Vector3 look = new Vector3();
     private Quaternion rot = new Quaternion();
+    private Vector3 anchorVC = new Vector3();
 
     /*
      * Converts the position change of anchorSegment into a Force that, when applied to the anchor's rigidbody,
      * will result in the same position change
      */
     private void updateAnchor() {
-        Vector3 anchorVC = new Vector3();
-
         look.x = (float)anchorSegment.orientation.x;
         look.y = (float)anchorSegment.orientation.y;
         rot.SetLookRotation(look, Vector3.forward);
-
-        Rigidbody rigid = GetComponent<Rigidbody>();
 
         float pendingPosX = rb.Position.pendingValue().x + pendingVelocity.x * Time.fixedDeltaTime;
         float pendingPosY = rb.Position.pendingValue().y + pendingVelocity.y * Time.fixedDeltaTime;
 
         anchorVC.x = ((float)anchorSegment.p1.x - pendingPosX) / Time.fixedDeltaTime;
         anchorVC.y = ((float)anchorSegment.p1.y - pendingPosY) / Time.fixedDeltaTime; 
-        
-        Debug.Log("START////////////////////////////////////////////////////////////////");
-        Debug.Log("pending Velocity " + pendingVelocity.x + " " + pendingVelocity.y);
-        Debug.Log("anchor rigid " + rigid.position.x + " " + rigid.position.y);
-        Debug.Log("pending rigid " + pendingPosX + " " + pendingPosY);
-        Debug.Log("anchor " + anchorSegment.p1.x + " " + anchorSegment.p1.y);
-        Debug.Log("anchorVC" + anchorVC.x + " " + anchorVC.y);
-        //Debug.Log("actual Pos " + rigid.position.x + " " + rigid.position.y);
 
-        //Debug.Log("pending V " + (pendingVelocity.x + anchorVC.x) + " " + (pendingVelocity.y + anchorVC.y));
-        //Debug.Log("actual V " + rigid.velocity.x + " " + rigid.velocity.y);
-
-        rb.Force.mutate(RequestClass.Move, (List<(Vector3, ForceMode)> forces) => {
+        rb.Force.mutate(rb.Force.priorityClass, (List<(Vector3, ForceMode)> forces) => {
             forces.Add((anchorVC, ForceMode.VelocityChange));
             return forces;
         });
 
-        rb.Rotation.set(RequestClass.Rope, rot);
+        //rb.Rotation.set(RequestClass.Rope, rot);
     }
 
 	void OnValidate() {

@@ -4,6 +4,14 @@ using System.Collections.Generic;
 public class ManagedAnyRequestableValue<T> : ManagedRequestableValueBase<T>, IManagedAnyRequest<T> {
     protected ManagedAnyRequestable<T> wrapper;
 
+    public int priority {
+        get { return wrapper.priority; }
+    }
+
+    public RequestClass priorityClass {
+        get { return wrapper.priorityClass; }
+    }
+
     public ManagedAnyRequestableValue(T value, IRequestReference reference, IPriorityManager priorityManager, 
             IAnyRequestManager<T> requestManager) : base(value) {
         wrapper = new(getVal, setVal, reference, priorityManager, requestManager);

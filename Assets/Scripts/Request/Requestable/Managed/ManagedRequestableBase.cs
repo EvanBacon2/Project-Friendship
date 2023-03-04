@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-public class ManagedRequestableBase<T> : RequestableBase<T> {
+public class ManagedRequestableBase<T> : RequestableBase<T>, IManagedRequestBase<T> {
     protected IAnyRequestManager<T> requestManager;
 
     public ManagedRequestableBase(Func<T> get, Action<T> set, IRequestReference reference, IPriorityManager priority, 

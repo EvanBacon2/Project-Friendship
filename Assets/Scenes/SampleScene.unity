@@ -1206,6 +1206,7 @@ MonoBehaviour:
   rb: {fileID: 356274344}
   acceleration: 40
   maxSpeed: 25
+  maxRotation: 14
 --- !u!114 &356274362
 MonoBehaviour:
   m_ObjectHideFlags: 0

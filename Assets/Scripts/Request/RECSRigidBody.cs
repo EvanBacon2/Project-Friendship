@@ -6,6 +6,7 @@ public class RECSRigidbody : MonoBehaviour {
     public Rigidbody rb;
     public float acceleration;
     public float maxSpeed;
+    public float maxRotation;
 
     private float _baseAcceleration;
     private float _baseMaxSpeed;
@@ -17,9 +18,12 @@ public class RECSRigidbody : MonoBehaviour {
     private Dictionary<RequestSender, HashSet<Guid>> senders;
 
     private ManagedAnyRequestable<Vector3> _velocity;
+    private ManagedAnyRequestable<Vector3> _angularVelocity;
     private ManagedAnyRequestableValue<float> _acceleration;
     private ManagedAnyRequestableValue<float> _maxSpeed;
+    private ManagedAnyRequestableValue<float> _maxRotation;
     private ManagedAnyRequestable<List<(Vector3, ForceMode)>> _force;
+    private ManagedAnyRequestable<List<(Vector3, ForceMode)>> _torque;
     private ManagedAnyRequestable<float> _magnitude;
     private ManagedAnyRequestable<Quaternion> _rotation;
     private ManagedAnyRequestable<Vector3> _position;
@@ -30,14 +34,23 @@ public class RECSRigidbody : MonoBehaviour {
     public IManagedAnyRequest<Vector3> Velocity {
         get { return _velocity; }
     }
+    public IManagedAnyRequest<Vector3> AngularVelocity {
+        get { return _angularVelocity; }
+    }
     public IManagedAnyRequest<float> Acceleration { 
         get { return _acceleration; }
     }
     public IManagedAnyRequest<float> MaxSpeed { 
         get { return _maxSpeed; }
     }
+    public IManagedAnyRequest<float> MaxRotation {
+        get { return _maxRotation; }
+    }
     public IManagedAnyRequest<List<(Vector3, ForceMode)>> Force {
         get { return _force; }
+    }
+    public IManagedAnyRequest<List<(Vector3, ForceMode)>> Torque {
+        get { return _torque; }
     }
     public IManagedAnyRequest<float> Magnitude {
         get { return _magnitude; }
@@ -64,6 +77,15 @@ public class RECSRigidbody : MonoBehaviour {
             velPool
         );
 
+        AnyRequestPool<Vector3> angVelPool = new();
+        _angularVelocity = new ManagedAnyRequestable<Vector3>(
+            () => { return rb.angularVelocity; },
+            (Vector3 v) => { rb.angularVelocity = v; },
+            reference.AngularVelocity,
+            new IncreasingPriority(() => { angVelPool.reset(); }),
+            angVelPool
+        );
+
         AnyRequestPool<float> accPool = new();
         _acceleration = new ManagedAnyRequestableValue<float>(
             acceleration, 
@@ -72,12 +94,20 @@ public class RECSRigidbody : MonoBehaviour {
             accPool
         );
 
-        AnyRequestPool<float> maxPool = new();    
+        AnyRequestPool<float> maxSpeedPool = new();    
         _maxSpeed = new ManagedAnyRequestableValue<float>(
             maxSpeed, 
             reference.MaxSpeed, 
-            new IncreasingPriority(() => { maxPool.reset(); }), 
-            maxPool
+            new IncreasingPriority(() => { maxSpeedPool.reset(); }), 
+            maxSpeedPool
+        );
+
+        AnyRequestPool<float> maxRotationPool = new();
+        _maxRotation = new ManagedAnyRequestableValue<float>(
+            maxRotation,
+            reference.MaxRotation,
+            new IncreasingPriority(() => { maxRotationPool.reset(); }),
+            maxRotationPool
         );
 
         AnyRequestPool<List<(Vector3, ForceMode)>> forcePool = new();
@@ -91,6 +121,19 @@ public class RECSRigidbody : MonoBehaviour {
             reference.Force,
             new IncreasingPriority(() => { forcePool.reset(); }),
             forcePool
+        );
+
+        AnyRequestPool<List<(Vector3, ForceMode)>> torquePool = new();
+        _torque = new ManagedAnyRequestable<List<(Vector3, ForceMode)>>(
+            () => { return new List<(Vector3, ForceMode)>(); },
+            (List<(Vector3, ForceMode)> torques) => {
+                foreach((Vector3, ForceMode) torque in torques) {
+                    rb.AddTorque(torque.Item1, torque.Item2);
+                }
+            },
+            reference.Torque,
+            new IncreasingPriority(() => { torquePool.reset(); }),
+            torquePool
         );
 
         AnyRequestPool<float> magPool = new();
@@ -127,6 +170,7 @@ public class RECSRigidbody : MonoBehaviour {
         _acceleration.executeRequests();
         _maxSpeed.executeRequests();
         _force.executeRequests();
+        _torque.executeRequests();
         _magnitude.executeRequests();
         _rotation.executeRequests();
         _position.executeRequests();
@@ -138,6 +182,7 @@ public class RECSRigidbody : MonoBehaviour {
         _acceleration.setReference(reference.Acceleration);
         _maxSpeed.setReference(reference.MaxSpeed);
         _force.setReference(reference.Force);
+        _torque.setReference(reference.Torque);
         _magnitude.setReference(reference.Magnitude);
         _rotation.setReference(reference.Rotation);
         _position.setReference(reference.Position);
@@ -147,6 +192,7 @@ public class RECSRigidbody : MonoBehaviour {
         _acceleration.addSendersTo(senders);
         _maxSpeed.addSendersTo(senders);
         _force.addSendersTo(senders);
+        _torque.addSendersTo(senders);
         _magnitude.addSendersTo(senders);
         _rotation.addSendersTo(senders);
         _position.addSendersTo(senders);
@@ -175,6 +221,9 @@ public class RECSRigidbody : MonoBehaviour {
     private void onExecuted() {
         if (rb.velocity.magnitude > MaxSpeed.value)
             rb.velocity = rb.velocity.normalized * MaxSpeed.value;
+
+        //if (rb.angularVelocity.z > MaxRotation.value * Mathf.Deg2Rad)
+          //  rb.angularVelocity = new Vector3(rb.angularVelocity.x, rb.angularVelocity.y, MaxRotation.value);
 
         calcNextVelocity();
     }

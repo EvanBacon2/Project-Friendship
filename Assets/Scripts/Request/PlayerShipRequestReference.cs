@@ -2,9 +2,12 @@ using UnityEngine;
 
 public interface RigidbodyReference {
 	public IRequestReference Velocity { get; }
+	public IRequestReference AngularVelocity { get; }
 	public IRequestReference Acceleration { get; } 
 	public IRequestReference MaxSpeed { get; }
+	public IRequestReference MaxRotation { get; }
 	public IRequestReference Force { get; }
+	public IRequestReference Torque { get; }
 	public IRequestReference Magnitude { get; }
 	public IRequestReference Rotation { get; }
 	public IRequestReference Position { get; } 
@@ -15,6 +18,11 @@ public class PlayerShipRequestReference : RigidbodyReference {
 		new() {
 			{ RequestClass.Rope, 0 },
 		},
+		new()
+	);
+
+	private IRequestReference _angularVelocity = new RequestReferenceMap(
+		new(),
 		new()
 	);
 
@@ -36,6 +44,11 @@ public class PlayerShipRequestReference : RigidbodyReference {
 		new()
 	);
 
+	private IRequestReference _maxRotation = new RequestReferenceMap(
+		new(),
+		new()
+	);
+
 	private IRequestReference _force = new RequestReferenceMap(
 		new() {
 			{ RequestClass.Move, 0 }, 
@@ -43,6 +56,13 @@ public class PlayerShipRequestReference : RigidbodyReference {
 			{ RequestClass.Brake, 2 }, 
 			{ RequestClass.BoostReset, 3 },
 			{ RequestClass.Rope, 4 }
+		},
+		new()
+	);
+
+	private IRequestReference _torque = new RequestReferenceMap(
+		new() {
+			{ RequestClass.LookAtMouse, 0 },
 		},
 		new()
 	);
@@ -74,6 +94,10 @@ public class PlayerShipRequestReference : RigidbodyReference {
 		get { return _velocity; }
 	}
 
+	public IRequestReference AngularVelocity {
+		get { return _angularVelocity; }
+	}
+
 	public IRequestReference Acceleration {
 		get { return _acceleration; }
 	}
@@ -82,8 +106,16 @@ public class PlayerShipRequestReference : RigidbodyReference {
 		get { return _maxSpeed; }
 	}
 
+	public IRequestReference MaxRotation {
+		get { return _maxRotation; }
+	}
+
 	public IRequestReference Force {
 		get { return _force; }
+	}
+
+	public IRequestReference Torque {
+		get { return _torque; }
 	}
 
 	public IRequestReference Magnitude {

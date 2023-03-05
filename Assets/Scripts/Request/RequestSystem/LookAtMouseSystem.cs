@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -7,8 +6,9 @@ using UnityEngine.Rendering.Universal;
 
 public class LookAtMouseSystem : RequestSystem<ShipState> {
     private RECSRigidbody rb;
-
-    private float rotationDrive = 14;
+    private float maxSpeed = 1080;
+    private float acceleration = 125;
+    private float responsiveness = 15;
 
     public override void OnStateReceived(object sender, ShipState state) {
         rb = state.rigidbody;
@@ -16,15 +16,30 @@ public class LookAtMouseSystem : RequestSystem<ShipState> {
         Vector2 mousePos = state.lookDirection;
         Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(rb.Position.value)));
         
-        Quaternion rotationGoal = lookAtMouse(mousePos, playerPos);
-        Quaternion rotationStep = Quaternion.Slerp(rb.Rotation.value, rotationGoal, Time.fixedDeltaTime * rotationDrive);
+        float pendingRotation = rb.Rotation.pendingValue().eulerAngles.z + 
+                                rb.AngularVelocity.pendingValue().z * Time.fixedDeltaTime; 
+        float goalRotation = Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg - 90;
         
-        rb.Rotation.set(RequestClass.LookAtMouse, rotationStep);
-    }
+        if (pendingRotation < 0)
+            pendingRotation += 360;
+        
+        if (goalRotation < 0) 
+            goalRotation += 360;
 
-    private Quaternion lookAtMouse(Vector3 mouseInput, Vector3 playerPos) {
-        float lookAngle = Mathf.Atan2(mouseInput.y - playerPos.y, mouseInput.x - playerPos.x) * Mathf.Rad2Deg - 90;
-        return Quaternion.AngleAxis(lookAngle, Vector3.forward);
+        float angleGap = goalRotation - pendingRotation;
+        if (Mathf.Abs(angleGap) > 180)
+            angleGap = -(Mathf.Sign(angleGap) * 360 - angleGap);
+        
+        float targetVelocity = Mathf.Clamp(angleGap * responsiveness, -maxSpeed, maxSpeed);
+        float currentVelocity = rb.AngularVelocity.pendingValue().z * Mathf.Rad2Deg;
+        float velocityChange = targetVelocity - currentVelocity;
+
+        velocityChange = Mathf.Clamp(velocityChange, -acceleration, acceleration) * Mathf.Deg2Rad;
+
+        rb.Torque.mutate(RequestClass.LookAtMouse, (List<(Vector3, ForceMode)> torques) => {
+            torques.Add((new Vector3(0, 0, velocityChange), ForceMode.VelocityChange));
+            return torques;
+        });
     }
 
     /*

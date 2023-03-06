@@ -1,19 +1,37 @@
 using UnityEngine;
 
 public interface RigidbodyReference {
+	public IRequestReference Position { get; } 
+	public IRequestReference Rotation { get; }
 	public IRequestReference Velocity { get; }
 	public IRequestReference AngularVelocity { get; }
-	public IRequestReference Acceleration { get; } 
-	public IRequestReference MaxSpeed { get; }
-	public IRequestReference MaxRotation { get; }
 	public IRequestReference Force { get; }
 	public IRequestReference Torque { get; }
 	public IRequestReference Magnitude { get; }
-	public IRequestReference Rotation { get; }
-	public IRequestReference Position { get; } 
 }
 
-public class PlayerShipRequestReference : RigidbodyReference {
+public interface PlayerShipReference : RigidbodyReference {
+	public IRequestReference LinearMax { get; }
+	public IRequestReference LinearAcceleration { get; }
+	public IRequestReference AngularMax { get; }
+	public IRequestReference AngularAcceleration { get; }
+}
+
+public class PlayerShipRequestReference : PlayerShipReference {
+	private IRequestReference _position = new RequestReferenceMap(
+		new() {
+			{ RequestClass.Rope, 0 },
+		},
+		new()
+	);
+
+	private IRequestReference _rotation = new RequestReferenceMap(
+		new() {
+			{ RequestClass.LookAtMouse, 0 },
+		},
+		new()
+	);
+
 	private IRequestReference _velocity = new RequestReferenceMap(
 		new() {
 			{ RequestClass.Rope, 0 },
@@ -22,29 +40,6 @@ public class PlayerShipRequestReference : RigidbodyReference {
 	);
 
 	private IRequestReference _angularVelocity = new RequestReferenceMap(
-		new(),
-		new()
-	);
-
-	private IRequestReference _acceleration = new RequestReferenceMap(
-		new() {
-			{ RequestClass.Boost, 0 },
-			{ RequestClass.Brake, 1 },
-			{ RequestClass.BoostReset, 3 },
-		},
-		new()
-	);
-
-	private IRequestReference _maxSpeed = new RequestReferenceMap(
-		new() {
-			{ RequestClass.Boost, 0 },
-			{ RequestClass.Brake, 1 },
-			{ RequestClass.BoostReset, 2 },
-		},
-		new()
-	);
-
-	private IRequestReference _maxRotation = new RequestReferenceMap(
 		new(),
 		new()
 	);
@@ -76,19 +71,41 @@ public class PlayerShipRequestReference : RigidbodyReference {
 		new()
 	);
 
-	private IRequestReference _rotation = new RequestReferenceMap(
+	private IRequestReference _linearMax = new RequestReferenceMap(
 		new() {
-			{ RequestClass.LookAtMouse, 0 },
+			{ RequestClass.Boost, 0 },
+			{ RequestClass.Brake, 1 },
+			{ RequestClass.BoostReset, 2 },
 		},
 		new()
 	);
 
-	private IRequestReference _position = new RequestReferenceMap(
+	private IRequestReference _linearAcceleration = new RequestReferenceMap(
 		new() {
-			{ RequestClass.Rope, 0 },
+			{ RequestClass.Boost, 0 },
+			{ RequestClass.Brake, 1 },
+			{ RequestClass.BoostReset, 3 },
 		},
 		new()
 	);
+
+	private IRequestReference _angularMax = new RequestReferenceMap(
+		new(),
+		new()
+	);
+
+	private IRequestReference _angularAcceleration = new RequestReferenceMap(
+		new(),
+		new()
+	);
+
+	public IRequestReference Position {
+		get { return _position; }
+	}
+
+	public IRequestReference Rotation {
+		get { return _rotation; }
+	}
 
 	public IRequestReference Velocity {
 		get { return _velocity; }
@@ -96,18 +113,6 @@ public class PlayerShipRequestReference : RigidbodyReference {
 
 	public IRequestReference AngularVelocity {
 		get { return _angularVelocity; }
-	}
-
-	public IRequestReference Acceleration {
-		get { return _acceleration; }
-	}
-
-	public IRequestReference MaxSpeed {
-		get { return _maxSpeed; }
-	}
-
-	public IRequestReference MaxRotation {
-		get { return _maxRotation; }
 	}
 
 	public IRequestReference Force {
@@ -122,11 +127,19 @@ public class PlayerShipRequestReference : RigidbodyReference {
 		get { return _magnitude; }
 	}
 
-	public IRequestReference Rotation {
-		get { return _rotation; }
+	public IRequestReference LinearMax {
+		get { return _linearMax; }
 	}
 
-	public IRequestReference Position {
-		get { return _position; }
+	public IRequestReference LinearAcceleration {
+		get { return _linearAcceleration; }
+	}
+
+	public IRequestReference AngularMax {
+		get { return _angularMax; }
+	}
+
+	public IRequestReference AngularAcceleration {
+		get { return _angularAcceleration; }
 	}
 }

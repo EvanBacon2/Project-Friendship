@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Anchor : MonoBehaviour, RopeBehaviour {
-	public RECSRigidbody rb;
+	public RECSShipbody rb;
     public Segment anchorSegment;
 	public Segment attachSegment;
 	public ExtendableRope rope;
@@ -32,6 +32,7 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 	public double rotationStep;
 
 	private Vector3 pendingVelocity = Vector3.zero;
+    private Vector3 pendingAngulerVelocity = Vector3.zero;
 	
 	void Start() {
 		anchorSegment = new Segment(Vector2d.zero, Vector2d.up,
@@ -110,31 +111,41 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
     }
 
 	private Vector2d nextOrientation = Vector2d.zero;
+    private Vector2d nextPosition = Vector2d.zero;
 
 	/*
      * Updates the interpolation start and end points for a new physics step.
      */
     private void updateInterpolation() {
-		calcPendingVelocity();
+        pendingVelocity.x = rb.Velocity.pendingValue().x;
+        pendingVelocity.y = rb.Velocity.pendingValue().y;
+		calcPendingVelocity(rb.Force.pendingValue(), pendingVelocity);
 
-        double anchorRotation = (rb.Rotation.pendingValue().eulerAngles.z + 90) * Mathf.Deg2Rad;
-        nextOrientation.x = Math.Cos(anchorRotation);
-        nextOrientation.y = Math.Sin(anchorRotation);
+        pendingAngulerVelocity.x = rb.AngularVelocity.pendingValue().x;
+        pendingAngulerVelocity.y = rb.AngularVelocity.pendingValue().y;
+        calcPendingVelocity(rb.Torque.pendingValue(), pendingAngulerVelocity);
+
+        float nextRotation = (rb.Rotation.pendingValue().eulerAngles.z + 90) + pendingAngulerVelocity.z * Time.fixedDeltaTime;
+        nextRotation *= Mathf.Deg2Rad;
+
+        nextOrientation.x = Math.Cos(nextRotation);
+        nextOrientation.y = Math.Sin(nextRotation);
 
         rotationStep = Vector2d.SignedAngle(anchorSegment.orientation, nextOrientation) / rope.substeps;
 
-        double nextPositionX = rb.Position.pendingValue().x + pendingVelocity.x * Time.fixedDeltaTime;
-        double nextPositionY = rb.Position.pendingValue().y + pendingVelocity.y * Time.fixedDeltaTime;
-        positionStep.x = (nextPositionX - anchorSegment.p1.x) / rope.substeps;
-        positionStep.y = (nextPositionY - anchorSegment.p1.y) / rope.substeps;
+        nextPosition.x = rb.Position.pendingValue().x + pendingVelocity.x * Time.fixedDeltaTime;
+        nextPosition.y = rb.Position.pendingValue().y + pendingVelocity.y * Time.fixedDeltaTime;
+        positionStep.x = (nextPosition.x - anchorSegment.p1.x) / rope.substeps;
+        positionStep.y = (nextPosition.y - anchorSegment.p1.y) / rope.substeps;
     }
 
-	private void calcPendingVelocity() {
+    /*
+     * Applies the provided list of forces to baseVelocity.
+     */
+	private void calcPendingVelocity(List<(Vector3, ForceMode)> forces, Vector3 baseVelocity) {
         Rigidbody rigid = GetComponent<Rigidbody>();
-        pendingVelocity.x = rb.Velocity.pendingValue().x;
-        pendingVelocity.y = rb.Velocity.pendingValue().y;
         
-        foreach((Vector3, ForceMode) force in rb.Force.pendingValue()) {
+        foreach((Vector3, ForceMode) force in forces) {
             float forceX = force.Item1.x;
             float forceY = force.Item1.y;
 
@@ -148,13 +159,13 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
                 forceY *= Time.fixedDeltaTime;
             }
 
-            pendingVelocity.x += forceX;
-            pendingVelocity.y += forceY;
+            baseVelocity.x += forceX;
+            baseVelocity.y += forceY;
         }
 
         double mag = pendingVelocity.magnitude;
-        if (mag > rb.MaxSpeed.pendingValue())
-            pendingVelocity = pendingVelocity.normalized * (rb.MaxSpeed.pendingValue() + .8f);
+        if (mag > rb.LinearMax.pendingValue())
+            pendingVelocity = pendingVelocity.normalized * (rb.LinearMax.pendingValue() + .8f);
     }
 
 	private void correctVelocity() {
@@ -172,31 +183,27 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
         anchorSegment.setP1(anchorSegment.p1.x + positionStep.x, anchorSegment.p1.y + positionStep.y);
     }
 
-    private Vector3 look = new Vector3();
-    private Quaternion rot = new Quaternion();
     private Vector3 anchorVC = new Vector3();
+    private Vector3 anchorAVC = new Vector3();
 
     /*
      * Converts the position change of anchorSegment into a Force that, when applied to the anchor's rigidbody,
      * will result in the same position change
      */
     private void updateAnchor() {
-        look.x = (float)anchorSegment.orientation.x;
-        look.y = (float)anchorSegment.orientation.y;
-        rot.SetLookRotation(look, Vector3.forward);
-
-        float pendingPosX = rb.Position.pendingValue().x + pendingVelocity.x * Time.fixedDeltaTime;
-        float pendingPosY = rb.Position.pendingValue().y + pendingVelocity.y * Time.fixedDeltaTime;
-
-        anchorVC.x = ((float)anchorSegment.p1.x - pendingPosX) / Time.fixedDeltaTime;
-        anchorVC.y = ((float)anchorSegment.p1.y - pendingPosY) / Time.fixedDeltaTime; 
+        anchorVC.x = ((float)(anchorSegment.p1.x - nextPosition.x)) / Time.fixedDeltaTime;
+        anchorVC.y = ((float)(anchorSegment.p1.y - nextPosition.y)) / Time.fixedDeltaTime; 
 
         rb.Force.mutate(rb.Force.priorityClass, (List<(Vector3, ForceMode)> forces) => {
             forces.Add((anchorVC, ForceMode.VelocityChange));
             return forces;
         });
 
-        //rb.Rotation.set(RequestClass.Rope, rot);
+        anchorAVC.z = (float)Vector2d.SignedAngle(nextOrientation, anchorSegment.orientation) / Time.fixedDeltaTime;
+        rb.Torque.mutate(rb.Torque.priorityClass, (List<(Vector3, ForceMode)> torques) => {
+            torques.Add((anchorAVC, ForceMode.VelocityChange));
+            return torques;
+        });
     }
 
 	void OnValidate() {

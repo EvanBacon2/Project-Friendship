@@ -5,24 +5,21 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 public class LookAtMouseSystem : RequestSystem<ShipState> {
-    private RECSRigidbody rb;
-    private float maxSpeed = 1080;
-    private float acceleration = 125;
+    private RECSShipbody rb;
     private float responsiveness = 15;
 
     public override void OnStateReceived(object sender, ShipState state) {
         rb = state.rigidbody;
 
         Vector2 mousePos = state.lookDirection;
-        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(rb.Position.value)));
+        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(rb.Position.pendingValue())));
         
         float pendingRotation = rb.Rotation.pendingValue().eulerAngles.z + 
                                 rb.AngularVelocity.pendingValue().z * Time.fixedDeltaTime; 
         float goalRotation = Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg - 90;
         
-        if (pendingRotation < 0)
+        if (pendingRotation < 0) 
             pendingRotation += 360;
-        
         if (goalRotation < 0) 
             goalRotation += 360;
 
@@ -30,11 +27,14 @@ public class LookAtMouseSystem : RequestSystem<ShipState> {
         if (Mathf.Abs(angleGap) > 180)
             angleGap = -(Mathf.Sign(angleGap) * 360 - angleGap);
         
-        float targetVelocity = Mathf.Clamp(angleGap * responsiveness, -maxSpeed, maxSpeed);
+        float targetVelocity = Mathf.Clamp(angleGap * responsiveness, 
+                                -rb.AngularMax.pendingValue(), rb.AngularMax.pendingValue());
         float currentVelocity = rb.AngularVelocity.pendingValue().z * Mathf.Rad2Deg;
         float velocityChange = targetVelocity - currentVelocity;
-
-        velocityChange = Mathf.Clamp(velocityChange, -acceleration, acceleration) * Mathf.Deg2Rad;
+        
+        velocityChange = Mathf.Clamp(velocityChange, 
+                                    -rb.AngularAcceleration.pendingValue(), 
+                                    rb.AngularAcceleration.pendingValue()) * Mathf.Deg2Rad;
 
         rb.Torque.mutate(RequestClass.LookAtMouse, (List<(Vector3, ForceMode)> torques) => {
             torques.Add((new Vector3(0, 0, velocityChange), ForceMode.VelocityChange));

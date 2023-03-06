@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
-    private RECSRigidbody rigidBody;
+    private RECSShipbody rigidBody;
     private PlayerRope rope;
     private Anchor anchor;
     public PlayerRopeHook hook;
@@ -11,16 +11,13 @@ public class PlayerController : MonoBehaviour {
 
     private BoostManager boostManager;
 
-    private const float BASE_ACCELERATION = 40;
-    private const float BASE_MAXSPEED = 25;
-
     public event EventHandler<ShipState> ShipStateReceived;
     public event EventHandler<PlayerRopeState> PlayerRopeStateReceived;
     public event EventHandler<ExtendableState> ExtendableStateReceived;
     public event EventHandler<AnchorState> AnchorStateReceived;
 
     void Start() {
-        rigidBody = GetComponent<RECSRigidbody>();
+        rigidBody = GetComponent<RECSShipbody>();
         rope = GetComponent<PlayerRope>();
         anchor = GetComponent<Anchor>();
 
@@ -37,8 +34,6 @@ public class PlayerController : MonoBehaviour {
         ExtendableStateReceived = new ExtendableSystem().OnStateReceived;
         AnchorStateReceived = new AnchorSystem().OnStateReceived;
     }
-
-    private bool fixFlag = false;
 
     void FixedUpdate() {
         publishShipState();
@@ -89,7 +84,7 @@ public class PlayerController : MonoBehaviour {
 
 public class ShipState : EventArgs {
     public float time { get; set; }
-    public RECSRigidbody rigidbody { get; set; }
+    public RECSShipbody rigidbody { get; set; }
     public BoostManager manager { get; set; }
     public Vector3 lookDirection { get; set; }
     public float horizontalMove { get; set; }

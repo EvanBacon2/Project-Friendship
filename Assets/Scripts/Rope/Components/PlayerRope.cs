@@ -1,5 +1,10 @@
 using UnityEngine;
 
+public enum RopeMode {
+    STIFF,
+    FLEXIBLE
+}
+
 public class PlayerRope : ExtendableRope {
 	public RopeMode mode;
     public int segmentCount;
@@ -32,7 +37,7 @@ public class PlayerRope : ExtendableRope {
         addAutoExtendEndCallback(() => {
             anchor.velocityCorrection = 0;
             anchor.mass = 1;
-            anchor.inertia = 1;
+            anchor.inertia = .05;
 		    maxSpeed = 25;
         });
 

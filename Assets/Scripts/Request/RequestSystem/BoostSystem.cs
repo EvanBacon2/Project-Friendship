@@ -11,7 +11,7 @@ public enum BoostState {
 }
 
 public class BoostSystem : RequestSystem<ShipState> {
-    private RECSRigidbody rb;
+    private RECSShipbody rb;
     private BoostManager manager;
 
     private bool wasAccelerating;
@@ -49,11 +49,11 @@ public class BoostSystem : RequestSystem<ShipState> {
         switch (getState(state)) {
             case BoostState.BOOST_START:
                 if (boostLevel < manager.maxBoostLevel) {
-                    BoostStartAcceleration = rb.Acceleration.mutate(this, RequestClass.Boost, (float val) => { return val * manager.boostAccelerationMod; });
-                    BoostStartMaxSpeed = rb.MaxSpeed.mutate(this, RequestClass.Boost, (float val) => { return val + manager.boostMaxSpeedMod; });
+                    BoostStartAcceleration = rb.LinearAcceleration.mutate(this, RequestClass.Boost, (float val) => { return val * manager.boostAccelerationMod; });
+                    BoostStartMaxSpeed = rb.LinearMax.mutate(this, RequestClass.Boost, (float val) => { return val + manager.boostMaxSpeedMod; });
                 }
 
-                boostVelocity = new Vector3(state.horizontalMove, state.verticalMove).normalized * rb.BASE_MAXSPEED * 2;
+                boostVelocity = new Vector3(state.horizontalMove, state.verticalMove).normalized * rb.BASE_LINEAR_MAX * 2;
                 BoostStartForce = rb.Force.mutate(this, RequestClass.Boost, (List<(Vector3, ForceMode)> forces) => {
                     forces.Add((boostVelocity * .01f, ForceMode.VelocityChange));
                     return forces; 
@@ -69,16 +69,16 @@ public class BoostSystem : RequestSystem<ShipState> {
                 coastStart = float.MaxValue;
                 break;
             case BoostState.RESET_START:
-                brakeStep = (rb.Magnitude.value - rb.BASE_MAXSPEED) / 80;
+                brakeStep = (rb.Magnitude.value - rb.BASE_LINEAR_MAX) / 80;
                 resetBoost = true;
                 break;
             case BoostState.RESET_ACTIVE:
-                if (rb.Magnitude.value > rb.BASE_MAXSPEED) {
+                if (rb.Magnitude.value > rb.BASE_LINEAR_MAX) {
                     rb.Magnitude.mutate(RequestClass.BoostReset, (float val) => { return val - brakeStep; });
                     rb.Force.block(RequestClass.BoostReset);
                 } else {
-                    rb.Acceleration.set(RequestClass.BoostReset, rb.BASE_ACCELERATION);
-                    rb.MaxSpeed.set(RequestClass.BoostReset, rb.BASE_MAXSPEED);
+                    rb.LinearAcceleration.set(RequestClass.BoostReset, rb.BASE_LINEAR_ACCELERATION);
+                    rb.LinearMax.set(RequestClass.BoostReset, rb.BASE_LINEAR_MAX);
                     boostLevel = 0;
                     resetBoost = false;
                 }

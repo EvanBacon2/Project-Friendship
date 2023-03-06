@@ -991,7 +991,7 @@ GameObject:
   - component: {fileID: 356274346}
   - component: {fileID: 356274345}
   - component: {fileID: 356274344}
-  - component: {fileID: 356274361}
+  - component: {fileID: 356274363}
   - component: {fileID: 356274355}
   - component: {fileID: 356274356}
   - component: {fileID: 356274357}
@@ -1085,8 +1085,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1026296163}
+  m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1155,7 +1154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb678ace9d7b17446bbe6e980441106b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 356274361}
+  rb: {fileID: 356274363}
   rope: {fileID: 356274360}
   velocityCorrection: 0
   rotationStep: 0
@@ -1172,13 +1171,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   substeps: 300
-  _angleLimit: 35
-  _linearDrag: 0
-  _angulerDrag: 0.95
+  _angleLimit: 3
+  _linearDrag: 0.98
+  _angulerDrag: 0.98
   stiffness: 1
   stretchiness: 1
-  maxSpeed: 25
-  maxSpeedScale: 0.1
+  maxSpeed: 6
+  maxSpeedScale: 1
   uniformSegments: 1
   activeSegments: 0
   baseSegment: -1
@@ -1191,22 +1190,6 @@ MonoBehaviour:
   segmentLength: 0.65
   anchor: {fileID: 356274359}
   hook: {fileID: 2125503710}
---- !u!114 &356274361
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 356274343}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebfeea1129b9bf34a940e3f31a238c01, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rb: {fileID: 356274344}
-  acceleration: 40
-  maxSpeed: 25
-  maxRotation: 14
 --- !u!114 &356274362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1225,6 +1208,23 @@ MonoBehaviour:
   boostAccelerationMod: 1.3
   boostMaxSpeedMod: 3
   coastTime: 0.5
+--- !u!114 &356274363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 356274343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24c115f0fd5327e44b5836bf1bb98879, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 356274344}
+  linearMax: 25
+  linearAcceleration: 40
+  angularMax: 1080
+  angularAcceleration: 80000
 --- !u!4 &372813684 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6767336483662742566, guid: 045641f2e895dd04c9f1758630f321aa, type: 3}
@@ -2553,65 +2553,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6767336483662742566, guid: 045641f2e895dd04c9f1758630f321aa, type: 3}
   m_PrefabInstance: {fileID: 1751007455}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1026296161
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1026296163}
-  - component: {fileID: 1026296166}
-  m_Layer: 0
-  m_Name: Rope
-  m_TagString: Rope
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1026296163
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1026296161}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 356274346}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1026296166
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1026296161}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 680fe811d8e95a743a7241da2eb27b62, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxSegments: 35
-  length: 0.65
-  angleLimit: 35
-  mass: 1
-  inertia: 1
-  stiffness: 1
-  stretchiness: 1
-  maxSpeed: 6
-  maxSpeedScale: 1
-  linearDrag: 0
-  angulerDrag: 0
-  substeps: 150
-  segmentSprite: {fileID: 3538393289461218784, guid: 856e2be51034c0845a8d8fb7ca11e006, type: 3}
-  extendedSegments: 0
-  shipCorrection: 0.4
 --- !u!54 &1033195083 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 7503971735436739438, guid: ed3d00cdb8a837946bfd7dffb0041e67, type: 3}

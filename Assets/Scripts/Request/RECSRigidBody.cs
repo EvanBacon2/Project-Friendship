@@ -6,7 +6,7 @@ public class RECSRigidbody : MonoBehaviour {
     public Rigidbody rb;
 
     protected RigidbodyReference reference;
-    private Dictionary<RequestSender, HashSet<Guid>> senders;
+    protected Dictionary<RequestSender, HashSet<Guid>> senders;
 
     protected ManagedAnyRequestable<Vector3> _position;
     public ManagedAnyRequestable<Quaternion> _rotation;
@@ -14,7 +14,6 @@ public class RECSRigidbody : MonoBehaviour {
     private ManagedAnyRequestable<Vector3> _angularVelocity;
     private ManagedAnyRequestable<List<(Vector3, ForceMode)>> _force;
     private ManagedAnyRequestable<List<(Vector3, ForceMode)>> _torque;
-    private ManagedAnyRequestable<float> _magnitude;
  
     public IManagedAnyRequest<Vector3> Position {
         get { return _position; }
@@ -33,9 +32,6 @@ public class RECSRigidbody : MonoBehaviour {
     }
     public IManagedAnyRequest<List<(Vector3, ForceMode)>> Torque {
         get { return _torque; }
-    }
-    public IManagedAnyRequest<float> Magnitude {
-        get { return _magnitude; }
     }
 
     void Start() {
@@ -104,15 +100,6 @@ public class RECSRigidbody : MonoBehaviour {
             new IncreasingPriority(() => { torquePool.reset(); }),
             torquePool
         );
-
-        AnyRequestPool<float> magnitudePool = new();
-        _magnitude = new ManagedAnyRequestable<float>(
-            () => { return rb.velocity.magnitude; }, 
-            (float m) => { rb.velocity = rb.velocity.normalized * m; },
-            reference.Magnitude,
-            new IncreasingPriority(() => { magnitudePool.reset(); }),
-            magnitudePool
-        );
     }
 
     protected virtual void start() {}
@@ -127,7 +114,6 @@ public class RECSRigidbody : MonoBehaviour {
         //_angularVelocity.executeRequests();
         _force.executeRequests();
         _torque.executeRequests();
-        _magnitude.executeRequests();
         _position.executeRequests();
         _rotation.executeRequests();
     }
@@ -141,7 +127,6 @@ public class RECSRigidbody : MonoBehaviour {
         _angularVelocity.setReference(reference.AngularVelocity);
         _force.setReference(reference.Force);
         _torque.setReference(reference.Torque);
-        _magnitude.setReference(reference.Magnitude);
     }
 
     private void notifySenders() {
@@ -162,6 +147,31 @@ public class RECSRigidbody : MonoBehaviour {
         _angularVelocity.addSendersTo(senders);
         _force.addSendersTo(senders);
         _torque.addSendersTo(senders);
-        _magnitude.addSendersTo(senders);
+    }
+
+    public void calcPendingVelocity(Vector3 baseVelocity) {
+        Rigidbody rigid = GetComponent<Rigidbody>();
+        
+        foreach((Vector3, ForceMode) force in Force.pendingValue()) {
+            float forceX = force.Item1.x;
+            float forceY = force.Item1.y;
+
+            if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Impulse) {
+                forceX /= rigid.mass;
+                forceY /= rigid.mass;
+            }
+            
+            if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Acceleration) {
+                forceX *= Time.fixedDeltaTime;
+                forceY *= Time.fixedDeltaTime;
+            }
+
+            baseVelocity.x += forceX;
+            baseVelocity.y += forceY;
+        }
+
+        /*double mag = baseVelocity.magnitude;
+        if (mag > LinearMax.pendingValue())
+            baseVelocity = baseVelocity.normalized * (LinearMax.pendingValue() + .8f);*/
     }
 }

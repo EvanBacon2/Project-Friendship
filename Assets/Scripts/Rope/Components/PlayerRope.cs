@@ -49,8 +49,8 @@ public class PlayerRope : ExtendableRope {
             anchor.inertia = double.PositiveInfinity;
 
 		    flexible();
-		    angulerDrag = .99;
-		    maxSpeed = 55;
+		    angulerDrag = .995;
+		    maxSpeed = 30;
         });
 
         addAutoRetractEndCallback(() => {

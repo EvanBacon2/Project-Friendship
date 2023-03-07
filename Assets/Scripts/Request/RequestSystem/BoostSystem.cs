@@ -69,13 +69,17 @@ public class BoostSystem : RequestSystem<ShipState> {
                 coastStart = float.MaxValue;
                 break;
             case BoostState.RESET_START:
-                brakeStep = (rb.Magnitude.value - rb.BASE_LINEAR_MAX) / 80;
+                brakeStep = (rb.Velocity.pendingValue().magnitude - rb.BASE_LINEAR_MAX) * .9f;
                 resetBoost = true;
                 break;
             case BoostState.RESET_ACTIVE:
-                if (rb.Magnitude.value > rb.BASE_LINEAR_MAX) {
-                    rb.Magnitude.mutate(RequestClass.BoostReset, (float val) => { return val - brakeStep; });
-                    rb.Force.block(RequestClass.BoostReset);
+                if (rb.Velocity.pendingValue().magnitude > rb.BASE_LINEAR_MAX) {
+                    Vector3 pendingVelocity = rb.Velocity.pendingValue();
+                    rb.calcPendingVelocity(pendingVelocity);
+                    rb.Force.mutate(RequestClass.BoostReset, (List<(Vector3, ForceMode)> forces) => {
+                        forces.Add((new Vector3(pendingVelocity.x, pendingVelocity.y, 0).normalized * -brakeStep, ForceMode.Force));
+                        return forces;
+                    });
                 } else {
                     rb.LinearAcceleration.set(RequestClass.BoostReset, rb.BASE_LINEAR_ACCELERATION);
                     rb.LinearMax.set(RequestClass.BoostReset, rb.BASE_LINEAR_MAX);
@@ -90,7 +94,7 @@ public class BoostSystem : RequestSystem<ShipState> {
                     coastStart = float.MaxValue;
                 break;
         }
-
+        Debug.Log(rb.Velocity.value);
         wasAccelerating = state.isAccelerating;
         lastBoostRequestTime = state.time;
     }

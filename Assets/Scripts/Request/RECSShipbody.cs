@@ -108,9 +108,9 @@ public class RECSShipbody : RECSRigidbody {
     protected override void _notifySenders(){
         base._notifySenders();
 
-        _linearMax.notifySenders();
-        _linearAcceleration.notifySenders();
-        _angularMax.executeRequests();
-        _angularAcceleration.executeRequests();
+        _linearMax.addSendersTo(senders);
+        _linearAcceleration.addSendersTo(senders);
+        _angularMax.addSendersTo(senders);
+        _angularAcceleration.addSendersTo(senders);
     }
 }

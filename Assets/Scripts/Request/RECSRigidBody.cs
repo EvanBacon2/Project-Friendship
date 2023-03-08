@@ -14,6 +14,8 @@ public class RECSRigidbody : MonoBehaviour {
     private ManagedAnyRequestable<Vector3> _angularVelocity;
     private ManagedAnyRequestable<List<(Vector3, ForceMode)>> _force;
     private ManagedAnyRequestable<List<(Vector3, ForceMode)>> _torque;
+
+    private List<(Vector3, ForceMode)> collisionForces;
  
     public IManagedAnyRequest<Vector3> Position {
         get { return _position; }
@@ -36,6 +38,7 @@ public class RECSRigidbody : MonoBehaviour {
 
     void Start() {
         this.senders = new();
+        this.collisionForces = new();
 
         start();
 
@@ -116,6 +119,8 @@ public class RECSRigidbody : MonoBehaviour {
         _torque.executeRequests();
         _position.executeRequests();
         _rotation.executeRequests();
+
+        collisionForces.Clear();
     }
 
     protected void setReference(RigidbodyReference reference) {
@@ -133,7 +138,6 @@ public class RECSRigidbody : MonoBehaviour {
         _notifySenders();
 
         foreach(RequestSender sender in senders.Keys) {
-            Debug.Log(sender);
             sender.onRequestsExecuted(senders[sender]);
         }
 
@@ -149,29 +153,57 @@ public class RECSRigidbody : MonoBehaviour {
         _torque.addSendersTo(senders);
     }
 
-    public void calcPendingVelocity(Vector3 baseVelocity) {
-        Rigidbody rigid = GetComponent<Rigidbody>();
-        
+    /*
+     * Calculates what this rigidbody's velocity will be after all forces have been applied to it
+     */
+    public Vector3 calcPendingVelocity(Vector3 baseVelocity) {
         foreach((Vector3, ForceMode) force in Force.pendingValue()) {
-            float forceX = force.Item1.x;
-            float forceY = force.Item1.y;
-
-            if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Impulse) {
-                forceX /= rigid.mass;
-                forceY /= rigid.mass;
-            }
-            
-            if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Acceleration) {
-                forceX *= Time.fixedDeltaTime;
-                forceY *= Time.fixedDeltaTime;
-            }
-
-            baseVelocity.x += forceX;
-            baseVelocity.y += forceY;
+            baseVelocity = addForce(baseVelocity, force);
         }
 
-        /*double mag = baseVelocity.magnitude;
-        if (mag > LinearMax.pendingValue())
-            baseVelocity = baseVelocity.normalized * (LinearMax.pendingValue() + .8f);*/
+        foreach((Vector3, ForceMode) force in collisionForces) {
+            baseVelocity = addForce(baseVelocity, force);
+        }
+
+        return baseVelocity;
+    }
+
+    /*
+     * Calculates what this rigidbody's angular velocity will be after all torques have been applied to it
+     */
+    public Vector3 calcPendingAngularVelocity(Vector3 baseAngularVelocity) {
+        foreach((Vector3, ForceMode) torque in Torque.pendingValue()) {
+            baseAngularVelocity = addForce(baseAngularVelocity, torque);
+        }
+
+        return baseAngularVelocity;
+    }
+
+    private Vector3 addForce(Vector3 velocity, (Vector3, ForceMode) force) {
+        float forceX = force.Item1.x;
+        float forceY = force.Item1.y;
+        float forceZ = force.Item1.z;
+
+        if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Impulse) {
+            forceX /= rb.mass;
+            forceY /= rb.mass;
+            forceZ /= rb.mass;
+        }
+        
+        if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Acceleration) {
+            forceX *= Time.fixedDeltaTime;
+            forceY *= Time.fixedDeltaTime;
+            forceZ *= Time.fixedDeltaTime;
+        }
+
+        velocity.x += forceX;
+        velocity.y += forceY;
+        velocity.z += forceZ;
+
+        return velocity;
+    }
+
+    void OnCollisionEnter(Collision other) {
+        collisionForces.Add((other.impulse, ForceMode.Impulse));
     }
 }

@@ -17,12 +17,12 @@ public class LookAtMouseSystem : RequestSystem<ShipState> {
         float pendingRotation = rb.Rotation.pendingValue().eulerAngles.z + 
                                 rb.AngularVelocity.pendingValue().z * Time.fixedDeltaTime; 
         float goalRotation = Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg - 90;
-        
+       
         if (pendingRotation < 0) 
             pendingRotation += 360;
         if (goalRotation < 0) 
             goalRotation += 360;
-
+        
         float angleGap = goalRotation - pendingRotation;
         if (Mathf.Abs(angleGap) > 180)
             angleGap = -(Mathf.Sign(angleGap) * 360 - angleGap);

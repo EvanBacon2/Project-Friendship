@@ -119,12 +119,18 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
     private void updateInterpolation() {
         pendingVelocity.x = rb.Velocity.pendingValue().x;
         pendingVelocity.y = rb.Velocity.pendingValue().y;
-		calcPendingVelocity(rb.Force.pendingValue(), pendingVelocity);
+        pendingVelocity.z = rb.Velocity.pendingValue().z;
+        pendingVelocity = rb.calcPendingVelocity(pendingVelocity);
+
+        double mag = pendingVelocity.magnitude;
+        if (mag > rb.LinearMax.pendingValue())
+            pendingVelocity = pendingVelocity.normalized * (rb.LinearMax.pendingValue() + .8f);
 
         pendingAngulerVelocity.x = rb.AngularVelocity.pendingValue().x;
         pendingAngulerVelocity.y = rb.AngularVelocity.pendingValue().y;
-        calcPendingVelocity(rb.Torque.pendingValue(), pendingAngulerVelocity);
-
+        pendingAngulerVelocity.z = rb.AngularVelocity.pendingValue().z;
+        pendingAngulerVelocity = rb.calcPendingAngularVelocity(pendingAngulerVelocity);
+    
         float nextRotation = (rb.Rotation.pendingValue().eulerAngles.z + 90) + pendingAngulerVelocity.z * Time.fixedDeltaTime;
         nextRotation *= Mathf.Deg2Rad;
 
@@ -135,37 +141,9 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 
         nextPosition.x = rb.Position.pendingValue().x + pendingVelocity.x * Time.fixedDeltaTime;
         nextPosition.y = rb.Position.pendingValue().y + pendingVelocity.y * Time.fixedDeltaTime;
+        
         positionStep.x = (nextPosition.x - anchorSegment.p1.x) / rope.substeps;
         positionStep.y = (nextPosition.y - anchorSegment.p1.y) / rope.substeps;
-    }
-
-    /*
-     * Applies the provided list of forces to baseVelocity.
-     */
-	private void calcPendingVelocity(List<(Vector3, ForceMode)> forces, Vector3 baseVelocity) {
-        Rigidbody rigid = GetComponent<Rigidbody>();
-        
-        foreach((Vector3, ForceMode) force in forces) {
-            float forceX = force.Item1.x;
-            float forceY = force.Item1.y;
-
-            if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Impulse) {
-                forceX /= rigid.mass;
-                forceY /= rigid.mass;
-            }
-            
-            if (force.Item2 == ForceMode.Force || force.Item2 == ForceMode.Acceleration) {
-                forceX *= Time.fixedDeltaTime;
-                forceY *= Time.fixedDeltaTime;
-            }
-
-            baseVelocity.x += forceX;
-            baseVelocity.y += forceY;
-        }
-
-        double mag = pendingVelocity.magnitude;
-        if (mag > rb.LinearMax.pendingValue())
-            pendingVelocity = pendingVelocity.normalized * (rb.LinearMax.pendingValue() + .8f);
     }
 
 	private void correctVelocity() {

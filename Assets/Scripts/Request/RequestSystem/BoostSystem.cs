@@ -94,7 +94,7 @@ public class BoostSystem : RequestSystem<ShipState> {
                     coastStart = float.MaxValue;
                 break;
         }
-        Debug.Log(rb.Velocity.value);
+       
         wasAccelerating = state.isAccelerating;
         lastBoostRequestTime = state.time;
     }

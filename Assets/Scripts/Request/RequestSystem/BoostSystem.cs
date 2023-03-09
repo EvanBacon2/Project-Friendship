@@ -5,6 +5,7 @@ using UnityEngine;
 public enum BoostState {
     BOOST_START,
     BOOST_ACTIVE,
+    BOOST_END,
     RESET_START,
     RESET_ACTIVE,
     INACTIVE
@@ -28,6 +29,8 @@ public class BoostSystem : RequestSystem<ShipState> {
     private Guid BoostStartAcceleration;
     private Guid BoostStartMaxSpeed;
 
+    private BoostState boostState;
+
     public BoostSystem() {
         wasAccelerating = false;
         lastBoostRequestTime = 0;
@@ -46,14 +49,16 @@ public class BoostSystem : RequestSystem<ShipState> {
         rb = state.rigidbody;
         manager = state.manager;
 
-        switch (getState(state)) {
+        boostState = getState(state);
+
+        switch (boostState) {
             case BoostState.BOOST_START:
                 if (boostLevel < manager.maxBoostLevel) {
                     BoostStartAcceleration = rb.LinearAcceleration.mutate(this, RequestClass.Boost, (float val) => { return val * manager.boostAccelerationMod; });
                     BoostStartMaxSpeed = rb.LinearMax.mutate(this, RequestClass.Boost, (float val) => { return val + manager.boostMaxSpeedMod; });
                 }
 
-                boostVelocity = new Vector3(state.horizontalMove, state.verticalMove).normalized * rb.BASE_LINEAR_MAX * 2;
+                boostVelocity = new Vector3(state.horizontalMove, state.verticalMove).normalized * rb.BASE_LINEAR_MAX * 1;
                 BoostStartForce = rb.Force.mutate(this, RequestClass.Boost, (List<(Vector3, ForceMode)> forces) => {
                     forces.Add((boostVelocity * .01f, ForceMode.VelocityChange));
                     return forces; 
@@ -68,7 +73,21 @@ public class BoostSystem : RequestSystem<ShipState> {
                 });
                 coastStart = float.MaxValue;
                 break;
+            case BoostState.BOOST_END:
+                float diff = rb.Velocity.value.magnitude - rb.LinearMax.value;
+                float ratio = Mathf.Abs(rb.Velocity.value.x) / (Mathf.Abs(rb.Velocity.value.x) + Mathf.Abs(rb.Velocity.value.y));
+                
+                Vector3 opp = new Vector3(rb.Velocity.value.x, rb.Velocity.value.y, 0).normalized * -diff / Time.fixedDeltaTime;
+                (Vector3, ForceMode) oppForce = (opp, ForceMode.Force);
+                
+                rb.Force.mutate(RequestClass.Move, (List<(Vector3, ForceMode)> forces) => { 
+                    forces.Add(oppForce); 
+                    return forces;
+                });
+                break;
             case BoostState.RESET_START:
+                rb.LinearMax.set(RequestClass.BoostReset, rb.BASE_LINEAR_MAX);
+                rb.LinearAcceleration.set(RequestClass.BoostReset, rb.BASE_LINEAR_ACCELERATION);
                 brakeStep = (rb.Velocity.pendingValue().magnitude - rb.BASE_LINEAR_MAX) * .9f;
                 resetBoost = true;
                 break;
@@ -81,8 +100,6 @@ public class BoostSystem : RequestSystem<ShipState> {
                         return forces;
                     });
                 } else {
-                    rb.LinearAcceleration.set(RequestClass.BoostReset, rb.BASE_LINEAR_ACCELERATION);
-                    rb.LinearMax.set(RequestClass.BoostReset, rb.BASE_LINEAR_MAX);
                     boostLevel = 0;
                     resetBoost = false;
                 }
@@ -94,7 +111,7 @@ public class BoostSystem : RequestSystem<ShipState> {
                     coastStart = float.MaxValue;
                 break;
         }
-       
+        
         wasAccelerating = state.isAccelerating;
         lastBoostRequestTime = state.time;
     }
@@ -112,6 +129,8 @@ public class BoostSystem : RequestSystem<ShipState> {
             return BoostState.RESET_ACTIVE;
         else if (boostActive(args.time))
             return BoostState.BOOST_ACTIVE;
+        else if (!boostActive(args.time) && boostState == BoostState.BOOST_ACTIVE)
+            return BoostState.BOOST_END;
         else if (boostReady(args.time) && args.isAccelerating && args.boost)
             return BoostState.BOOST_START;
         else if (resetReady(args.time) && !args.isAccelerating && boostLevel > 0)

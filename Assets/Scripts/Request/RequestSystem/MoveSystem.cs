@@ -20,20 +20,17 @@ public class MoveSystem : RequestSystem<ShipState> {
             newVelocity.y = rb.Velocity.value.y + force.Item1.y * Time.fixedDeltaTime;
 
             if (newVelocity.magnitude > rb.LinearMax.value) {
-                float diff = newVelocity.magnitude - rb.LinearMax.value;
+                float diff = newVelocity.magnitude - rb.Velocity.value.magnitude;
                 float ratio = Mathf.Abs(newVelocity.x) / (Mathf.Abs(newVelocity.x) + Mathf.Abs(newVelocity.y));
                 
-                float oppX = -Mathf.Sign(newVelocity.x) * ratio * diff / Time.fixedDeltaTime;
-                float oppY = -Mathf.Sign(newVelocity.y) * (1 - ratio) * diff / Time.fixedDeltaTime;
-
-                (Vector3, ForceMode) oppForce = (new Vector3(oppX, oppY, 0), ForceMode.Force);
+                Vector3 opp = new Vector3(newVelocity.x, newVelocity.y, 0).normalized * -diff / Time.fixedDeltaTime;
+                (Vector3, ForceMode) oppForce = (opp, ForceMode.Force);
                 
                 rb.Force.mutate(RequestClass.Move, (List<(Vector3, ForceMode)> forces) => { 
                     forces.Add(oppForce); 
                     return forces;
                 });
             }
-            Debug.Log(rb.Velocity.value + " " + force);
         }
     }
 }

@@ -90,9 +90,6 @@ public class RECSShipbody : RECSRigidbody {
         _linearAcceleration.executeRequests();
         _angularMax.executeRequests();
         _angularAcceleration.executeRequests();
-
-        //if (rb.velocity.magnitude > LinearMax.value)
-            //rb.velocity = rb.velocity.normalized * LinearMax.value;
     }
 
     public void setReference(PlayerShipReference reference){

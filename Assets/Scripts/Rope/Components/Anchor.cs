@@ -122,10 +122,6 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
         pendingVelocity.z = rb.Velocity.pendingValue().z;
         pendingVelocity = rb.calcPendingVelocity(pendingVelocity);
 
-        double mag = pendingVelocity.magnitude;
-        if (mag > rb.LinearMax.pendingValue())
-            pendingVelocity = pendingVelocity.normalized * (rb.LinearMax.pendingValue() + .8f);
-
         pendingAngulerVelocity.x = rb.AngularVelocity.pendingValue().x;
         pendingAngulerVelocity.y = rb.AngularVelocity.pendingValue().y;
         pendingAngulerVelocity.z = rb.AngularVelocity.pendingValue().z;
@@ -176,6 +172,9 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
             forces.Add((anchorVC, ForceMode.VelocityChange));
             return forces;
         });
+
+        Debug.Log("real " + rb.Velocity.value);
+        Debug.Log("pending " + pendingVelocity);
 
         anchorAVC.z = (float)Vector2d.SignedAngle(nextOrientation, anchorSegment.orientation) / Time.fixedDeltaTime;
         rb.Torque.mutate(rb.Torque.priorityClass, (List<(Vector3, ForceMode)> torques) => {

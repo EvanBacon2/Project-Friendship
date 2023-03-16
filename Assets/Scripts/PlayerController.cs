@@ -35,6 +35,8 @@ public class PlayerController : MonoBehaviour {
         AnchorStateReceived = new AnchorSystem().OnStateReceived;
     }
 
+    
+
     void FixedUpdate() {
         publishShipState();
         publishPlayerRopeState();

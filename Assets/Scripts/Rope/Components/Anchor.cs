@@ -173,9 +173,6 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
             return forces;
         });
 
-        Debug.Log("real " + rb.Velocity.value);
-        Debug.Log("pending " + pendingVelocity);
-
         anchorAVC.z = (float)Vector2d.SignedAngle(nextOrientation, anchorSegment.orientation) / Time.fixedDeltaTime;
         rb.Torque.mutate(rb.Torque.priorityClass, (List<(Vector3, ForceMode)> torques) => {
             torques.Add((anchorAVC, ForceMode.VelocityChange));

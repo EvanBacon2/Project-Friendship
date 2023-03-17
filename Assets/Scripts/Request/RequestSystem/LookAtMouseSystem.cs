@@ -8,131 +8,61 @@ public class LookAtMouseSystem : RequestSystem<ShipState> {
     private RECSShipbody rb;
     private float responsiveness = 15;
 
-    float prevRotation = 0;
-    float rotation = 0;
-    float scale = 1;
-    float sign = 1;
+    private ScaledArc shipMouseDiff = new ScaledArc(3 * 360);
+    private Vector3 startPoint = new Vector3();
+    private Vector3 endPoint = new Vector3();
 
-    float gapTotal = 0;
-    float prevScaledRotation = 0;
-
-    ScaledRotation scaledShip = new ScaledRotation();
-    ScaledRotation scaledMouse = new ScaledRotation();
-
-    ScaledDifference shipMouseDiff = new ScaledDifference(0, 0, 4);
+    private Color[] lineColors =  {Color.white, Color.cyan, Color.green};
 
     public override void OnStateReceived(object sender, ShipState state) {
         rb = state.rigidbody;
 
+        Vector3 rbPos = rb.Position.pendingValue();
+        float rbAngV = rb.AngularVelocity.pendingValue().z;
+        float rbAngA = rb.AngularAcceleration.pendingValue();
+        float rbAngM = rb.AngularMax.pendingValue();
+
         Vector2 mousePos = state.lookDirection;
-        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(rb.Position.pendingValue())));
-        
+        Vector2 playerPos = Camera.main.ViewportToScreenPoint(distort(Camera.main.WorldToViewportPoint(rbPos)));
         Vector3 cameraPos = Camera.main.transform.position;
-        Vector3 startPoint = new Vector3();
-        Vector3 endPoint = new Vector3();
-
-        /*rotation = rb.Rotation.value.eulerAngles.z;
-
-        if (rotation >= 0 && rotation < 90 && prevRotation >= 270 && prevRotation < 360) 
-            scale = Mathf.Min(4, scale + (scale == -1 ? 2 : 1));
-
-        if (rotation >= 270 && rotation < 360 && prevRotation >= 0 && prevRotation < 90) 
-            scale = Mathf.Max(-4, scale - (scale == 1 ? 2 : 1));
-
-        prevRotation = rotation;
-
-        float scaledRotation;
-    
-        if (scale > 0)
-            scaledRotation = rotation + (360 * (scale - 1));
-        else
-            scaledRotation = -(360 - rotation) + (360 * (scale + 1));*/
         
-        float shipAngle = rb.Rotation.pendingValue().eulerAngles.z + 
-                        rb.AngularVelocity.pendingValue().z * Time.fixedDeltaTime;
+        float shipAngle = rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime;
         float mouseAngle = Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg - 90;
 
         if (mouseAngle < 0) 
             mouseAngle += 360;
 
-        //scaledShip.rotateTo(shipAngle);
-        //scaledMouse.rotateTo(mouseAngle);
-
         shipMouseDiff.setStart(shipAngle);
         shipMouseDiff.setEnd(mouseAngle);
+
+        float angSign = Mathf.Sign(shipMouseDiff.arc);
         
-        //Debug.Log("pending " + scaledPending.value + " goal " + scaledGoal.value);
-
-        float angSign = Mathf.Sign(shipMouseDiff.arc);//Mathf.Sign(scaledShip.value);
-
-        Color[] lineColors =  {Color.white, Color.cyan, Color.green};
-
-        float pendingRotation = 0;//scaledShip.value;//rb.Rotation.pendingValue().eulerAngles.z + rb.AngularVelocity.pendingValue().z * Time.fixedDeltaTime; 
-        float goalRotation = shipMouseDiff.arc;//scaledMouse.value;//Mathf.Atan2(mousePos.y - playerPos.y, mousePos.x - playerPos.x) * Mathf.Rad2Deg - 90;
-       
-        //Debug.Log("pending " + pendingRotation);
-        //Debug.Log("goal " + goalRotation);
-
-        //Debug.Log("ship " + shipAngle);
-        //Debug.Log("mouse " + mouseAngle);
-        
-        Debug.Log(shipMouseDiff.arc);
-
-        /*if (pendingRotation < 0) 
-            pendingRotation += 360;
-        if (goalRotation < 0) 
-            goalRotation += 360;*/
-        
-        float angleGap = goalRotation - pendingRotation;
-        //gapTotal += angleGap;
-        //Debug.Log(angleGap);
-
-        //if (Mathf.Abs(angleGap) > 180)
-            //angleGap = -(Mathf.Sign(angleGap) * 360 - angleGap);
-        
-        float targetVelocity = Mathf.Clamp(angleGap * responsiveness, 
-                                -rb.AngularMax.pendingValue(), rb.AngularMax.pendingValue());
-        float currentVelocity = rb.AngularVelocity.pendingValue().z * Mathf.Rad2Deg;
+        float targetVelocity = Mathf.Clamp(shipMouseDiff.arc * responsiveness, -rbAngM, rbAngM);
+        float currentVelocity = rbAngV * Mathf.Rad2Deg;
         float velocityChange = targetVelocity - currentVelocity;
         
-        velocityChange = Mathf.Clamp(velocityChange, 
-                                    -rb.AngularAcceleration.pendingValue(), 
-                                    rb.AngularAcceleration.pendingValue()) * Mathf.Deg2Rad;
+        velocityChange = Mathf.Clamp(velocityChange, -rbAngA, rbAngA) * Mathf.Deg2Rad;
 
         rb.Torque.mutate(RequestClass.LookAtMouse, (List<(Vector3, ForceMode)> torques) => {
             torques.Add((new Vector3(0, 0, velocityChange), ForceMode.VelocityChange));
             return torques;
         });
 
-        int pendingInt = Mathf.RoundToInt(Mathf.Abs(scaledShip.value));
-
-        int iStart;
-        int iEnd;
-
-        if (shipMouseDiff.arc > 0) {
-            iStart = Mathf.RoundToInt(shipMouseDiff.start);
-            iEnd = Mathf.RoundToInt(shipMouseDiff.end);
-        } else {
-            iStart = Mathf.RoundToInt(shipMouseDiff.end);
-            iEnd = Mathf.RoundToInt(shipMouseDiff.start);
-        }
-
         for (int i = 0; i < Mathf.RoundToInt(Mathf.Abs(shipMouseDiff.arc)); i++) {
-            int ring = Mathf.Min(2, (int)Mathf.Floor((i - pendingInt) / 360));
+            int ring = Mathf.Min(2, (int)Mathf.Floor(i / 360.0f));
             float radius = (5 + (ring * 1));
+            Color lineColor = angSign < 0 ? Color.red : Color.cyan;
 
             float ang = shipMouseDiff.start + (i * angSign) + 90;
 
-            startPoint.x = cameraPos.x + Mathf.Cos(ang * Mathf.Deg2Rad) * radius;
-            startPoint.y = cameraPos.y + Mathf.Sin(ang * Mathf.Deg2Rad) * radius;
+            startPoint.x = rb.Position.value.x + Mathf.Cos(ang * Mathf.Deg2Rad) * radius;
+            startPoint.y = rb.Position.value.y + Mathf.Sin(ang * Mathf.Deg2Rad) * radius;
 
-            endPoint.x = cameraPos.x + Mathf.Cos((ang + angSign) * Mathf.Deg2Rad) * radius;
-            endPoint.y = cameraPos.y + Mathf.Sin((ang + angSign) * Mathf.Deg2Rad) * radius;
+            endPoint.x = rb.Position.value.x + Mathf.Cos((ang + angSign) * Mathf.Deg2Rad) * radius;
+            endPoint.y = rb.Position.value.y + Mathf.Sin((ang + angSign) * Mathf.Deg2Rad) * radius;
 
-            Debug.DrawLine(startPoint, endPoint, lineColors[ring], Time.fixedDeltaTime);
+            Debug.DrawLine(startPoint, endPoint, lineColor, Time.fixedDeltaTime);
         }
-
-        //prevScaledRotation = scaledRotation;
     }
 
     /*
@@ -172,40 +102,12 @@ public class LookAtMouseSystem : RequestSystem<ShipState> {
     }
 }
 
-public class ScaledRotation {
-    private float prevRotation;
-    private float scale;
-    public float value { get; private set; }
-
-    public ScaledRotation() {
-        this.prevRotation = 0;
-        this.scale = 1;
-        this.value = 0;
-    }
-
-    public void rotateTo(float rotation) {
-        if (rotation >= 0 && rotation < 90 && prevRotation >= 270 && prevRotation < 360) 
-            scale = Mathf.Min(4, scale + (scale == -1 ? 2 : 1));
-
-        if (rotation >= 270 && rotation < 360 && prevRotation >= 0 && prevRotation < 90) 
-            scale = Mathf.Max(-4, scale - (scale == 1 ? 2 : 1));
-
-        if (scale > 0)
-            value = rotation + (360 * (scale - 1));
-        else
-            value = -(360 - rotation) + (360 * (scale + 1));
-
-        prevRotation = rotation;
-    }
-}
-
-public class ScaledDifference {
+public class ScaledArc {
     private float _start;
     private float _end;
-    private float loops;
-    private float range;
+    private float _arc;
 
-    private float maxLoops;
+    private float max;
 
     public float start {
         get { return _start; }
@@ -216,38 +118,37 @@ public class ScaledDifference {
     }
 
     public float arc { 
-        get { return loops * 360 + range; }
+        get { 
+            return Mathf.Clamp(_arc, -max, max);
+        }
     }
 
-    public ScaledDifference(float start, float end, float maxLoops) {
-        this._start = start;
-        this._end = end;
-        this.maxLoops = maxLoops;
+    public ScaledArc(float max) {
+        this._start = 0;
+        this._end = 0;
+        this._arc = 0;
 
-        this.loops = 0;
-        this.range = calculateRange(start, end);
+        this.max = max;
     }
 
     public void setStart(float newStart) {
-        setRange(range - calculateRange(start, newStart) * Mathf.Sign(range));
+        setArc(_arc - calculateRange(start, newStart));
         _start = newStart;
     }
 
     public void setEnd(float newEnd) {
-        setRange(range + calculateRange(end, newEnd) * Mathf.Sign(range));
+        setArc(_arc + calculateRange(end, newEnd));
         _end = newEnd;
     }
 
-    private void setRange(float newRange) {
-        range = newRange;
+    private void setArc(float newArc) {
+        _arc = newArc;
 
-        if (range >= 360) {
-            range -= 360;
-            loops += 1;
-        } else if (range <= 360) {
-            range += 360;
-            loops -= 1;
-        }
+        if (_arc > max + 360)
+            _arc -= 360;
+        
+        if (_arc < -max - 360)
+            _arc += 360;
     }
 
     private float calculateRange(float start, float end) {

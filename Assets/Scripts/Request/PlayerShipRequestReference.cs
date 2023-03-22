@@ -33,9 +33,7 @@ public class PlayerShipRequestReference : PlayerShipReference {
 	);
 
 	private IRequestReference _velocity = new RequestReferenceMap(
-		new() {
-			{ RequestClass.Rope, 0 },
-		},
+		new(),
 		new()
 	);
 

@@ -62,7 +62,7 @@ public class RECSRigidbody : MonoBehaviour {
         
         AnyRequestPool<Vector3> velocityPool = new();
         _velocity = new ManagedAnyRequestable<Vector3>(
-            () => { return rb.velocity; },
+            () => { return rb.velocity; /*new Vector3(rb.velocity.x, rb.velocity.y, rb.velocity.z);*/ },
             (Vector3 v) => { rb.velocity = v; },
             reference.Velocity,
             new IncreasingPriority(() => { velocityPool.reset(); }),
@@ -71,7 +71,7 @@ public class RECSRigidbody : MonoBehaviour {
 
         AnyRequestPool<Vector3> angularVelocityPool = new();
         _angularVelocity = new ManagedAnyRequestable<Vector3>(
-            () => { return rb.angularVelocity; },
+            () => { return rb.angularVelocity; /*new Vector3(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z);*/ },
             (Vector3 v) => { rb.angularVelocity = v; },
             reference.AngularVelocity,
             new IncreasingPriority(() => { angularVelocityPool.reset(); }),
@@ -113,8 +113,8 @@ public class RECSRigidbody : MonoBehaviour {
     }
 
     protected virtual void _executeRequests() {
-        //_velocity.executeRequests();
-        //_angularVelocity.executeRequests();
+        _velocity.executeRequests();
+        _angularVelocity.executeRequests();
         _force.executeRequests();
         _torque.executeRequests();
         _position.executeRequests();

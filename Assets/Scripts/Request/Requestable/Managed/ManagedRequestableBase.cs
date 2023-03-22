@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ManagedRequestableBase<T> : RequestableBase<T>, IManagedRequestBase<T> {
     protected IAnyRequestManager<T> requestManager;

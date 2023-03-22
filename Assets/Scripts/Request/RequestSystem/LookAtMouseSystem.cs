@@ -18,7 +18,7 @@ public class LookAtMouseSystem : RequestSystem<ShipState> {
         rb = state.rigidbody;
 
         Vector3 rbPos = rb.Position.pendingValue();
-        float rbAngV = rb.AngularVelocity.pendingValue().z;
+        float rbAngV = rb.AngularVelocity.value.z;
         float rbAngA = rb.AngularAcceleration.pendingValue();
         float rbAngM = rb.AngularMax.pendingValue();
 

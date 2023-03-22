@@ -122,9 +122,9 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
         pendingVelocity.z = rb.Velocity.pendingValue().z;
         pendingVelocity = rb.calcPendingVelocity(pendingVelocity);
 
-        pendingAngulerVelocity.x = rb.AngularVelocity.pendingValue().x;
-        pendingAngulerVelocity.y = rb.AngularVelocity.pendingValue().y;
-        pendingAngulerVelocity.z = rb.AngularVelocity.pendingValue().z;
+        pendingAngulerVelocity.x = rb.AngularVelocity.value.x;
+        pendingAngulerVelocity.y = rb.AngularVelocity.value.y;
+        pendingAngulerVelocity.z = rb.AngularVelocity.value.z;
         pendingAngulerVelocity = rb.calcPendingAngularVelocity(pendingAngulerVelocity);
     
         float nextRotation = (rb.Rotation.pendingValue().eulerAngles.z + 90) + pendingAngulerVelocity.z * Time.fixedDeltaTime;

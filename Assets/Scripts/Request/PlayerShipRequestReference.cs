@@ -20,14 +20,14 @@ public interface PlayerShipReference : RigidbodyReference {
 public class PlayerShipRequestReference : PlayerShipReference {
 	private IRequestReference _position = new RequestReferenceMap(
 		new() {
-			{ RequestClass.Rope, 0 },
+			{ PriorityAlias.Rope, 0 },
 		},
 		new()
 	);
 
 	private IRequestReference _rotation = new RequestReferenceMap(
 		new() {
-			{ RequestClass.LookAtMouse, 0 },
+			{ PriorityAlias.LookAtMouse, 0 },
 		},
 		new()
 	);
@@ -44,45 +44,45 @@ public class PlayerShipRequestReference : PlayerShipReference {
 
 	private IRequestReference _force = new RequestReferenceMap(
 		new() {
-			{ RequestClass.Move, 0 }, 
-			{ RequestClass.Boost, 1 },
-			{ RequestClass.Brake, 2 }, 
-			{ RequestClass.BoostReset, 3 },
-			{ RequestClass.Rope, 4 }
+			{ PriorityAlias.Move, 0 }, 
+			{ PriorityAlias.Boost, 1 },
+			{ PriorityAlias.Brake, 2 }, 
+			{ PriorityAlias.BoostReset, 3 },
+			{ PriorityAlias.Rope, 4 }
 		},
 		new()
 	);
 
 	private IRequestReference _torque = new RequestReferenceMap(
 		new() {
-			{ RequestClass.LookAtMouse, 0 },
+			{ PriorityAlias.LookAtMouse, 0 },
 		},
 		new()
 	);
 
 	private IRequestReference _magnitude = new RequestReferenceMap(
 		new() {
-			{ RequestClass.Brake, 0 },
-			{ RequestClass.Boost, 1 },
-			{ RequestClass.BoostReset, 2 },
+			{ PriorityAlias.Brake, 0 },
+			{ PriorityAlias.Boost, 1 },
+			{ PriorityAlias.BoostReset, 2 },
 		},
 		new()
 	);
 
 	private IRequestReference _linearMax = new RequestReferenceMap(
 		new() {
-			{ RequestClass.Boost, 0 },
-			{ RequestClass.Brake, 1 },
-			{ RequestClass.BoostReset, 2 },
+			{ PriorityAlias.Boost, 0 },
+			{ PriorityAlias.Brake, 1 },
+			{ PriorityAlias.BoostReset, 2 },
 		},
 		new()
 	);
 
 	private IRequestReference _linearAcceleration = new RequestReferenceMap(
 		new() {
-			{ RequestClass.Boost, 0 },
-			{ RequestClass.Brake, 1 },
-			{ RequestClass.BoostReset, 3 },
+			{ PriorityAlias.Boost, 0 },
+			{ PriorityAlias.Brake, 1 },
+			{ PriorityAlias.BoostReset, 3 },
 		},
 		new()
 	);

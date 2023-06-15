@@ -1,4 +1,4 @@
-using UnityEngine;
+/*using UnityEngine;
 using UnityEditor;
 
 [System.AttributeUsage(System.AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
@@ -14,4 +14,4 @@ public class ReadOnlyFieldAttributeDrawer : PropertyDrawer {
         EditorGUI.PropertyField(position, property, label, true);
         GUI.enabled = true;
     }
-}
+}*/

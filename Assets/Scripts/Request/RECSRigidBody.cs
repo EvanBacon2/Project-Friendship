@@ -17,22 +17,22 @@ public class RECSRigidbody : MonoBehaviour {
 
     private List<(Vector3, ForceMode)> collisionForces;
  
-    public IManagedAnyRequest<Vector3> Position {
+    public IManagedRequestPort<Vector3> Position {
         get { return _position; }
     }
-    public IManagedAnyRequest<Quaternion> Rotation {
+    public IManagedRequestPort<Quaternion> Rotation {
         get { return _rotation; }
     }
-    public IManagedAnyRequest<Vector3> Velocity {
+    public IManagedRequestPort<Vector3> Velocity {
         get { return _velocity; }
     }
-    public IManagedAnyRequest<Vector3> AngularVelocity {
+    public IManagedRequestPort<Vector3> AngularVelocity {
         get { return _angularVelocity; }
     }
-    public IManagedAnyRequest<List<(Vector3, ForceMode)>> Force {
+    public IManagedRequestPort<List<(Vector3, ForceMode)>> Force {
         get { return _force; }
     }
-    public IManagedAnyRequest<List<(Vector3, ForceMode)>> Torque {
+    public IManagedRequestPort<List<(Vector3, ForceMode)>> Torque {
         get { return _torque; }
     }
 

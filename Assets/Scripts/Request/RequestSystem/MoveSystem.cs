@@ -11,7 +11,7 @@ public class MoveSystem : RequestSystem<ShipState> {
         if (state.isAccelerating) {
             (Vector3, ForceMode) force = (new Vector3(state.horizontalMove, state.verticalMove, 0).normalized * rb.LinearAcceleration.value, ForceMode.Force);
 
-            rb.Force.mutate(RequestClass.Move, (List<(Vector3, ForceMode)> forces) => { 
+            rb.Force.mutate(PriorityAlias.Move, (List<(Vector3, ForceMode)> forces) => { 
                 forces.Add(force); 
                 return forces;
             });
@@ -26,7 +26,7 @@ public class MoveSystem : RequestSystem<ShipState> {
                 Vector3 opp = new Vector3(newVelocity.x, newVelocity.y, 0).normalized * -diff / Time.fixedDeltaTime;
                 (Vector3, ForceMode) oppForce = (opp, ForceMode.Force);
                 
-                rb.Force.mutate(RequestClass.Move, (List<(Vector3, ForceMode)> forces) => { 
+                rb.Force.mutate(PriorityAlias.Move, (List<(Vector3, ForceMode)> forces) => { 
                     forces.Add(oppForce); 
                     return forces;
                 });

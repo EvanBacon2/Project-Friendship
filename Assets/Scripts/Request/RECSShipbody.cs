@@ -25,19 +25,19 @@ public class RECSShipbody : RECSRigidbody {
     private ManagedAnyRequestableValue<float> _angularMax;
     private ManagedAnyRequestableValue<float> _angularAcceleration;
     
-    public IManagedAnyRequest<float> LinearMax { 
+    public IManagedRequestPort<float> LinearMax { 
         get { return _linearMax; }
     }
 
-    public IManagedAnyRequest<float> LinearAcceleration { 
+    public IManagedRequestPort<float> LinearAcceleration { 
         get { return _linearAcceleration; }
     }
 
-    public IManagedAnyRequest<float> AngularMax {
+    public IManagedRequestPort<float> AngularMax {
         get { return _angularMax; }
     }
 
-    public IManagedAnyRequest<float> AngularAcceleration {
+    public IManagedRequestPort<float> AngularAcceleration {
         get { return _angularAcceleration; }
     }
 

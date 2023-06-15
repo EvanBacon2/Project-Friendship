@@ -38,7 +38,7 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
 		    active = false;
 			unHook();
 		}   
-    
+        Debug.Log(hookSegment.mass);
         //tighten rope
         if (tighten) {
             if (tightLength > tightenRate) {

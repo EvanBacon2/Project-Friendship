@@ -1020,7 +1020,7 @@ Rigidbody:
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 120
+  m_Constraints: 56
   m_CollisionDetection: 1
 --- !u!212 &356274345
 SpriteRenderer:
@@ -1224,7 +1224,7 @@ MonoBehaviour:
   linearMax: 25
   linearAcceleration: 40
   angularMax: 1080
-  angularAcceleration: 130
+  angularAcceleration: 225
 --- !u!4 &372813684 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6767336483662742566, guid: 045641f2e895dd04c9f1758630f321aa, type: 3}

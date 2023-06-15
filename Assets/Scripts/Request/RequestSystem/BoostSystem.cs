@@ -54,12 +54,12 @@ public class BoostSystem : RequestSystem<ShipState> {
         switch (boostState) {
             case BoostState.BOOST_START:
                 if (boostLevel < manager.maxBoostLevel) {
-                    BoostStartAcceleration = rb.LinearAcceleration.mutate(this, RequestClass.Boost, (float val) => { return val * manager.boostAccelerationMod; });
-                    BoostStartMaxSpeed = rb.LinearMax.mutate(this, RequestClass.Boost, (float val) => { return val + manager.boostMaxSpeedMod; });
+                    BoostStartAcceleration = rb.LinearAcceleration.mutate(this, PriorityAlias.Boost, (float val) => { return val * manager.boostAccelerationMod; });
+                    BoostStartMaxSpeed = rb.LinearMax.mutate(this, PriorityAlias.Boost, (float val) => { return val + manager.boostMaxSpeedMod; });
                 }
 
                 boostVelocity = new Vector3(state.horizontalMove, state.verticalMove).normalized * rb.BASE_LINEAR_MAX * 1;
-                BoostStartForce = rb.Force.mutate(this, RequestClass.Boost, (List<(Vector3, ForceMode)> forces) => {
+                BoostStartForce = rb.Force.mutate(this, PriorityAlias.Boost, (List<(Vector3, ForceMode)> forces) => {
                     forces.Add((boostVelocity * .01f, ForceMode.VelocityChange));
                     return forces; 
                 });
@@ -67,7 +67,7 @@ public class BoostSystem : RequestSystem<ShipState> {
             case BoostState.BOOST_ACTIVE:
                 float x = (manager.boostTime - (state.time - lastBoostTime)) / manager.boostTime;
                 float boostMagMod = x > .85f ? 0f + (1f * ((1 - x) * (1 - x) / 1f)) : (Mathf.Log10(x * 4) / 3f) + .6f;
-                rb.Force.mutate(RequestClass.Boost, (List<(Vector3, ForceMode)> forces) => {
+                rb.Force.mutate(PriorityAlias.Boost, (List<(Vector3, ForceMode)> forces) => {
                     forces.Add((boostVelocity * boostMagMod, ForceMode.VelocityChange));
                     return forces; 
                 });
@@ -80,14 +80,14 @@ public class BoostSystem : RequestSystem<ShipState> {
                 Vector3 opp = new Vector3(rb.Velocity.value.x, rb.Velocity.value.y, 0).normalized * -diff / Time.fixedDeltaTime;
                 (Vector3, ForceMode) oppForce = (opp, ForceMode.Force);
                 
-                rb.Force.mutate(RequestClass.Move, (List<(Vector3, ForceMode)> forces) => { 
+                rb.Force.mutate(PriorityAlias.Move, (List<(Vector3, ForceMode)> forces) => { 
                     forces.Add(oppForce); 
                     return forces;
                 });
                 break;
             case BoostState.RESET_START:
-                rb.LinearMax.set(RequestClass.BoostReset, rb.BASE_LINEAR_MAX);
-                rb.LinearAcceleration.set(RequestClass.BoostReset, rb.BASE_LINEAR_ACCELERATION);
+                rb.LinearMax.set(PriorityAlias.BoostReset, rb.BASE_LINEAR_MAX);
+                rb.LinearAcceleration.set(PriorityAlias.BoostReset, rb.BASE_LINEAR_ACCELERATION);
                 brakeStep = (rb.Velocity.pendingValue().magnitude - rb.BASE_LINEAR_MAX) * .9f;
                 resetBoost = true;
                 break;
@@ -95,7 +95,7 @@ public class BoostSystem : RequestSystem<ShipState> {
                 if (rb.Velocity.pendingValue().magnitude > rb.BASE_LINEAR_MAX) {
                     Vector3 pendingVelocity = rb.Velocity.pendingValue();
                     rb.calcPendingVelocity(pendingVelocity);
-                    rb.Force.mutate(RequestClass.BoostReset, (List<(Vector3, ForceMode)> forces) => {
+                    rb.Force.mutate(PriorityAlias.BoostReset, (List<(Vector3, ForceMode)> forces) => {
                         forces.Add((new Vector3(pendingVelocity.x, pendingVelocity.y, 0).normalized * -brakeStep, ForceMode.Force));
                         return forces;
                     });

@@ -43,7 +43,7 @@ public class LookAtMouseSystem : RequestSystem<ShipState> {
         
         velocityChange = Mathf.Clamp(velocityChange, -rbAngA, rbAngA) * Mathf.Deg2Rad;
 
-        rb.Torque.mutate(RequestClass.LookAtMouse, (List<(Vector3, ForceMode)> torques) => {
+        rb.Torque.mutate(PriorityAlias.LookAtMouse, (List<(Vector3, ForceMode)> torques) => {
             torques.Add((new Vector3(0, 0, velocityChange), ForceMode.VelocityChange));
             return torques;
         });

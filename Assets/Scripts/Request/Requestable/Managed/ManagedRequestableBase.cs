@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ManagedRequestableBase<T> : RequestableBase<T>, IManagedRequestBase<T> {
+public class ManagedRequestableBase<T> : PriorityWrapper<T>, IManagedPriorityValue<T> {
     protected IAnyRequestManager<T> requestManager;
 
     public ManagedRequestableBase(Func<T> get, Action<T> set, IRequestReference reference, IPriorityManager priority, 

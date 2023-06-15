@@ -5,7 +5,7 @@ using UnityEngine;
 public abstract class RequestPoolBase<T> : IRequestManagerBase<T> {
     protected bool setFlag;
     protected T setValue;
-    protected Dictionary<RequestClass, List<Func<T, T>>> mutations;
+    protected Dictionary<PriorityAlias, List<Func<T, T>>> mutations;
 
     public RequestPoolBase() {
         this.setFlag = false;
@@ -23,7 +23,7 @@ public abstract class RequestPoolBase<T> : IRequestManagerBase<T> {
      * 
      * The pool will be cleared upon execution of all requests.
      */
-    public virtual T executeRequests(T baseValue, IEnumerable<RequestClass> order) {
+    public virtual T executeRequests(T baseValue, IEnumerable<PriorityAlias> order) {
         T newValue = pendingValue(baseValue, order);
         reset();
         return newValue;
@@ -32,13 +32,13 @@ public abstract class RequestPoolBase<T> : IRequestManagerBase<T> {
     /*
      * Applies all priority requests to the baseValue and returns the result
      */
-    public virtual T pendingValue(T baseValue, IEnumerable<RequestClass> order) {
+    public virtual T pendingValue(T baseValue, IEnumerable<PriorityAlias> order) {
         T newValue = setFlag ? setValue : baseValue;
 
-        HashSet<RequestClass> orderedClasses = new();
+        HashSet<PriorityAlias> orderedClasses = new();
 
         //Ordered mutations
-        foreach (RequestClass entry in order) {
+        foreach (PriorityAlias entry in order) {
             if (mutations.ContainsKey(entry)) {
                 foreach(Func<T, T> mutation in mutations[entry]) {
                     newValue = mutation(newValue);
@@ -48,7 +48,7 @@ public abstract class RequestPoolBase<T> : IRequestManagerBase<T> {
         }
 
         //Unordered mutations
-        foreach (RequestClass entry in mutations.Keys) {
+        foreach (PriorityAlias entry in mutations.Keys) {
             if (!orderedClasses.Contains(entry)) {
                 foreach(Func<T, T> mutation in mutations[entry]) {
                     newValue = mutation(newValue);

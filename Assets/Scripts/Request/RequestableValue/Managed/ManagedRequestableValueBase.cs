@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-public abstract class ManagedRequestableValueBase<T> : RequestableValueBase<T> {
+public abstract class ManagedRequestableValueBase<T> : PriorityValue<T> {
     public ManagedRequestableValueBase(T value) : base(value) {}
 
     public abstract void executeRequests();
@@ -9,3 +9,4 @@ public abstract class ManagedRequestableValueBase<T> : RequestableValueBase<T> {
     public abstract void notifySenders();
     public abstract void addSendersTo(Dictionary<RequestSender, HashSet<Guid>> senders);
 }
+

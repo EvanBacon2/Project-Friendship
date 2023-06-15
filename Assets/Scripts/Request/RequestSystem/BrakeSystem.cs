@@ -15,12 +15,12 @@ public class BrakeRequest : RequestSystem<ShipState> {
         rb.calcPendingVelocity(pendingVelocity);
 
         if (state.brake) {
-            rb.Force.mutate(RequestClass.Brake, (List<(Vector3, ForceMode)> forces) => { 
+            rb.Force.mutate(PriorityAlias.Brake, (List<(Vector3, ForceMode)> forces) => { 
                 forces.Add((new Vector3(pendingVelocity.x, pendingVelocity.y, 0).normalized * brakeRate, ForceMode.Force));
                 return forces;
             });
-            rb.LinearAcceleration.block(RequestClass.Brake);
-            rb.LinearMax.block(RequestClass.Brake);
+            rb.LinearAcceleration.block(PriorityAlias.Brake);
+            rb.LinearMax.block(PriorityAlias.Brake);
         }
     }
 }

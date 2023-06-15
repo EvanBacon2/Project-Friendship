@@ -8,13 +8,13 @@ public class IncreasingPriority : IPriorityManager {
     private readonly int _basePriority;
     private Action onPriorityChange;
 
-    private RequestClass _priorityClass;
+    private PriorityAlias _priorityClass;
 
     public int priority {
         get { return _priority; }
     }
 
-    public RequestClass priorityClass {
+    public PriorityAlias priorityClass {
         get { return _priorityClass; }
     }
 
@@ -34,7 +34,7 @@ public class IncreasingPriority : IPriorityManager {
      * Returns true if newPriority is greater than or equal to priority
      * If priority is successfully set then onSuccess callback is invoked.
      */
-    public bool setPriority(RequestClass newPriorityClass, int newPriority, Action onSuccess) {
+    public bool setPriority(PriorityAlias newPriorityClass, int newPriority, Action onSuccess) {
         if (newPriority > _priority)
             onPriorityChange();
 
@@ -54,7 +54,7 @@ public class IncreasingPriority : IPriorityManager {
      * 
      * Returns true if newPriority is greater than or equal to priority
      */
-    public bool setPriority(RequestClass rClass, int newPriority) {
+    public bool setPriority(PriorityAlias rClass, int newPriority) {
         return setPriority(rClass, newPriority, () => {});
     }
 

@@ -1,15 +1,5 @@
 using System;
 
-public interface IRequestBase<T> {
-    public T value { get; }
-    public int priority { get; }
-    public RequestClass priorityClass { get; }
-}
-
-public interface IManagedRequestBase<T> : IRequestBase<T> {
-    public T pendingValue();
-}
-
 /*
  * Defines a set of methods for submiting requests
  *
@@ -17,9 +7,9 @@ public interface IManagedRequestBase<T> : IRequestBase<T> {
  * means it does not.
  */
 public interface IRequest<T> {
-    public bool set(RequestClass priority, T value);
-    public bool mutate(RequestClass priority, Func<T, T> mutation);
-    public bool block(RequestClass priority);
+    public bool set(PriorityAlias priority, T value);
+    public bool mutate(PriorityAlias priority, Func<T, T> mutation);
+    public bool block(PriorityAlias priority);
 }
 
 /*
@@ -31,10 +21,19 @@ public interface IRequest<T> {
  * any other Guid means it does.
  */
 public interface IUniqueRequest<T> {
-    public Guid set(RequestSender sender, RequestClass priority, T value);
-    public Guid mutate(RequestSender sender, RequestClass priority, Func<T, T> mutation);
-    public Guid block(RequestSender sender, RequestClass priority);
+    public Guid set(RequestSender sender, PriorityAlias priority, T value);
+    public Guid mutate(RequestSender sender, PriorityAlias priority, Func<T, T> mutation);
+    public Guid block(RequestSender sender, PriorityAlias priority);
 }
 
-public interface IAnyRequest<T> : IRequest<T>, IUniqueRequest<T>, IRequestBase<T> {}
-public interface IManagedAnyRequest<T>: IRequest<T>, IUniqueRequest<T>, IManagedRequestBase<T> {}
+/*
+ * Defines a set of methods that gives read access to a priority value, as well as
+ * methods that can be used to request changes to its value.
+ */
+public interface IRequestPort<T> : IRequest<T>, IUniqueRequest<T>, IPriorityValue<T> {}
+
+/*
+ * Defines a set of methods that gives read access to a managed priority value, as well as
+ * methods that can be used to request changes to its value.
+ */
+public interface IManagedRequestPort<T>: IRequest<T>, IUniqueRequest<T>, IManagedPriorityValue<T> {}

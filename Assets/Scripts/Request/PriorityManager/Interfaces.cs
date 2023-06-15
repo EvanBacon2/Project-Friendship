@@ -1,26 +1,26 @@
 using System;
 
 /*
- * Manages a priority
+ * Manages a priority; controlling when and how it is set.
  */
 public interface IPriorityManager {
     public int priority { get; }
-    public RequestClass priorityClass { get; }
+    public PriorityAlias priorityClass { get; }
 
     /*
-     * Attempts to set the priority.  
+     * Attempts to set the priority to the given value.  
      * 
      * Returns true if successful, false otherwise.
      * If priority is successfully set then onSuccess callback is invoked.
      */
-    public bool setPriority(RequestClass rClass, int priority, Action onSuccess);
+    public bool setPriority(PriorityAlias rClass, int priority, Action onSuccess);
 
     /*
-     * Attempts to set the priority.  
+     * Attempts to set the priority to the given value.  
      *
      * Returns true if successful, false otherwise.
      */
-    public bool setPriority(RequestClass rClass, int priority);
+    public bool setPriority(PriorityAlias rClass, int priority);
 
     /*
      * Resets the priority to a default starting value;

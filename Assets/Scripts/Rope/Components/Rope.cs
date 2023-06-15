@@ -49,8 +49,8 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 	private double _h;
 
 	public Segment[] segments { get; protected set; }
-	[ReadOnlyField] public int activeSegments = 0;
-	[ReadOnlyField] public int baseSegment = -1;
+	public int activeSegments = 0;
+	public int baseSegment = -1;
 
 	/*
 	 * Builds a rope using the supplied array of segments

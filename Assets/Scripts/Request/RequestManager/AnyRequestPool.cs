@@ -14,14 +14,14 @@ public class AnyRequestPool<T> : UniqueRequestPoolBase<T>, IAnyRequestManager<T>
         return manageSender(sender);
     }
 
-    public void manageMutation(RequestClass rClass, Func<T, T> mutation) {
+    public void manageMutation(PriorityAlias rClass, Func<T, T> mutation) {
         if (!mutations.ContainsKey(rClass))
             mutations[rClass] = new();
 
         mutations[rClass].Add(mutation);
     }
 
-    public Guid manageMutation(RequestSender sender, RequestClass reqClass, Func<T, T> mutation) {
+    public Guid manageMutation(RequestSender sender, PriorityAlias reqClass, Func<T, T> mutation) {
         manageMutation(reqClass, mutation);
         return manageSender(sender);
     }

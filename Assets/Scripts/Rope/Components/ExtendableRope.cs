@@ -54,8 +54,8 @@ public class ExtendableRope : Rope {
     public int winchFrames;//number of frames it takes to wind/unwind the rope by one winchUnit
     public double baseExtention { get { return winchOffset / winchUnit; } }//value between [1,0) indicating how extended the base segment is
 
-    private Vector2d inactivePosition = Vector2d.zero;
-    private Vector2d inactiveOrientation = Vector2d.zero;
+    private Vector2d inactivePosition = Vector2d.zero;//position of all inactive segments
+    private Vector2d inactiveOrientation = Vector2d.zero;//orientation of all inactive segments
 
     private List<Action> autoExtendStart = new List<Action>();
     private List<Action> autoExtendEnd = new List<Action>();
@@ -84,8 +84,6 @@ public class ExtendableRope : Rope {
             if (!extended)//stop retracting
                 autoRetract = false;
         }
-
-        //anchor.setOffset(0, winchOffset);//move to system
     }
 
     public override void ApplyConstraints() {

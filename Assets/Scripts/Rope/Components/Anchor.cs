@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Anchor : MonoBehaviour, RopeBehaviour {
 	public RECSShipbody rb;
-    public Segment anchorSegment;
+    public Segment anchorSegment;//Analog of rigidbody this anchor is attached to
 	public Segment attachSegment;
 	public ExtendableRope rope;
 	private double angleLimit;
@@ -168,13 +168,13 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
         anchorVC.x = ((float)(anchorSegment.p1.x - nextPosition.x)) / Time.fixedDeltaTime;
         anchorVC.y = ((float)(anchorSegment.p1.y - nextPosition.y)) / Time.fixedDeltaTime; 
 
-        rb.Force.mutate(rb.Force.priorityClass, (List<(Vector3, ForceMode)> forces) => {
+        rb.Force.mutate(rb.Force.priorityAlias, (List<(Vector3, ForceMode)> forces) => {
             forces.Add((anchorVC, ForceMode.VelocityChange));
             return forces;
         });
 
         anchorAVC.z = (float)Vector2d.SignedAngle(nextOrientation, anchorSegment.orientation) / Time.fixedDeltaTime;
-        rb.Torque.mutate(rb.Torque.priorityClass, (List<(Vector3, ForceMode)> torques) => {
+        rb.Torque.mutate(rb.Torque.priorityAlias, (List<(Vector3, ForceMode)> torques) => {
             torques.Add((anchorAVC, ForceMode.VelocityChange));
             return torques;
         });

@@ -3,13 +3,13 @@ using UnityEngine;
 public class Rope : MonoBehaviour, RopeBehaviour {
 	public int substeps = 1;//Number of simulation steps taken every fixed time step.
     [SerializeField] protected double _angleLimit = 360;//Max difference, in degrees, between the orientations, in relation to the origin, of two segments
-	[SerializeField] protected double _linearDrag = 1;
-	[SerializeField] protected double _angulerDrag = 1;
+	[SerializeField] protected double _linearDrag = 1;//Amount of linear drag to apply on each physics step
+	[SerializeField] protected double _angulerDrag = 1;//Amount of angular drag to apply on each physics step
 	public double stiffness = 1;//Complience of angle constraint
 	public double stretchiness = 1;//Complience of distance constraint
 	public double maxSpeed = 1;//Max speed of baseSegment, maxSpeed for each subsequent segment increases by a factor determined by maxSpeedScale
 	public double maxSpeedScale = 1;//1 == linear, >1 == exponential, <1 == logarithmic
-	public bool uniformSegments = false;//Set to true if all segments are the same length, the validity of this value is not checked
+	public bool uniformSegments = false;//Setting to true assumes all segments are the same length, the validity of this value is not checked
 
 	public double angleLimitDegrees {
 		get { return _angleLimit; }
@@ -39,8 +39,8 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 			_subAngulerDrag = System.Math.Pow(value, substeps);
 		}
 	}
-	public double subLinearDrag { get { return _subLinearDrag; } }
-	public double subAngulerDrag { get { return _subAngulerDrag; } }
+	public double subLinearDrag { get { return _subLinearDrag; } }//Amount of linear drag to apply on each substep
+	public double subAngulerDrag { get { return _subAngulerDrag; } }//Amount of angular drag to apply on each substep
 	public double h { get { return _h; } }
 
 	private double _angleLimitRadians;
@@ -66,8 +66,8 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 		this.segments = new Segment[count];
 		for (int i = 0; i < count; i++) {
 			segments[i] = new Segment(new Vector2d(segment.position.x, segment.position.y), 
-									new Vector2d(segment.orientation.x, segment.orientation.y),
-									segment.mass, segment.inertia, segment.length);
+									  new Vector2d(segment.orientation.x, segment.orientation.y),
+									  segment.mass, segment.inertia, segment.length);
 		}
 		uniformSegments = true;
 	}

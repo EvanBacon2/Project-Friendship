@@ -17,12 +17,15 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
 
     protected override void start() {
         addHookedCallback(() => {
-            rope.autoExtend = false;
+            //rope.autoExtend = false;
             rope.configure(rope.angleLimitDegrees, .97, .98, rope.maxSpeed, rope.maxSpeedScale);
             hookSegment.mass = hookMass;
             hookSegment.inertia = hookMass;
-            tighten = true;
-            tightenRope();
+            //hookSegment.velocity.x = 0;
+            //hookSegment.velocity.y = 0;
+
+            //tighten = true;
+            //tightenRope();
             hookSnapshot.x = hookSegment.p2.x;
             hookSnapshot.y = hookSegment.p2.y;
         });
@@ -38,7 +41,7 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
 		    active = false;
 			unHook();
 		}   
-        Debug.Log(hookSegment.mass);
+ 
         //tighten rope
         if (tighten) {
             if (tightLength > tightenRate) {

@@ -110,4 +110,21 @@ public class RECSShipbody : RECSRigidbody {
         _angularMax.addSendersTo(senders);
         _angularAcceleration.addSendersTo(senders);
     }
+
+    private Vector2 sGiz1 = new Vector2();
+    private Vector2 sGiz2 = new Vector2();
+
+    private void OnDrawGizmos() {
+        if (!Application.isPlaying) 
+			return;
+
+        Gizmos.color = Color.cyan;
+
+        sGiz1.x = Position.value.x;
+        sGiz1.y = Position.value.y;
+        sGiz2.x = Position.value.x + Mathf.Cos((Rotation.value.eulerAngles.z + 90) * Mathf.Deg2Rad) * 15;
+        sGiz2.y = Position.value.y + Mathf.Sin((Rotation.value.eulerAngles.z + 90) * Mathf.Deg2Rad) * 15;
+
+        Gizmos.DrawLine(sGiz1, sGiz2);
+    }
 }

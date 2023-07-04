@@ -11,6 +11,8 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 	public double maxSpeedScale = 1;//1 == linear, >1 == exponential, <1 == logarithmic
 	public bool uniformSegments = false;//Setting to true assumes all segments are the same length, the validity of this value is not checked
 
+	protected double[] _angleConstraints;//index i specifies angle limit between segment[i] and segment[i+1]
+
 	public double angleLimitDegrees {
 		get { return _angleLimit; }
 		set { 
@@ -55,8 +57,12 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 	/*
 	 * Builds a rope using the supplied array of segments
 	 */
-    public void buildRope(Segment [] segments) {
+    public void buildRope(Segment[] segments) {
         this.segments = segments;
+		this._angleConstraints = new double[segments.Length];
+		for (int i = 0; i < this._angleConstraints.Length; i++) {
+			this._angleConstraints[i] = 35;
+		}
     }
 
 	/*
@@ -69,6 +75,10 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 									  new Vector2d(segment.orientation.x, segment.orientation.y),
 									  segment.mass, segment.inertia, segment.length);
 		}
+		this._angleConstraints = new double[segments.Length];
+		for (int i = 0; i < this._angleConstraints.Length; i++) {
+			this._angleConstraints[i] = 35;
+		}
 		uniformSegments = true;
 	}
 
@@ -80,16 +90,23 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 		this.maxSpeedScale = maxSpeedScale;
 	}
 
+	public void setAngleConstraint(double angleLimitDegrees, int index) {
+		this._angleConstraints[index] = angleLimitDegrees;
+	}
+
 	void Start() {
 		start();
 	}
+
+	public bool noAngle;
 
 	public virtual void OnUpdate() {}
 	public virtual void OnSubUpdate() {}
 	public virtual void ApplyConstraints() {
 		 for (int i = baseSegment; i >= 1; i--) {
             SegmentConstraint.distanceConstraint(segments[i], segments[i - 1]);
-            SegmentConstraint.angleConstraint(segments[i], segments[i - 1], angleLimitRadians);
+			if (!noAngle)
+            	SegmentConstraint.angleConstraint(segments[i], segments[i - 1], _angleConstraints[i] * Mathf.Deg2Rad/*angleLimitRadians*/);
         }
 	}
 	public virtual void OnUpdateLate() {}
@@ -118,7 +135,9 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 			return;
 
 		for (int i = 0; i < segments.Length; i++) {
-			Gizmos.color = i % 2 == 0 ? Color.green : Color.white;
+			Color modeColor = _angleConstraints[i] == 3 ? Color.red : Color.green;
+			Gizmos.color = i % 2 == 0 ? modeColor : Color.white;
+
 
 			giz1.x = (float)segments[i].p1.x;
 			giz1.y = (float)segments[i].p1.y;

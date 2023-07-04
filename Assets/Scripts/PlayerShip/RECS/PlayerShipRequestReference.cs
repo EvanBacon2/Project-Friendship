@@ -28,6 +28,7 @@ public class PlayerShipPriorityReference : PlayerShipReference {
 	private IPriorityReference _rotation = new PriorityReferenceMap(
 		new() {
 			{ PriorityAlias.LookAtMouse, 0 },
+			{ PriorityAlias.Rope, 0 },
 		},
 		new()
 	);
@@ -56,6 +57,7 @@ public class PlayerShipPriorityReference : PlayerShipReference {
 	private IPriorityReference _torque = new PriorityReferenceMap(
 		new() {
 			{ PriorityAlias.LookAtMouse, 0 },
+			{ PriorityAlias.Rope, 1 },
 		},
 		new()
 	);

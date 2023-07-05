@@ -98,15 +98,12 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 		start();
 	}
 
-	public bool noAngle;
-
 	public virtual void OnUpdate() {}
 	public virtual void OnSubUpdate() {}
 	public virtual void ApplyConstraints() {
 		 for (int i = baseSegment; i >= 1; i--) {
             SegmentConstraint.distanceConstraint(segments[i], segments[i - 1]);
-			if (!noAngle)
-            	SegmentConstraint.angleConstraint(segments[i], segments[i - 1], _angleConstraints[i] * Mathf.Deg2Rad/*angleLimitRadians*/);
+            SegmentConstraint.angleConstraint(segments[i], segments[i - 1], _angleConstraints[i] * Mathf.Deg2Rad/*angleLimitRadians*/);
         }
 	}
 	public virtual void OnUpdateLate() {}

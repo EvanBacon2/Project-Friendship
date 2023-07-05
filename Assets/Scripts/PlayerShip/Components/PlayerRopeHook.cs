@@ -5,14 +5,10 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
     public Anchor anchor;
     public int hookIndex;
     public double hookLag;
-    public double tightenRate;
-    private bool tighten;
 
     private Segment hookSegment { get { return rope.segments[hookIndex]; } }
     private Vector2d autoHookPos = Vector2d.zero;//position hookSegment is constrained to during autoExtend
 
-    private double tightLength = 0;
-    private double looseLength = 0;
     private Vector2d hookSnapshot = Vector2d.zero;
 
     protected override void start() {
@@ -24,8 +20,6 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
             //hookSegment.velocity.x = 0;
             //hookSegment.velocity.y = 0;
 
-            //tighten = true;
-            //tightenRope();
             hookSnapshot.x = hookSegment.p2.x;
             hookSnapshot.y = hookSegment.p2.y;
         });
@@ -41,24 +35,6 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
 		    active = false;
 			unHook();
 		}   
- 
-        //tighten rope
-        if (tighten) {
-            if (tightLength > tightenRate) {
-                rope.winchOffset -= tightenRate;
-                //tightLength -= tightenRate;
-                tightenRope();
-            } else {
-                rope.winchOffset -= tightLength;
-                if (rope.baseExtention > 0)
-                    rope.winchOffset -= rope.winchUnit * rope.baseExtention;
-                looseLength = 0;
-                tightLength = 0;
-                rope.stiff();
-                tighten = false;
-                Debug.Log("stiff");
-            }
-        } 
     }
 
     public void OnSubUpdate() {
@@ -69,21 +45,14 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
     public void ApplyConstraints() {
         //constrain hook while auto extending
         if (rope.extended && rope.autoExtend) {
-            SegmentConstraint.pointConstraint(autoHookPos, hookSegment, false);
-            SegmentConstraint.angleConstraint(anchor.anchorSegment, hookSegment, 0);
-        }
-
-        //constrain hook while tightening rope
-        if (tightLength > 0) {
-            //SegmentConstraint.pointConstraint(hookSnapshot, hookSegment, false);
+            //SegmentConstraint.pointConstraint(autoHookPos, hookSegment, false);
             //SegmentConstraint.angleConstraint(anchor.anchorSegment, hookSegment, 0);
         }
-
-        //if (isHooked)
-          //  SegmentConstraint.pointConstraint(hookSnapshot, hookSegment, false);
     }
 
     private Vector3 hookPosition = Vector3.zero;
+    Vector2 real = Vector2.zero;
+    Vector2 complex = Vector2.zero;
 
     public void OnUpdateLate() {
         //update hook position
@@ -120,18 +89,5 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
 
             baseRotation = transform.rotation;
         }
-    }
-
-    Vector2 real = Vector2.zero;
-    Vector2 complex = Vector2.zero;
-
-    private Vector2d hook2Base = Vector2d.zero;
-    private void tightenRope() {
-        hook2Base.x = hookSegment.p2.x - anchor.attachPoint.x;
-        hook2Base.y = hookSegment.p2.y - anchor.attachPoint.y;
-
-        looseLength = (rope.baseExtention + rope.activeSegments - 1) * rope.segmentLength;
-        tightLength = looseLength - hook2Base.magnitude;
-        Debug.Log("tight " + tightLength + " loose " + looseLength);
     }
 }

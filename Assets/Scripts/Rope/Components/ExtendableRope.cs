@@ -62,6 +62,13 @@ public class ExtendableRope : Rope {
     private List<Action> autoRetractStart = new List<Action>();
     private List<Action> autoRetractEnd = new List<Action>();
 
+    protected override void start() {
+        addAutoExtendStartCallback(() => {
+            //segments[0].velocity.x *= 15;
+            //segments[0].velocity.y *= 15;
+        });
+    }
+
     public override void OnUpdateLate() {
         base.OnUpdateLate();
 
@@ -69,6 +76,9 @@ public class ExtendableRope : Rope {
         if (winchScrollBuffer != 0) {
             winchOffset += winchUnit / winchFrames * System.Math.Sign(winchScrollBuffer);
             winchScrollBuffer -= winchScrollBuffer > 0 ? 1 : -1;
+
+            //segments[0].velocity.x = 25 * Math.Cos(segments[0].velocity.x / segments[0].velocity.magnitude);
+            //segments[0].velocity.y = 25 * Math.Sin(segments[0].velocity.y / segments[0].velocity.magnitude);
         }
         
         //apply auto extention
@@ -142,7 +152,7 @@ public class ExtendableRope : Rope {
         _winchOffset = adjustment;
         if (_winchOffset >= length || _winchOffset < 0) {
             int segmentChange = (int)(_winchOffset / length);
-            if (_winchOffset < 0)  {
+            while (_winchOffset < 0)  {
                 segmentChange -= 1;
                 _winchOffset = baseSegment > -1 ? length + _winchOffset : 0;
             }
@@ -154,7 +164,7 @@ public class ExtendableRope : Rope {
         }      
     }
 
-	 /*
+	/*
      * Winds and unwinds rope based on adjustment
      */
     protected void adjustWinch(double adjustment) {

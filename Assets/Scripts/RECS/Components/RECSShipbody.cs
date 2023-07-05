@@ -114,7 +114,7 @@ public class RECSShipbody : RECSRigidbody {
     private Vector2 sGiz1 = new Vector2();
     private Vector2 sGiz2 = new Vector2();
 
-    private void OnDrawGizmos() {
+    /*private void OnDrawGizmos() {
         if (!Application.isPlaying) 
 			return;
 
@@ -126,5 +126,5 @@ public class RECSShipbody : RECSRigidbody {
         sGiz2.y = Position.value.y + Mathf.Sin((Rotation.value.eulerAngles.z + 90) * Mathf.Deg2Rad) * 15;
 
         Gizmos.DrawLine(sGiz1, sGiz2);
-    }
+    }*/
 }

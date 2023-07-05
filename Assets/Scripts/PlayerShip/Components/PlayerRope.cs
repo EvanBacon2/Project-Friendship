@@ -1,5 +1,5 @@
 
-using System.Collections;
+using System;
 using UnityEngine;
 
 public enum RopeMode {
@@ -17,28 +17,22 @@ public class PlayerRope : ExtendableRope {
     private double _stiffAngle = 3;
     private double _flexAngle = 35;
 
+    private bool hookBoost;
+
 	public void stiff() {
         configure(3, .98, .98, 6, 1);
         for (int i = (segments?.Length ?? 0) - 1; i >= 0; i--) {
             _angleConstraints[i] = _stiffAngle;
         }
-        //StartCoroutine(changeAngles(RopeMode.STIFF));
         mode = RopeMode.STIFF;
     }
 
     public void flexible() {
         configure(35, 0, .95, 25, .1);
-        StartCoroutine(changeAngles(RopeMode.FLEXIBLE));
-        mode = RopeMode.FLEXIBLE;
-    }
-
-    IEnumerator changeAngles(RopeMode mode) {
-        double newAngle = mode == RopeMode.STIFF ? _stiffAngle : _flexAngle;
-        
         for (int i = (segments?.Length ?? 0) - 1; i >= 0; i--) {
-            _angleConstraints[i] = newAngle;
-            yield return null;
+            _angleConstraints[i] = _flexAngle;
         }
+        mode = RopeMode.FLEXIBLE;
     }
 
     protected override void start() {
@@ -51,6 +45,8 @@ public class PlayerRope : ExtendableRope {
 
             anchor.velocityCorrection = 1;
 		    hook.active = true;
+
+            hookBoost = true;
         });
 
         addAutoExtendEndCallback(() => {
@@ -58,6 +54,9 @@ public class PlayerRope : ExtendableRope {
             anchor.mass = 1;
             anchor.inertia = .05;
 		    maxSpeed = 25;
+
+            segments[0].mass = 1;
+            hookBoost = false;
         });
 
         addAutoRetractStartCallback(() => {
@@ -83,18 +82,26 @@ public class PlayerRope : ExtendableRope {
         setInactiveOrientation(anchor.orientation.x, anchor.orientation.y);
     }
 
-    public override void ApplyConstraints()
-    {
-        base.ApplyConstraints();
-        if (constrainHook)
-            constrain();
-    }
+    public override void OnUpdateLate() {
+        base.OnUpdateLate();
 
+        if (hookBoost && activeSegments != 0) {
+            float rbAngV = anchor.rb.AngularVelocity.pendingValue().z;
 
-    public bool constrainHook = false;
-    public Vector2d hookPoint = Vector2d.zero;
-    private void constrain() {
-        SegmentConstraint.pointConstraint(hookPoint, segments[0], false);
+            float shipAngle = 90 + (anchor.rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime);
+
+            segments[0].velocity.x = anchor.rb.Velocity.value.x + 4000 * Math.Cos(shipAngle * Mathf.Deg2Rad);
+            segments[0].velocity.y = anchor.rb.Velocity.value.y + 4000 * Math.Sin(shipAngle * Mathf.Deg2Rad);
+
+            segments[0].previousPosition.x = segments[0].position.x - segments[0].velocity.x;
+            segments[0].previousPosition.x = segments[0].position.y - segments[0].velocity.y;
+            segments[0].mass = 100000;
+
+            Debug.Log("hookBoost");
+
+            //if (activeSegments > 15)
+              //  hookBoost = false;
+        }
     }
 
     protected override void onValidate() {

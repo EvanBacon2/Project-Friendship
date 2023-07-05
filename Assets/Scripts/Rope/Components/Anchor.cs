@@ -69,6 +69,9 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 	public void OnUpdate() {
 		updateInterpolation();
 		correctVelocity();
+
+        //Debug.Log("baseSegment: " + rope.baseSegment);
+        //Debug.Log("winchOffset: " + rope.winchOffset);
 	}
 
 	public void OnSubUpdate() {

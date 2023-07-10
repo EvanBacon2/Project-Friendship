@@ -43,7 +43,7 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 	}
 	public double subLinearDrag { get { return _subLinearDrag; } }//Amount of linear drag to apply on each substep
 	public double subAngulerDrag { get { return _subAngulerDrag; } }//Amount of angular drag to apply on each substep
-	public double h { get { return _h; } }
+	public double h { get { return _h; } set { _h = value; } }
 
 	private double _angleLimitRadians;
 	private double _subLinearDrag;
@@ -98,10 +98,14 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 		start();
 	}
 
+	public bool tightEnd = false;
+
 	public virtual void OnUpdate() {}
 	public virtual void OnSubUpdate() {}
 	public virtual void ApplyConstraints() {
-		 for (int i = baseSegment; i >= 1; i--) {
+		int end = tightEnd ? 2 : 1;
+
+		 for (int i = baseSegment; i >= end; i--) {
             SegmentConstraint.distanceConstraint(segments[i], segments[i - 1]);
             SegmentConstraint.angleConstraint(segments[i], segments[i - 1], _angleConstraints[i] * Mathf.Deg2Rad/*angleLimitRadians*/);
         }
@@ -131,17 +135,6 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 		if (!Application.isPlaying) 
 			return;
 
-		for (int i = 0; i < segments.Length; i++) {
-			Color modeColor = _angleConstraints[i] == 3 ? Color.red : Color.green;
-			Gizmos.color = i % 2 == 0 ? modeColor : Color.white;
-
-
-			giz1.x = (float)segments[i].p1.x;
-			giz1.y = (float)segments[i].p1.y;
-			giz2.x = (float)segments[i].p2.x;
-			giz2.y = (float)segments[i].p2.y;
-
-			Gizmos.DrawLine(giz1, giz2);
-		}
+		
 	}
 }

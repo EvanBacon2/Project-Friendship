@@ -9,23 +9,28 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
     private Segment hookSegment { get { return rope.segments[hookIndex]; } }
     private Vector2d autoHookPos = Vector2d.zero;//position hookSegment is constrained to during autoExtend
 
-    private Vector2d hookSnapshot = Vector2d.zero;
+    private bool constrainHook = false;
 
     protected override void start() {
         addHookedCallback(() => {
             //rope.autoExtend = false;
+            Debug.Log("///////////////hooked");
+            constrainHook = false;
             rope.configure(rope.angleLimitDegrees, .97, .98, rope.maxSpeed, rope.maxSpeedScale);
-            hookSegment.mass = hookMass;
-            hookSegment.inertia = hookMass;
-            //hookSegment.velocity.x = 0;
-            //hookSegment.velocity.y = 0;
-
-            hookSnapshot.x = hookSegment.p2.x;
-            hookSnapshot.y = hookSegment.p2.y;
+            hookSegment.mass = 500;
+            hookSegment.inertia = 500;
+            hookSegment.velocity.x /= 500;
+            hookSegment.velocity.y /= 500;
+            hookSegment.previousPosition.x = hookSegment.position.x - hookSegment.velocity.x;
+            hookSegment.previousPosition.y = hookSegment.position.y - hookSegment.velocity.y;
         });
 
         addUnHookedCallback(() => {
             hookSegment.mass = 1;
+        });
+
+        rope.addAutoExtendStartCallback(() => {
+            constrainHook = true;
         });
     }
 
@@ -44,9 +49,9 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
 
     public void ApplyConstraints() {
         //constrain hook while auto extending
-        if (rope.extended && rope.autoExtend) {
-            //SegmentConstraint.pointConstraint(autoHookPos, hookSegment, false);
-            //SegmentConstraint.angleConstraint(anchor.anchorSegment, hookSegment, 0);
+        if (rope.extended && rope.autoExtend && constrainHook) {
+            SegmentConstraint.pointConstraint(autoHookPos, hookSegment, false);
+            SegmentConstraint.angleConstraint(anchor.anchorSegment, hookSegment, 0);
         }
     }
 

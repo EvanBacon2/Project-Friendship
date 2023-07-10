@@ -40,11 +40,12 @@ public class PlayerController : MonoBehaviour {
 
     void FixedUpdate() {
         publishShipState();
-        publishPlayerRopeState();
+        
         publishExtendableState();
         publishAnchorState();
         
         simulator.advance();
+        publishPlayerRopeState();
         rigidBody.executeRequests();
     }
 

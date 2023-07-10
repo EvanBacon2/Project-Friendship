@@ -1264,17 +1264,17 @@ MonoBehaviour:
   uniformSegments: 1
   activeSegments: 0
   baseSegment: -1
-  noAngle: 0
+  tightEnd: 0
   autoExtendRate: 3
   autoRetractRate: 0.65
-  winchUnit: 0.65
+  winchUnit: 0.35
   winchFrames: 4
   mode: 0
   segmentCount: 35
   segmentLength: 0.65
   anchor: {fileID: 356274359}
   hook: {fileID: 2125503710}
-  constrainHook: 0
+  tighten: 0
 --- !u!114 &356274362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4904,8 +4904,7 @@ MonoBehaviour:
   rope: {fileID: 356274360}
   anchor: {fileID: 356274359}
   hookIndex: 0
-  hookLag: 0.92
-  tightenRate: 0.4
+  hookLag: 0.86
 --- !u!1001 &2137652147
 PrefabInstance:
   m_ObjectHideFlags: 0

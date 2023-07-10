@@ -14,10 +14,16 @@ public class PlayerRope : ExtendableRope {
     public Anchor anchor;
     public Hook hook;
 
+    public double stiffAngle { get { return _stiffAngle; } }
+    public double flexAngle { get { return _flexAngle; } }
+
     private double _stiffAngle = 3;
     private double _flexAngle = 35;
 
     private bool hookBoost;
+
+    public bool tighten = false;
+    private TightenRope tighty = new TightenRope();
 
 	public void stiff() {
         configure(3, .98, .98, 6, 1);
@@ -29,6 +35,7 @@ public class PlayerRope : ExtendableRope {
 
     public void flexible() {
         configure(35, 0, .95, 25, .1);
+        tightEnd = false;
         for (int i = (segments?.Length ?? 0) - 1; i >= 0; i--) {
             _angleConstraints[i] = _flexAngle;
         }
@@ -46,7 +53,7 @@ public class PlayerRope : ExtendableRope {
             anchor.velocityCorrection = 1;
 		    hook.active = true;
 
-            hookBoost = true;
+            //hookBoost = true;
         });
 
         addAutoExtendEndCallback(() => {
@@ -55,7 +62,7 @@ public class PlayerRope : ExtendableRope {
             anchor.inertia = .05;
 		    maxSpeed = 25;
 
-            segments[0].mass = 1;
+            //segments[0].mass = 1;
             hookBoost = false;
         });
 
@@ -76,10 +83,16 @@ public class PlayerRope : ExtendableRope {
         });
     }
 
+    public override void ApplyConstraints(){
+        base.ApplyConstraints();
+    }
+
     public override void OnSubUpdate() {
         base.OnSubUpdate();
         setInactivePosition(anchor.position.x, anchor.position.y);
         setInactiveOrientation(anchor.orientation.x, anchor.orientation.y);
+        if (tighten)
+            tighten = tighty.execute(this);
     }
 
     public override void OnUpdateLate() {
@@ -87,18 +100,16 @@ public class PlayerRope : ExtendableRope {
 
         if (hookBoost && activeSegments != 0) {
             float rbAngV = anchor.rb.AngularVelocity.pendingValue().z;
-
+            Debug.Log("active: " + activeSegments + " mag: " + segments[1].velocity.magnitude);
             float shipAngle = 90 + (anchor.rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime);
 
-            segments[0].velocity.x = anchor.rb.Velocity.value.x + 4000 * Math.Cos(shipAngle * Mathf.Deg2Rad);
-            segments[0].velocity.y = anchor.rb.Velocity.value.y + 4000 * Math.Sin(shipAngle * Mathf.Deg2Rad);
+            segments[0].velocity.x = anchor.rb.Velocity.value.x + 8000 * Math.Cos(shipAngle * Mathf.Deg2Rad);
+            segments[0].velocity.y = anchor.rb.Velocity.value.y + 8000 * Math.Sin(shipAngle * Mathf.Deg2Rad);
 
             segments[0].previousPosition.x = segments[0].position.x - segments[0].velocity.x;
             segments[0].previousPosition.x = segments[0].position.y - segments[0].velocity.y;
-            segments[0].mass = 100000;
-
-            Debug.Log("hookBoost");
-
+            segments[0].mass = Double.PositiveInfinity;
+            
             //if (activeSegments > 15)
               //  hookBoost = false;
         }
@@ -119,10 +130,10 @@ public class PlayerRope : ExtendableRope {
     private void OnDrawGizmos() {
         if (!Application.isPlaying) 
 			return;
-
-		for (int i = 0; i < segments.Length; i++) {
-			Color modeColor = _angleConstraints[i] == 3 ? Color.red : Color.green;
-			Gizmos.color = i % 2 == 0 ? modeColor : Color.white;
+        
+        for (int i = 1; i < segments.Length; i++) {
+			Color modeColor = _angleConstraints[i] == 3 ? Color.magenta : Color.cyan;
+			Gizmos.color = i % 2 == 1 ? modeColor : Color.yellow;
 
 
 			pGiz1.x = (float)segments[i].p1.x;

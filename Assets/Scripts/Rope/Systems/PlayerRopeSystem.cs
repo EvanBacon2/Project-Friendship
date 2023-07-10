@@ -10,13 +10,15 @@ public class PlayerRopeSystem : RequestSystem<PlayerRopeState> {
     public override void OnStateReceived(object sender, PlayerRopeState state) {
         if (state.mode && state.rope.extended) {
             if (state.rope.mode == RopeMode.FLEXIBLE) {
-                this.tight = true;
-                tighty.execute(state);
-            } else 
+                //this.tight = true;
+                //tighty.execute(state);
+                state.rope.tighten = true;
+            } else {
                 state.rope.flexible();
+            }
         }
 
-        if (tight)
-            tight = tighty.execute(state);
+        //if (tight)
+          //  tight = tighty.execute(state);
     }    
 }

@@ -100,8 +100,8 @@ public class PlayerRope : ExtendableRope {
         setInactivePosition(anchor.position.x, anchor.position.y);
         setInactiveOrientation(anchor.orientation.x, anchor.orientation.y);
 
-        if (tighten)
-            tighten = tighty.execute(this);
+        //if (tighten)
+        //    tighten = tighty.execute(this);
     }
 
     public override void OnUpdateLate() {

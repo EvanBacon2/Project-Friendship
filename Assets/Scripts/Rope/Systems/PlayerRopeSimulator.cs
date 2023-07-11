@@ -2,9 +2,16 @@ public class PlayerRopeSimulator : RopeSimulator {
     private Anchor anchor;
     private PlayerRopeHook hook;
 
-    public PlayerRopeSimulator(Rope rope, Anchor anchor, PlayerRopeHook hook) : base(rope) {
+    private ExtendRopeNoIn extender;
+    private PlayerRopeNoIn playerRope;
+
+    public PlayerRopeSimulator(Rope rope, Anchor anchor, PlayerRopeHook hook, ExtendRopeNoIn extender, 
+        PlayerRopeNoIn playerRope) : base(rope) {
         this.anchor = anchor;
         this.hook = hook;
+
+        this.extender = extender;
+        this.playerRope = playerRope;
     }
 
     public void advance() {
@@ -17,7 +24,7 @@ public class PlayerRopeSimulator : RopeSimulator {
         anchor.OnUpdate();
         rope.OnUpdate();
         //extender.OnUpdate();
-        //playerRope.OnUpdate();
+        playerRope.OnUpdate();
         hook.OnUpdate();
     }
 
@@ -25,13 +32,13 @@ public class PlayerRopeSimulator : RopeSimulator {
         anchor.OnSubUpdate();
         rope.OnSubUpdate();
         //extender.OnSubUpdate();
-        //playerRope.OnSubUpdate();
+        playerRope.OnSubUpdate();
         hook.OnSubUpdate();
     }
 
     protected override void ApplyConstraints() {
         rope.ApplyConstraints();
-        //extender.ApplyConstraints();
+        extender.ApplyConstraints();
         //playerRope.ApplyConstraints();
         anchor.ApplyConstraints();
         hook.ApplyConstraints();
@@ -39,7 +46,7 @@ public class PlayerRopeSimulator : RopeSimulator {
 
     protected override void OnUpdateLate() {
         rope.OnUpdateLate();
-        //extender.OnUpdateLate();
+        extender.OnUpdateLate();
         //playerRope.OnUpdateLate();
         anchor.OnUpdateLate();
         hook.OnUpdateLate();

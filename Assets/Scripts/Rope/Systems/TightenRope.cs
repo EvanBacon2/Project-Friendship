@@ -11,7 +11,7 @@ public class TightenRope {
 
     private bool endTighten = false;
 
-    public bool execute(PlayerRope rope) {//Rope, Anchor, Extender, PlayerRope
+    public bool execute(/*PlayerRope rope*/Rope rope, Anchor anchor, ExtendRopeNoIn extender, PlayerRopeNoIn playerRope) {//Rope, Anchor, Extender, PlayerRope
         if (!active) {
             this.active = true;
             tightenRate /= rope.substeps;
@@ -26,21 +26,21 @@ public class TightenRope {
             rope.angulerDrag = .995;
             rope.maxSpeed = 30;        
             
-            rope.anchor.mass = double.PositiveInfinity;
-            rope.anchor.inertia = double.PositiveInfinity;
+            anchor.mass = double.PositiveInfinity;
+            anchor.inertia = double.PositiveInfinity;
         }
 
-        return tighten(rope);
+        return tighten(rope, extender, anchor, playerRope);
     }
 
-    private bool tighten(PlayerRope rope) {//Rope, Extender, Anchor, PlayerRope
-        calcLengths(rope);
+    private bool tighten(/*PlayerRope rope*/Rope rope, ExtendRopeNoIn extender, Anchor anchor, PlayerRopeNoIn playerRope) {//Rope, Extender, Anchor, PlayerRope
+        calcLengths(rope, extender, anchor, playerRope);
 
         if (tightLength > 0) {
             if (tightLength > tightenRate)
-                rope.winchOffset -= tightenRate;
+                extender.winchOffset -= tightenRate;
             else
-                rope.winchOffset -= tightLength;
+                extender.winchOffset -= tightLength;
 
             rope.segments[0].velocity.x *= .997;
             rope.segments[0].velocity.y *= .997;
@@ -55,11 +55,11 @@ public class TightenRope {
                 rope.segments[i].inertia = 1;
             }
 
-            rope.tighten = false;
-            rope.anchor.mass = 1;
-            rope.anchor.inertia = .05;
+            playerRope.tighten = false;
+            anchor.mass = 1;
+            anchor.inertia = .05;
             rope.tightEnd = true;
-            rope.stiff();
+            playerRope.stiff();
             tightenRate *= rope.substeps;
             this.active = false;
 
@@ -74,11 +74,11 @@ public class TightenRope {
 
     private Vector2d hook2Base = Vector2d.zero;
     private Vector2d segGap = Vector2d.zero;
-    private void calcLengths(PlayerRope rope) {//Rope, Extender, Anchor
-        hook2Base.x = rope.segments[0].p2.x - rope.anchor.attachPoint.x;
-        hook2Base.y = rope.segments[0].p2.y - rope.anchor.attachPoint.y;
+    private void calcLengths(Rope rope, ExtendRopeNoIn extender, Anchor anchor, PlayerRopeNoIn playerRope) {//Rope, Extender, Anchor
+        hook2Base.x = rope.segments[0].p2.x - anchor.attachPoint.x;
+        hook2Base.y = rope.segments[0].p2.y - anchor.attachPoint.y;
 
-        looseLength = (rope.baseExtention + rope.activeSegments) * rope.segmentLength;
+        looseLength = (extender.baseExtention + rope.activeSegments) * playerRope.segmentLength;
         tightLength = looseLength - hook2Base.magnitude;
         //Debug.Log("tight: " + hook2Base.magnitude + " loose: " + looseLength);
     }

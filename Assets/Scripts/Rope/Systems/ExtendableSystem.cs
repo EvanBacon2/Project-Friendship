@@ -5,18 +5,23 @@ using UnityEngine;
  */
 public class ExtendableSystem : RequestSystem<ExtendableState> {
     public override void OnStateReceived(object sender, ExtendableState state) {//rope extender
-        ExtendableRope rope = state.rope;
+        Rope rope = state.rope;
+        ExtendRopeNoIn extender = state.extender;
+        
+        if (state.auto) {
+            Debug.Log("extended: " + extender.extended + " autoRetract: " + extender.autoRetract + " autoExtend: " + extender.autoExtend);
+        }
 
         //auto extend rope
-        if (state.auto && !rope.extended && !rope.autoRetract && !rope.autoExtend)
-            rope.autoExtend = true;
+        if (state.auto && !extender.extended && !extender.autoRetract && !extender.autoExtend) 
+            extender.autoExtend = true;
 
         //auto retract rope
-        if (state.auto && rope.extended && !rope.autoExtend && !rope.autoRetract)
-            rope.autoRetract = true;
+        if (state.auto && extender.extended && !extender.autoExtend && !extender.autoRetract)
+            extender.autoRetract = true;
 
         //wind/unwind rope 
-        if (rope.extended && state.wind != 0 && rope.winchScrollBuffer == 0 && (rope.activeSegments < rope.segments.Length || state.wind < 0))
-            rope.winchScrollBuffer = rope.winchFrames * System.Math.Sign(state.wind);
+        if (extender.extended && state.wind != 0 && extender.winchScrollBuffer == 0 && (rope.activeSegments < rope.segments.Length || state.wind < 0))
+            extender.winchScrollBuffer = extender.winchFrames * System.Math.Sign(state.wind);
     }
 }

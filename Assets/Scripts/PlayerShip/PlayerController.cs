@@ -7,13 +7,13 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
     private RECSShipbody rigidBody;
 
-    /*
+    
     private Rope rope;
     private ExtendRopeNoIn extender;
     private PlayerRopeNoIn playerRope;
-    */
+    
 
-    private PlayerRope rope;
+    //private PlayerRope rope;
     private Anchor anchor;
     public PlayerRopeHook hook;
 
@@ -26,18 +26,22 @@ public class PlayerController : MonoBehaviour {
     public event EventHandler<ExtendableState> ExtendableStateReceived;
     public event EventHandler<AnchorState> AnchorStateReceived;
 
-    void Start() {
-        rigidBody = GetComponent<RECSShipbody>();
-        rope = GetComponent<PlayerRope>();
-        anchor = GetComponent<Anchor>();
-
-        /*
+    void Awake() {
         rope = GetComponent<Rope>();
         extender = GetComponent<ExtendRopeNoIn>();
         playerRope = GetComponent<PlayerRopeNoIn>();
-        */
+    }
 
-        simulator = new PlayerRopeSimulator(rope, anchor, hook);
+    void Start() {
+        rigidBody = GetComponent<RECSShipbody>();
+        //rope = GetComponent<PlayerRope>();
+        anchor = GetComponent<Anchor>();
+
+        
+       
+        
+
+        simulator = new PlayerRopeSimulator(rope, anchor, hook, extender, playerRope);
 
         boostManager = GetComponent<BoostManager>();
 
@@ -77,7 +81,9 @@ public class PlayerController : MonoBehaviour {
 
     private void publishPlayerRopeState() {
         PlayerRopeStateReceived?.Invoke(this, new() {
-            rope = this.rope,//playerRope
+            //rope = this.rope,//playerRope
+            playerRope = this.playerRope,
+            extender = this.extender,
             mode = PlayerInputProvider.ropeModeInput,
         });
     }
@@ -85,6 +91,7 @@ public class PlayerController : MonoBehaviour {
     private void publishExtendableState() {
         ExtendableStateReceived?.Invoke(this, new() {
             rope = this.rope,//rope extender
+            extender = this.extender,
             auto = PlayerInputProvider.ropeAutoInput,
             wind = PlayerInputProvider.ropeWindInput,
         });
@@ -111,7 +118,9 @@ public class ShipState : EventArgs {
 }
 
 public class PlayerRopeState : EventArgs {
-    public PlayerRope rope { get; set; }//playerRope
+    //public PlayerRope rope { get; set; }//playerRope
+    public PlayerRopeNoIn playerRope { get; set; }
+    public ExtendRopeNoIn extender { get; set; }
     public bool mode { get; set; }
 }
 
@@ -121,7 +130,9 @@ public class AnchorState : EventArgs {
 }
 
 public class ExtendableState : EventArgs {
-    public ExtendableRope rope { get; set; }//rope extender
+    //public ExtendableRope rope { get; set; }//rope extender
+    public Rope rope { get; set; }
+    public ExtendRopeNoIn extender { get; set; }
     public bool auto { get; set; }
     public float wind { get; set; }
 }

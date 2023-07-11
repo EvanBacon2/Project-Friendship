@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class PlayerRopeSystem : RequestSystem<PlayerRopeState> {
     public override void OnStateReceived(object sender, PlayerRopeState state) {//playerRope
-        if (state.mode && state.rope.extended) {
-            if (state.rope.mode == RopeMode.FLEXIBLE) {
-                state.rope.tighten = true;
+        if (state.mode && state.extender.extended) {
+            if (state.playerRope.mode == RopeMode.FLEXIBLE) {
+                state.playerRope.tighten = true;
             } else {
-                state.rope.flexible();
+                state.playerRope.flexible();
             }
         }
     }    

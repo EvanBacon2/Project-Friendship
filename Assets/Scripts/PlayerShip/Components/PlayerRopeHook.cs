@@ -1,7 +1,11 @@
 using UnityEngine;
 
 public class PlayerRopeHook : Hook, RopeBehaviour {
-    public PlayerRope rope;
+    //public PlayerRope rope;
+    public Rope rope;
+    public ExtendRopeNoIn extender;
+    public PlayerRopeNoIn playerRope;
+
     public Anchor anchor;
     public int hookIndex;
     public double hookLag;
@@ -29,27 +33,27 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
             hookSegment.mass = 1;
         });
 
-        rope.addAutoExtendStartCallback(() => {
+        extender.addAutoExtendStartCallback(() => {
             constrainHook = true;
         });
     }
 
     public void OnUpdate() {
         //deactivate hook when rope isn't extended
-        if (!rope.extended && !rope.autoExtend) {
+        if (!extender.extended && !extender.autoExtend) {
 		    active = false;
 			unHook();
 		}   
     }
 
     public void OnSubUpdate() {
-        autoHookPos.x = anchor.attachPoint.x + anchor.orientation.x * (rope.segmentLength * hookLag * rope.activeSegments);
-		autoHookPos.y = anchor.attachPoint.y + anchor.orientation.y * (rope.segmentLength * hookLag * rope.activeSegments);
+        autoHookPos.x = anchor.attachPoint.x + anchor.orientation.x * (playerRope.segmentLength * hookLag * rope.activeSegments);
+		autoHookPos.y = anchor.attachPoint.y + anchor.orientation.y * (playerRope.segmentLength * hookLag * rope.activeSegments);
     }
 
     public void ApplyConstraints() {
         //constrain hook while auto extending
-        if (rope.extended && rope.autoExtend && constrainHook) {
+        if (extender.extended && extender.autoExtend && constrainHook) {
             SegmentConstraint.pointConstraint(autoHookPos, hookSegment, false);
             SegmentConstraint.angleConstraint(anchor.anchorSegment, hookSegment, 0);
         }

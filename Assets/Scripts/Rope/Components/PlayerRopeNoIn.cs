@@ -107,15 +107,15 @@ public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
         extender.setInactivePosition(anchor.position.x, anchor.position.y);
         extender.setInactiveOrientation(anchor.orientation.x, anchor.orientation.y);
 
-        //if (tighten)
-        //    tighten = tighty.execute(rope, extender, anchor, this);
+        if (tighten)
+            tighten = tighty.execute(rope, anchor, extender, this);
     }
 
     void OnValidate() {
-        if (mode == RopeMode.STIFF)
+        /*if (mode == RopeMode.STIFF)
             stiff();
         else
-            flexible();
+            flexible();*/
     }
 
     private Vector2 pGiz1 = new Vector3(0, 0, 0);

@@ -52,7 +52,8 @@ public class ExtendableRope : Rope {
     public double autoRetractRate;//segments/fixed time step the rope is auto retracted by
     public double winchUnit;//length the rope is extended/retracted by per wind input
     public int winchFrames;//number of frames it takes to wind/unwind the rope by one winchUnit
-    public double baseExtention { get { return winchOffset / winchUnit; } }//value between [1,0) indicating how extended the base segment is
+    public double baseExtention { get { return winchOffset / _baseLength; } }//value between [1,0) indicating how extended the base segment is
+    private double _baseLength { get { return baseSegment > -1 ? segments[baseSegment].length : Double.PositiveInfinity; } }
 
     private Vector2d inactivePosition = Vector2d.zero;//position of all inactive segments
     private Vector2d inactiveOrientation = Vector2d.zero;//orientation of all inactive segments
@@ -62,13 +63,6 @@ public class ExtendableRope : Rope {
     private List<Action> autoRetractStart = new List<Action>();
     private List<Action> autoRetractEnd = new List<Action>();
 
-    protected override void start() {
-        addAutoExtendStartCallback(() => {
-            //segments[0].velocity.x *= 15;
-            //segments[0].velocity.y *= 15;
-        });
-    }
-
     public override void OnUpdateLate() {
         base.OnUpdateLate();
 
@@ -76,9 +70,6 @@ public class ExtendableRope : Rope {
         if (winchScrollBuffer != 0) {
             winchOffset += winchUnit / winchFrames * System.Math.Sign(winchScrollBuffer);
             winchScrollBuffer -= winchScrollBuffer > 0 ? 1 : -1;
-
-            //segments[0].velocity.x = 25 * Math.Cos(segments[0].velocity.x / segments[0].velocity.magnitude);
-            //segments[0].velocity.y = 25 * Math.Sin(segments[0].velocity.y / segments[0].velocity.magnitude);
         }
         
         //apply auto extention

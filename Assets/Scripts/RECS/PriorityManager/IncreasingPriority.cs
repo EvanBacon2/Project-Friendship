@@ -60,6 +60,7 @@ public class IncreasingPriority : IPriorityManager {
 
     public void reset() {
         this._priority = this._basePriority;
+        this._priorityClass = PriorityAlias.NoRequest;
         onPriorityChange();
     }
 }

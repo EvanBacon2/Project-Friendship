@@ -3,6 +3,6 @@
  */
 public class AnchorSystem : RequestSystem<AnchorState> {
     public override void OnStateReceived(object sender, AnchorState state) {
-        state.anchor.setAngleLimit(state.angleLimit);
+        //state.anchor.setAngleLimit(state.angleLimit);
     }
 }

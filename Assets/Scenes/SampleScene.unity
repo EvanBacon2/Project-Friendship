@@ -1239,6 +1239,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 356274363}
   rope: {fileID: 356274360}
+  substeps: 0
   velocityCorrection: 0
   rotationStep: 0
 --- !u!114 &356274360

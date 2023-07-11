@@ -15,9 +15,6 @@ public class TightenRope {
         if (!active) {
             this.active = true;
             tightenRate /= rope.substeps;
-            //state.rope.tighten = true;
-            //state.rope.substeps = 200;
-            //state.rope.h = Time.fixedDeltaTime / state.rope.substeps;
             for (int i = 0; i < rope.segments.Length; i++) {
                 rope.setAngleConstraint(360, i);
             }
@@ -38,9 +35,8 @@ public class TightenRope {
 
     private bool tighten(PlayerRope rope) {
         calcLengths(rope);
-        //Debug.Log(checkAngles(rope));
 
-        if (/*!checkAngles(rope)*/tightLength > 0) {
+        if (tightLength > 0) {
             if (tightLength > tightenRate)
                 rope.winchOffset -= tightenRate;
             else
@@ -48,12 +44,12 @@ public class TightenRope {
 
             rope.segments[0].velocity.x *= .997;
             rope.segments[0].velocity.y *= .997;
-            rotateToRope(rope);
+            //rotateToRope(rope);
     
             return true;
         } else if (endTighten) {
-            if (rope.baseExtention > 0)
-                    rope.winchOffset -= rope.winchUnit * rope.baseExtention;
+            //if (rope.baseExtention > 0)
+            //        rope.winchOffset -= rope.winchUnit * rope.baseExtention;
             rope.segments[0].mass = 1;
             for (int i = 0; i < rope.activeSegments; i++) {
                 rope.segments[i].inertia = 1;
@@ -66,8 +62,6 @@ public class TightenRope {
             rope.stiff();
             tightenRate *= rope.substeps;
             this.active = false;
-            //rope.substeps = 90;
-            //rope.h = Time.fixedDeltaTime / rope.substeps;
 
             endTighten = false;
 
@@ -84,43 +78,19 @@ public class TightenRope {
         hook2Base.x = rope.segments[0].p2.x - rope.anchor.attachPoint.x;
         hook2Base.y = rope.segments[0].p2.y - rope.anchor.attachPoint.y;
 
-        looseLength = (rope.baseExtention + rope.activeSegments + 2) * rope.segmentLength;
+        looseLength = (rope.baseExtention + rope.activeSegments) * rope.segmentLength;
         tightLength = looseLength - hook2Base.magnitude;
         //Debug.Log("tight: " + hook2Base.magnitude + " loose: " + looseLength);
     }
 
-    /*private bool checkAngles(PlayerRope rope) {
-        bool pass = true;
-        double ang;
-
-        for (int i = 1; i < rope.baseSegment; i++) {
-            ang = Vector2d.SignedAngle(rope.segments[i].orientation, rope.segments[i + 1].orientation);
-            ang *= Mathf.Rad2Deg;
-
-            if (Math.Abs(ang) > rope.stiffAngle) {
-                pass = false;
-                //Debug.Log(i + " " + ang);
-            }
-        }
-
-        ang = Vector2d.SignedAngle(rope.segments[rope.baseSegment].orientation, rope.anchor.anchorSegment.orientation);
-        ang *= Mathf.Rad2Deg;
-        if (Math.Abs(ang) > rope.stiffAngle) {
-            pass = false;
-            //Debug.Log("base " + ang);
-        }
-
-        return pass;
-    }*/
-
-    private void rotateToRope(PlayerRope rope) {
+    public void rotateToRope(PlayerRope rope) {
         float rbAngV = rope.anchor.rb.AngularVelocity.pendingValue().z;
         float rbAngA = rope.anchor.rb.AngularAcceleration.pendingValue();
         float rbAngM = rope.anchor.rb.AngularMax.pendingValue();
 
         float ropeAngle = Mathf.Atan2((float)rope.segments[0].p2.y - rope.anchor.rb.transform.position.y, 
                                 (float)rope.segments[0].p2.x - rope.anchor.rb.transform.position.x) * Mathf.Rad2Deg - 90;
-        float shipAngle = rope.anchor.rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime * rope.substeps;
+        float shipAngle = rope.anchor.rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime;
         float diff = ropeAngle - shipAngle;
 
         if (diff > 180)

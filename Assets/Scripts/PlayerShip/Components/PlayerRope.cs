@@ -1,4 +1,3 @@
-
 using System;
 using UnityEngine;
 
@@ -19,8 +18,6 @@ public class PlayerRope : ExtendableRope {
 
     private double _stiffAngle = 3;
     private double _flexAngle = 35;
-
-    private bool hookBoost;
 
     public bool tighten = false;
     private TightenRope tighty = new TightenRope();
@@ -46,14 +43,14 @@ public class PlayerRope : ExtendableRope {
         base.start();
         buildRope(new Segment(Vector2d.zero, Vector2d.up, segmentLength), segmentCount);
 
+        anchor.substeps = substeps;
+
         addAutoExtendStartCallback(() => {
             flexible();
 		    maxSpeed = 40;
 
             anchor.velocityCorrection = 1;
 		    hook.active = true;
-
-            //hookBoost = true;
         });
 
         addAutoExtendEndCallback(() => {
@@ -61,9 +58,6 @@ public class PlayerRope : ExtendableRope {
             anchor.mass = 1;
             anchor.inertia = .05;
 		    maxSpeed = 25;
-
-            //segments[0].mass = 1;
-            hookBoost = false;
         });
 
         addAutoRetractStartCallback(() => {
@@ -87,32 +81,31 @@ public class PlayerRope : ExtendableRope {
         base.ApplyConstraints();
     }
 
+    public override void OnUpdate() {
+        base.OnUpdate();
+        anchor.correctVelocity(this);
+        
+        if (tighten)
+            tighty.rotateToRope(this);
+    }
+
     public override void OnSubUpdate() {
         base.OnSubUpdate();
+        anchor.setAngleLimit(this.angleLimitRadians * this.baseExtention);
+        anchor.setAttachSegment(baseSegment > -1 ? segments[baseSegment] : null);
+        anchor.setOffset(0, .00000001 + winchOffset);
+        anchor.subLinearDrag = subLinearDrag;
+        anchor.subAngulerDrag = subAngulerDrag;
+
         setInactivePosition(anchor.position.x, anchor.position.y);
         setInactiveOrientation(anchor.orientation.x, anchor.orientation.y);
+
         if (tighten)
             tighten = tighty.execute(this);
     }
 
     public override void OnUpdateLate() {
         base.OnUpdateLate();
-
-        if (hookBoost && activeSegments != 0) {
-            float rbAngV = anchor.rb.AngularVelocity.pendingValue().z;
-            Debug.Log("active: " + activeSegments + " mag: " + segments[1].velocity.magnitude);
-            float shipAngle = 90 + (anchor.rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime);
-
-            segments[0].velocity.x = anchor.rb.Velocity.value.x + 8000 * Math.Cos(shipAngle * Mathf.Deg2Rad);
-            segments[0].velocity.y = anchor.rb.Velocity.value.y + 8000 * Math.Sin(shipAngle * Mathf.Deg2Rad);
-
-            segments[0].previousPosition.x = segments[0].position.x - segments[0].velocity.x;
-            segments[0].previousPosition.x = segments[0].position.y - segments[0].velocity.y;
-            segments[0].mass = Double.PositiveInfinity;
-            
-            //if (activeSegments > 15)
-              //  hookBoost = false;
-        }
     }
 
     protected override void onValidate() {

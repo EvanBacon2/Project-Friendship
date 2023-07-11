@@ -6,9 +6,19 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 	public RECSShipbody rb;
     public Segment anchorSegment;//Analog of rigidbody this anchor is attached to
 	public Segment attachSegment;
-	public ExtendableRope rope;
 	private double angleLimit;
-	private int substeps;
+	public int substeps { 
+        get { return _substeps; }
+        set { 
+            _substeps = value; 
+            _h = Time.fixedDeltaTime / _substeps;
+        } 
+    }
+    private int _substeps;
+    private double _h;
+
+    public double subLinearDrag;
+    public double subAngulerDrag;
 
 	protected Vector2d _offset;
 	public Vector2d offset { get { return _offset; } }
@@ -37,15 +47,14 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 	void Start() {
 		anchorSegment = new Segment(Vector2d.zero, Vector2d.up,
 									double.PositiveInfinity, double.PositiveInfinity, .65);
-		this.substeps = rope.substeps;
 
 		this._offset = Vector2d.zero;
 		this.positionStep = Vector2d.zero;
 		this.rotationStep = 0;
 	}
 
-	public void setAttachSegment(int index) {
-		this.attachSegment = index >= 0 ? rope.segments[index] : null;	
+	public void setAttachSegment(Segment segment) {
+		this.attachSegment = segment;
 	}
 
 	public void setAngleLimit(double angleLimit) {
@@ -68,22 +77,16 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 
 	public void OnUpdate() {
 		updateInterpolation();
-		correctVelocity();
-
-        //Debug.Log("baseSegment: " + rope.baseSegment);
-        //Debug.Log("winchOffset: " + rope.winchOffset);
 	}
 
 	public void OnSubUpdate() {
-        setAttachSegment(rope.baseSegment);
 		interpolatePositions();
-        setOffset(0, .00000001 + rope.winchOffset);
 	}
 
 	public void ApplyConstraints() {
 		if (attachSegment != null) {
 			SegmentConstraint.dostanceConstraint(anchorSegment, attachSegment);
-			SegmentConstraint.angleConstraint(anchorSegment, attachSegment, angleLimit * rope.baseExtention);
+			SegmentConstraint.angleConstraint(anchorSegment, attachSegment, angleLimit);
 		} 
 	}
 
@@ -103,9 +106,9 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 
     public void applyDrag() {
         if (attachSegment != null) {
-            linearDiff.x = (attachSegment.velocity.x - positionStep.x / rope.h) * rope.subLinearDrag;
-            linearDiff.y = (attachSegment.velocity.y - positionStep.y / rope.h) * rope.subLinearDrag;
-            angulerDiff = (attachSegment.angulerVelocity - rotationStep / rope.h) * rope.subAngulerDrag;
+            linearDiff.x = (attachSegment.velocity.x - positionStep.x / _h) * subLinearDrag;
+            linearDiff.y = (attachSegment.velocity.y - positionStep.y / _h) * subLinearDrag;
+            angulerDiff = (attachSegment.angulerVelocity - rotationStep / _h) * subAngulerDrag;
             
             attachSegment.velocity.x -= linearDiff.x;
             attachSegment.velocity.y -= linearDiff.y;
@@ -136,16 +139,16 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
         nextOrientation.x = Math.Cos(nextRotation);
         nextOrientation.y = Math.Sin(nextRotation);
 
-        rotationStep = Vector2d.SignedAngle(anchorSegment.orientation, nextOrientation) / rope.substeps;
+        rotationStep = Vector2d.SignedAngle(anchorSegment.orientation, nextOrientation) / substeps;
 
         nextPosition.x = rb.Position.pendingValue().x + pendingVelocity.x * Time.fixedDeltaTime;
         nextPosition.y = rb.Position.pendingValue().y + pendingVelocity.y * Time.fixedDeltaTime;
         
-        positionStep.x = (nextPosition.x - anchorSegment.p1.x) / rope.substeps;
-        positionStep.y = (nextPosition.y - anchorSegment.p1.y) / rope.substeps;
+        positionStep.x = (nextPosition.x - anchorSegment.p1.x) / substeps;
+        positionStep.y = (nextPosition.y - anchorSegment.p1.y) / substeps;
     }
 
-	private void correctVelocity() {
+	public void correctVelocity(Rope rope) {
         for (int i = rope.baseSegment; i >= 0; i--) {
             rope.segments[i].setPosition(rope.segments[i].position.x + rb.Velocity.value.x * Time.fixedDeltaTime * velocityCorrection, 
                                          rope.segments[i].position.y + rb.Velocity.value.y * Time.fixedDeltaTime * velocityCorrection);

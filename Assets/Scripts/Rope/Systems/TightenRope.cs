@@ -11,7 +11,7 @@ public class TightenRope {
 
     private bool endTighten = false;
 
-    public bool execute(PlayerRope rope) {
+    public bool execute(PlayerRope rope) {//Rope, Anchor, Extender, PlayerRope
         if (!active) {
             this.active = true;
             tightenRate /= rope.substeps;
@@ -33,7 +33,7 @@ public class TightenRope {
         return tighten(rope);
     }
 
-    private bool tighten(PlayerRope rope) {
+    private bool tighten(PlayerRope rope) {//Rope, Extender, Anchor, PlayerRope
         calcLengths(rope);
 
         if (tightLength > 0) {
@@ -74,7 +74,7 @@ public class TightenRope {
 
     private Vector2d hook2Base = Vector2d.zero;
     private Vector2d segGap = Vector2d.zero;
-    private void calcLengths(PlayerRope rope) {
+    private void calcLengths(PlayerRope rope) {//Rope, Extender, Anchor
         hook2Base.x = rope.segments[0].p2.x - rope.anchor.attachPoint.x;
         hook2Base.y = rope.segments[0].p2.y - rope.anchor.attachPoint.y;
 
@@ -83,14 +83,14 @@ public class TightenRope {
         //Debug.Log("tight: " + hook2Base.magnitude + " loose: " + looseLength);
     }
 
-    public void rotateToRope(PlayerRope rope) {
-        float rbAngV = rope.anchor.rb.AngularVelocity.pendingValue().z;
-        float rbAngA = rope.anchor.rb.AngularAcceleration.pendingValue();
-        float rbAngM = rope.anchor.rb.AngularMax.pendingValue();
+    public void rotateToRope(Rope rope, Anchor anchor) {
+        float rbAngV = anchor.rb.AngularVelocity.pendingValue().z;
+        float rbAngA = anchor.rb.AngularAcceleration.pendingValue();
+        float rbAngM = anchor.rb.AngularMax.pendingValue();
 
-        float ropeAngle = Mathf.Atan2((float)rope.segments[0].p2.y - rope.anchor.rb.transform.position.y, 
-                                (float)rope.segments[0].p2.x - rope.anchor.rb.transform.position.x) * Mathf.Rad2Deg - 90;
-        float shipAngle = rope.anchor.rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime;
+        float ropeAngle = Mathf.Atan2((float)rope.segments[0].p2.y - anchor.rb.transform.position.y, 
+                                (float)rope.segments[0].p2.x - anchor.rb.transform.position.x) * Mathf.Rad2Deg - 90;
+        float shipAngle = anchor.rb.Rotation.pendingValue().eulerAngles.z + rbAngV * Time.fixedDeltaTime;
         float diff = ropeAngle - shipAngle;
 
         if (diff > 180)
@@ -108,6 +108,6 @@ public class TightenRope {
         List<(Vector3, ForceMode)> torques = new List<(Vector3, ForceMode)>();
         torques.Add((new Vector3(0, 0, velocityChange), ForceMode.VelocityChange));
 
-        rope.anchor.rb.Torque.set(PriorityAlias.Rope, torques);
+        anchor.rb.Torque.set(PriorityAlias.Rope, torques);
     }
 }

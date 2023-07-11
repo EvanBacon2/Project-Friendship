@@ -3,11 +3,7 @@ using System.Collections;
 using UnityEngine;
 
 public class PlayerRopeSystem : RequestSystem<PlayerRopeState> {
-    private bool tight;
-
-    private TightenRope tighty = new TightenRope();
-
-    public override void OnStateReceived(object sender, PlayerRopeState state) {
+    public override void OnStateReceived(object sender, PlayerRopeState state) {//playerRope
         if (state.mode && state.rope.extended) {
             if (state.rope.mode == RopeMode.FLEXIBLE) {
                 state.rope.tighten = true;

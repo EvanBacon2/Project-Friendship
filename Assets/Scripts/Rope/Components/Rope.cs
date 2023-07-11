@@ -94,6 +94,10 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 		this._angleConstraints[index] = angleLimitDegrees;
 	}
 
+	public double getAngleConstraint(int index) {
+		return _angleConstraints[index];
+	}
+
 	void Start() {
 		start();
 	}

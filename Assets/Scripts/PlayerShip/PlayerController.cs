@@ -6,6 +6,13 @@ using UnityEngine;
  */
 public class PlayerController : MonoBehaviour {
     private RECSShipbody rigidBody;
+
+    /*
+    private Rope rope;
+    private ExtendRopeNoIn extender;
+    private PlayerRopeNoIn playerRope;
+    */
+
     private PlayerRope rope;
     private Anchor anchor;
     public PlayerRopeHook hook;
@@ -23,6 +30,12 @@ public class PlayerController : MonoBehaviour {
         rigidBody = GetComponent<RECSShipbody>();
         rope = GetComponent<PlayerRope>();
         anchor = GetComponent<Anchor>();
+
+        /*
+        rope = GetComponent<Rope>();
+        extender = GetComponent<ExtendRopeNoIn>();
+        playerRope = GetComponent<PlayerRopeNoIn>();
+        */
 
         simulator = new PlayerRopeSimulator(rope, anchor, hook);
 
@@ -43,7 +56,7 @@ public class PlayerController : MonoBehaviour {
         publishExtendableState();
         publishAnchorState();
         publishPlayerRopeState();
-        
+
         simulator.advance();
         rigidBody.executeRequests();
     }
@@ -64,14 +77,14 @@ public class PlayerController : MonoBehaviour {
 
     private void publishPlayerRopeState() {
         PlayerRopeStateReceived?.Invoke(this, new() {
-            rope = this.rope,
+            rope = this.rope,//playerRope
             mode = PlayerInputProvider.ropeModeInput,
         });
     }
 
     private void publishExtendableState() {
         ExtendableStateReceived?.Invoke(this, new() {
-            rope = this.rope,
+            rope = this.rope,//rope extender
             auto = PlayerInputProvider.ropeAutoInput,
             wind = PlayerInputProvider.ropeWindInput,
         });
@@ -98,7 +111,7 @@ public class ShipState : EventArgs {
 }
 
 public class PlayerRopeState : EventArgs {
-    public PlayerRope rope { get; set; }
+    public PlayerRope rope { get; set; }//playerRope
     public bool mode { get; set; }
 }
 
@@ -108,7 +121,7 @@ public class AnchorState : EventArgs {
 }
 
 public class ExtendableState : EventArgs {
-    public ExtendableRope rope { get; set; }
+    public ExtendableRope rope { get; set; }//rope extender
     public bool auto { get; set; }
     public float wind { get; set; }
 }

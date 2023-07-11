@@ -16,23 +16,31 @@ public class PlayerRopeSimulator : RopeSimulator {
     protected override void OnUpdate() {
         anchor.OnUpdate();
         rope.OnUpdate();
+        //extender.OnUpdate();
+        //playerRope.OnUpdate();
         hook.OnUpdate();
     }
 
     protected override void OnSubUpdate() {
         anchor.OnSubUpdate();
         rope.OnSubUpdate();
+        //extender.OnSubUpdate();
+        //playerRope.OnSubUpdate();
         hook.OnSubUpdate();
     }
 
     protected override void ApplyConstraints() {
         rope.ApplyConstraints();
+        //extender.ApplyConstraints();
+        //playerRope.ApplyConstraints();
         anchor.ApplyConstraints();
         hook.ApplyConstraints();
     }
 
     protected override void OnUpdateLate() {
         rope.OnUpdateLate();
+        //extender.OnUpdateLate();
+        //playerRope.OnUpdateLate();
         anchor.OnUpdateLate();
         hook.OnUpdateLate();
     }

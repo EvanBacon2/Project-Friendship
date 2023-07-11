@@ -4,7 +4,7 @@ using UnityEngine;
  * Defines a system for controlling an ExtendableRope
  */
 public class ExtendableSystem : RequestSystem<ExtendableState> {
-    public override void OnStateReceived(object sender, ExtendableState state) {
+    public override void OnStateReceived(object sender, ExtendableState state) {//rope extender
         ExtendableRope rope = state.rope;
 
         //auto extend rope

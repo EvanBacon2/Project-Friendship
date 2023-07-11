@@ -1,10 +1,10 @@
 using System;
 using UnityEngine;
 
-public enum RopeMode {
+/*public enum RopeMode {
     STIFF,
     FLEXIBLE
-}
+}*/
 
 public class PlayerRope : ExtendableRope {
 	public RopeMode mode;
@@ -86,7 +86,7 @@ public class PlayerRope : ExtendableRope {
         anchor.correctVelocity(this);
         
         if (tighten)
-            tighty.rotateToRope(this);
+            tighty.rotateToRope(this, anchor);
     }
 
     public override void OnSubUpdate() {

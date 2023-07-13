@@ -6,11 +6,16 @@ public enum RopeMode {
     FLEXIBLE
 }
 
+//Things in this class
+//Define rope modes
+//Add callbacks to autoExtend and autoRetract
+//sync config of Anchor
+
 [RequireComponent(typeof(Rope))]
-[RequireComponent(typeof(ExtendRopeNoIn))]
+[RequireComponent(typeof(RopeExtender))]
 public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
     private Rope rope;
-    private ExtendRopeNoIn extender;
+    private RopeExtender extender;
 
 	public RopeMode mode;
     public int segmentCount;
@@ -23,9 +28,6 @@ public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
 
     private double _stiffAngle = 3;
     private double _flexAngle = 35;
-
-    public bool tighten = false;
-    private TightenRope tighty = new TightenRope();
 
 	public void stiff() {
         rope.configure(3, .98, .98, 6, 1);
@@ -46,7 +48,7 @@ public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
 
     private void Awake() {
         this.rope = GetComponent<Rope>();
-        this.extender = GetComponent<ExtendRopeNoIn>();
+        this.extender = GetComponent<RopeExtender>();
     }
 
     private void Start() {
@@ -86,15 +88,8 @@ public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
         });
     }
 
-    /*public void ApplyConstraints(){
-        base.ApplyConstraints();
-    }*/
-
     public void OnUpdate() {
         anchor.correctVelocity(rope);
-        
-        if (tighten)
-            tighty.rotateToRope(rope, anchor);
     }
 
     public void OnSubUpdate() {
@@ -106,16 +101,6 @@ public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
 
         extender.setInactivePosition(anchor.position.x, anchor.position.y);
         extender.setInactiveOrientation(anchor.orientation.x, anchor.orientation.y);
-
-        if (tighten)
-            tighten = tighty.execute(rope, anchor, extender, this);
-    }
-
-    void OnValidate() {
-        /*if (mode == RopeMode.STIFF)
-            stiff();
-        else
-            flexible();*/
     }
 
     private Vector2 pGiz1 = new Vector3(0, 0, 0);

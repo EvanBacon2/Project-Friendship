@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerRopeHook : Hook, RopeBehaviour {
     //public PlayerRope rope;
     public Rope rope;
-    public ExtendRopeNoIn extender;
+    public RopeExtender extender;
     public PlayerRopeNoIn playerRope;
 
     public Anchor anchor;

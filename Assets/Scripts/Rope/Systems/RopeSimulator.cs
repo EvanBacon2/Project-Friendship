@@ -26,10 +26,11 @@ public abstract class RopeSimulator {
 		}
 	}
 
-	protected virtual void OnUpdate() {}
+	private bool OnUpdate() { return false; }
+
 	protected virtual void OnSubUpdate() {}
 	protected virtual void ApplyConstraints() {}
-	protected virtual void OnUpdateLate() {}
+	private bool OnUpdateLate() { return false; }
 
 	/*
 	 * Integrate position and orientation of segments by timestep of h
@@ -83,8 +84,6 @@ public abstract class RopeSimulator {
 	}
 
 	protected virtual void applyDrag() {
-		//add base segment drag
-
 		for (int i = rope.activeSegments - 1; i >= 1; i--) {
 			Segment s1 = segments[i];
 			Segment s2 = segments[i - 1];
@@ -105,8 +104,6 @@ public abstract class RopeSimulator {
 			s2.angulerVelocity -= angulerDiff * (1 - angulerRatio);
 		}
 	}
-
-	
 }
 
 public interface RopeBehaviour {

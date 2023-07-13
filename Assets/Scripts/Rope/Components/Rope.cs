@@ -104,8 +104,6 @@ public class Rope : MonoBehaviour, RopeBehaviour {
 
 	public bool tightEnd = false;
 
-	public virtual void OnUpdate() {}
-	public virtual void OnSubUpdate() {}
 	public virtual void ApplyConstraints() {
 		int end = tightEnd ? 2 : 1;
 
@@ -114,7 +112,6 @@ public class Rope : MonoBehaviour, RopeBehaviour {
             SegmentConstraint.angleConstraint(segments[i], segments[i - 1], _angleConstraints[i] * Mathf.Deg2Rad/*angleLimitRadians*/);
         }
 	}
-	public virtual void OnUpdateLate() {}
 
 	void OnValidate() {
 		substeps = substeps < 1 ? 1 : substeps;

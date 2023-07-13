@@ -6,7 +6,7 @@ using UnityEngine;
 public class ExtendableSystem : RequestSystem<ExtendableState> {
     public override void OnStateReceived(object sender, ExtendableState state) {//rope extender
         Rope rope = state.rope;
-        ExtendRopeNoIn extender = state.extender;
+        RopeExtender extender = state.extender;
         
         if (state.auto) {
             Debug.Log("extended: " + extender.extended + " autoRetract: " + extender.autoRetract + " autoExtend: " + extender.autoExtend);

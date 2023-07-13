@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class Anchor : MonoBehaviour, RopeBehaviour {
 	public RECSShipbody rb;
     public Segment anchorSegment;//Analog of rigidbody this anchor is attached to
@@ -21,7 +22,6 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
     public double subAngulerDrag;
 
 	protected Vector2d _offset;
-	public Vector2d offset { get { return _offset; } }
 
 	public Vector2d position { get { return anchorSegment.p1; } }
 	public Vector2d orientation { get { return anchorSegment.orientation; } }
@@ -61,8 +61,6 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 		this.angleLimit = angleLimit;
 	}
 
-    private Vector2d rbOrientation = Vector2d.zero;
-
 	public void setOffset(double offsetX, double offsetY) {
         _offset.x = offsetX;
         _offset.y = offsetY;
@@ -71,9 +69,6 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
         Vector2d.rotateOrientation(_offset, rotation);
         anchorSegment.stretchP2(anchorSegment.p1.x + _offset.x, anchorSegment.p1.y + _offset.y); 
     } 
-
-    Vector3 giz1 = new Vector3();
-    Vector3 giz2 = new Vector3();
 
 	public void OnUpdate() {
 		updateInterpolation();
@@ -90,6 +85,8 @@ public class Anchor : MonoBehaviour, RopeBehaviour {
 		} 
 	}
 
+    Vector3 giz1 = new Vector3();
+    Vector3 giz2 = new Vector3();
 	public void OnUpdateLate() {
         updateAnchor();
 

@@ -2,15 +2,17 @@ public class PlayerRopeSimulator : RopeSimulator {
     private Anchor anchor;
     private PlayerRopeHook hook;
 
-    private ExtendRopeNoIn extender;
+    private RopeExtender extender;
+    private RopeTightener tightener;
     private PlayerRopeNoIn playerRope;
 
-    public PlayerRopeSimulator(Rope rope, Anchor anchor, PlayerRopeHook hook, ExtendRopeNoIn extender, 
-        PlayerRopeNoIn playerRope) : base(rope) {
+    public PlayerRopeSimulator(Rope rope, Anchor anchor, PlayerRopeHook hook, RopeExtender extender, 
+        RopeTightener tightener, PlayerRopeNoIn playerRope) : base(rope) {
         this.anchor = anchor;
         this.hook = hook;
 
         this.extender = extender;
+        this.tightener = tightener;
         this.playerRope = playerRope;
     }
 
@@ -20,18 +22,17 @@ public class PlayerRopeSimulator : RopeSimulator {
         OnUpdateLate();
     }
 
-    protected override void OnUpdate() {
+    protected void OnUpdate() {
         anchor.OnUpdate();
-        rope.OnUpdate();
-        //extender.OnUpdate();
+        tightener.OnUpdate();
         playerRope.OnUpdate();
         hook.OnUpdate();
+        extender.OnUpdateLate();
     }
 
     protected override void OnSubUpdate() {
         anchor.OnSubUpdate();
-        rope.OnSubUpdate();
-        //extender.OnSubUpdate();
+        tightener.OnSubUpdate();
         playerRope.OnSubUpdate();
         hook.OnSubUpdate();
     }
@@ -39,21 +40,18 @@ public class PlayerRopeSimulator : RopeSimulator {
     protected override void ApplyConstraints() {
         rope.ApplyConstraints();
         extender.ApplyConstraints();
-        //playerRope.ApplyConstraints();
         anchor.ApplyConstraints();
         hook.ApplyConstraints();
     }
 
-    protected override void OnUpdateLate() {
-        rope.OnUpdateLate();
-        extender.OnUpdateLate();
-        //playerRope.OnUpdateLate();
+    protected void OnUpdateLate() {
+        
         anchor.OnUpdateLate();
         hook.OnUpdateLate();
     }
 
     protected override void applyDrag() {
-        anchor.applyDrag();
         base.applyDrag();
+        anchor.applyDrag();
     }
 }

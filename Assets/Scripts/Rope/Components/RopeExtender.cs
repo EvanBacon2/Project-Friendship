@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ExtendableRope : Rope {
-	public bool extended { get { return activeSegments != 0; } }
+[RequireComponent(typeof(Rope))]
+public class RopeExtender : MonoBehaviour, RopeBehaviour {
+    private Rope rope;
+
+	public bool extended { get { return rope.activeSegments != 0; } }
 
 	protected bool _autoExtend = false;
 	public bool autoExtend {
@@ -39,8 +42,8 @@ public class ExtendableRope : Rope {
 	public double winchOffset {
 		get { return _winchOffset; }
 		set {
-			if (uniformSegments)
-				adjustWinch(value, segments[0].length);
+			if (rope.uniformSegments)
+				adjustWinch(value, rope.segments[0].length);
 			else
 				adjustWinch(value);
 		}
@@ -53,7 +56,7 @@ public class ExtendableRope : Rope {
     public double winchUnit;//length the rope is extended/retracted by per wind input
     public int winchFrames;//number of frames it takes to wind/unwind the rope by one winchUnit
     public double baseExtention { get { return winchOffset / _baseLength; } }//value between [1,0) indicating how extended the base segment is
-    private double _baseLength { get { return baseSegment > -1 ? segments[baseSegment].length : Double.PositiveInfinity; } }
+    private double _baseLength { get { return rope.baseSegment > -1 ? rope.segments[rope.baseSegment].length : Double.PositiveInfinity; } }
 
     private Vector2d inactivePosition = Vector2d.zero;//position of all inactive segments
     private Vector2d inactiveOrientation = Vector2d.zero;//orientation of all inactive segments
@@ -63,9 +66,13 @@ public class ExtendableRope : Rope {
     private List<Action> autoRetractStart = new List<Action>();
     private List<Action> autoRetractEnd = new List<Action>();
 
-    public override void OnUpdateLate() {
-        base.OnUpdateLate();
+    public EventHandler autoExtendStartEvent;
 
+    private void Awake() {
+        rope = GetComponent<Rope>();
+    }
+
+    public void OnUpdateLate() {
         //apply scroll wind
         if (winchScrollBuffer != 0) {
             winchOffset += winchUnit / winchFrames * System.Math.Sign(winchScrollBuffer);
@@ -75,7 +82,7 @@ public class ExtendableRope : Rope {
         //apply auto extention
         if (autoExtend) {
             winchOffset += autoExtendRate;
-            if (activeSegments == segments.Length)//stop extending 
+            if (rope.activeSegments == rope.segments.Length)//stop extending 
                 autoExtend = false;
         }
         
@@ -87,10 +94,9 @@ public class ExtendableRope : Rope {
         }
     }
 
-    public override void ApplyConstraints() {
-        base.ApplyConstraints();
-        for (int i = activeSegments; i < segments.Length; i++) {
-            inactiveConstraint(segments[i]);
+    public void ApplyConstraints() {
+        for (int i = rope.activeSegments; i < rope.segments.Length; i++) {
+            inactiveConstraint(rope.segments[i]);
         }
     }
 
@@ -145,11 +151,11 @@ public class ExtendableRope : Rope {
             int segmentChange = (int)(_winchOffset / length);
             while (_winchOffset < 0)  {
                 segmentChange -= 1;
-                _winchOffset = baseSegment > -1 ? length + _winchOffset : 0;
+                _winchOffset = rope.baseSegment > -1 ? length + _winchOffset : 0;
             }
             
-            baseSegment = System.Math.Clamp(baseSegment + segmentChange, -1, segments.Length - 1);
-            activeSegments = baseSegment + 1;
+            rope.baseSegment = System.Math.Clamp(rope.baseSegment + segmentChange, -1, rope.segments.Length - 1);
+            rope.activeSegments = rope.baseSegment + 1;
 
             _winchOffset = _winchOffset % length;
         }      
@@ -162,19 +168,19 @@ public class ExtendableRope : Rope {
         _winchOffset += adjustment;
         int sign = _winchOffset < 0 ? -1 : 1;
 
-        double baseLength = baseSegment > -1 ? segments[baseSegment].length : 0;
+        double baseLength = rope.baseSegment > -1 ? rope.segments[rope.baseSegment].length : 0;
 
         while (System.Math.Abs(_winchOffset) >= baseLength) {
             _winchOffset -= baseLength * sign;
-            baseSegment = System.Math.Clamp(baseSegment + sign, -1, segments.Length - 1);	
-            baseLength = baseSegment != -1 ? segments[baseSegment].length : double.PositiveInfinity;
+            rope.baseSegment = System.Math.Clamp(rope.baseSegment + sign, -1, rope.segments.Length - 1);	
+            baseLength = rope.baseSegment != -1 ? rope.segments[rope.baseSegment].length : double.PositiveInfinity;
         }
         
         if (_winchOffset < 0) {
-            _winchOffset = baseSegment != -1 ? baseLength + _winchOffset : 0;
-            baseSegment = System.Math.Clamp(baseSegment - 1, -1, segments.Length - 1);
+            _winchOffset = rope.baseSegment != -1 ? baseLength + _winchOffset : 0;
+            rope.baseSegment = System.Math.Clamp(rope.baseSegment - 1, -1, rope.segments.Length - 1);
         }
 
-        activeSegments = baseSegment + 1;
+        rope.activeSegments = rope.baseSegment + 1;
     }
 }

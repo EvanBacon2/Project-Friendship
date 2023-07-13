@@ -9,8 +9,9 @@ public class PlayerController : MonoBehaviour {
 
     
     private Rope rope;
-    private ExtendRopeNoIn extender;
+    private RopeExtender extender;
     private PlayerRopeNoIn playerRope;
+    private RopeTightener tightener;
     
 
     //private PlayerRope rope;
@@ -28,20 +29,16 @@ public class PlayerController : MonoBehaviour {
 
     void Awake() {
         rope = GetComponent<Rope>();
-        extender = GetComponent<ExtendRopeNoIn>();
+        extender = GetComponent<RopeExtender>();
         playerRope = GetComponent<PlayerRopeNoIn>();
+        tightener = GetComponent<RopeTightener>();
     }
 
     void Start() {
         rigidBody = GetComponent<RECSShipbody>();
-        //rope = GetComponent<PlayerRope>();
         anchor = GetComponent<Anchor>();
 
-        
-       
-        
-
-        simulator = new PlayerRopeSimulator(rope, anchor, hook, extender, playerRope);
+        simulator = new PlayerRopeSimulator(rope, anchor, hook, extender, tightener, playerRope);
 
         boostManager = GetComponent<BoostManager>();
 
@@ -81,16 +78,16 @@ public class PlayerController : MonoBehaviour {
 
     private void publishPlayerRopeState() {
         PlayerRopeStateReceived?.Invoke(this, new() {
-            //rope = this.rope,//playerRope
             playerRope = this.playerRope,
             extender = this.extender,
+            tightener = this.tightener,
             mode = PlayerInputProvider.ropeModeInput,
         });
     }
 
     private void publishExtendableState() {
         ExtendableStateReceived?.Invoke(this, new() {
-            rope = this.rope,//rope extender
+            rope = this.rope,
             extender = this.extender,
             auto = PlayerInputProvider.ropeAutoInput,
             wind = PlayerInputProvider.ropeWindInput,
@@ -118,9 +115,9 @@ public class ShipState : EventArgs {
 }
 
 public class PlayerRopeState : EventArgs {
-    //public PlayerRope rope { get; set; }//playerRope
     public PlayerRopeNoIn playerRope { get; set; }
-    public ExtendRopeNoIn extender { get; set; }
+    public RopeExtender extender { get; set; }
+    public RopeTightener tightener { get; set; }
     public bool mode { get; set; }
 }
 
@@ -130,9 +127,8 @@ public class AnchorState : EventArgs {
 }
 
 public class ExtendableState : EventArgs {
-    //public ExtendableRope rope { get; set; }//rope extender
     public Rope rope { get; set; }
-    public ExtendRopeNoIn extender { get; set; }
+    public RopeExtender extender { get; set; }
     public bool auto { get; set; }
     public float wind { get; set; }
 }

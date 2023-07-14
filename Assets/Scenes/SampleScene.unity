@@ -1059,12 +1059,12 @@ GameObject:
   - component: {fileID: 356274356}
   - component: {fileID: 356274357}
   - component: {fileID: 356274358}
-  - component: {fileID: 356274360}
   - component: {fileID: 356274359}
   - component: {fileID: 356274362}
   - component: {fileID: 356274366}
   - component: {fileID: 356274365}
   - component: {fileID: 356274364}
+  - component: {fileID: 356274367}
   m_Layer: 0
   m_Name: Player Ship
   m_TagString: Player
@@ -1245,40 +1245,6 @@ MonoBehaviour:
   subAngulerDrag: 0
   velocityCorrection: 0
   rotationStep: 0
---- !u!114 &356274360
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 356274343}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cfac44461d77d094e938b85073cf26a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  substeps: 90
-  _angleLimit: 3
-  _linearDrag: 0.98
-  _angulerDrag: 0.98
-  stiffness: 1
-  stretchiness: 1
-  maxSpeed: 6
-  maxSpeedScale: 1
-  uniformSegments: 1
-  activeSegments: 0
-  baseSegment: -1
-  tightEnd: 0
-  autoExtendRate: 3
-  autoRetractRate: 0.65
-  winchUnit: 0.35
-  winchFrames: 4
-  mode: 0
-  segmentCount: 35
-  segmentLength: 0.65
-  anchor: {fileID: 356274359}
-  hook: {fileID: 2125503710}
-  tighten: 0
 --- !u!114 &356274362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1331,7 +1297,6 @@ MonoBehaviour:
   segmentLength: 0.65
   anchor: {fileID: 356274359}
   hook: {fileID: 2125503710}
-  tighten: 0
 --- !u!114 &356274365
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1372,6 +1337,20 @@ MonoBehaviour:
   activeSegments: 0
   baseSegment: -1
   tightEnd: 0
+--- !u!114 &356274367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 356274343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db6699e1319fb15459d0755035871f12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  active: 0
+  tightenRate: 0.7
 --- !u!4 &372813684 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6767336483662742566, guid: 045641f2e895dd04c9f1758630f321aa, type: 3}
@@ -4963,7 +4942,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   active: 0
-  rope: {fileID: 356274360}
+  rope: {fileID: 356274366}
   extender: {fileID: 356274365}
   playerRope: {fileID: 356274364}
   anchor: {fileID: 356274359}

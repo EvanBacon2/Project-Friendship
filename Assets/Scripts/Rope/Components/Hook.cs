@@ -15,8 +15,8 @@ public class Hook : MonoBehaviour {
 	public bool active;
 	public bool isHooked { get; protected set; }
 
-	private List<Action> hookedCallbacks = new List<Action>();
-	private List<Action> unHookedCallbacks = new List<Action>();
+	public EventHandler hookedEvent;
+	public EventHandler unHookedEvent;
 
 	void Start() {
 		start();
@@ -37,9 +37,7 @@ public class Hook : MonoBehaviour {
 			hookMass = other.attachedRigidbody.mass;
 			isHooked = true;
 
-			foreach (Action callback in hookedCallbacks) {
-				callback();
-			}
+			hookedEvent.Invoke(this, new());
 		}
 	}
 
@@ -53,18 +51,8 @@ public class Hook : MonoBehaviour {
 		isHooked = false;
 		hookMass = 1;
 
-		foreach(Action callback in unHookedCallbacks) {
-			callback();
-		}
+		unHookedEvent.Invoke(this, new());
 	}
-
-	public void addHookedCallback(Action callback) {
-		hookedCallbacks.Add(callback);
-	}
-
-	public void addUnHookedCallback(Action callback) {
-		unHookedCallbacks.Add(callback);
-	} 
 
 	protected virtual void start() {}
 }

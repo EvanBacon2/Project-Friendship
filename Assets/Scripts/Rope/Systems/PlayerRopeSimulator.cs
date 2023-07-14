@@ -23,18 +23,18 @@ public class PlayerRopeSimulator : RopeSimulator {
     }
 
     protected void OnUpdate() {
-        anchor.OnUpdate();
-        tightener.OnUpdate();
-        playerRope.OnUpdate();
-        hook.OnUpdate();
         extender.OnUpdateLate();
+        hook.OnUpdate();
+        playerRope.OnUpdate();
+        tightener.OnUpdate();
+        anchor.OnUpdate();
     }
 
     protected override void OnSubUpdate() {
-        anchor.OnSubUpdate();
-        tightener.OnSubUpdate();
-        playerRope.OnSubUpdate();
         hook.OnSubUpdate();
+        playerRope.OnSubUpdate();
+        tightener.OnSubUpdate();
+        anchor.OnSubUpdate();
     }
 
     protected override void ApplyConstraints() {
@@ -45,13 +45,12 @@ public class PlayerRopeSimulator : RopeSimulator {
     }
 
     protected void OnUpdateLate() {
-        
-        anchor.OnUpdateLate();
         hook.OnUpdateLate();
+        anchor.OnUpdateLate();
     }
 
     protected override void applyDrag() {
-        base.applyDrag();
         anchor.applyDrag();
+        base.applyDrag();
     }
 }

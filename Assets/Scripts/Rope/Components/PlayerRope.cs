@@ -56,22 +56,22 @@ public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
 
         anchor.substeps = rope.substeps;
 
-        extender.addAutoExtendStartCallback(() => {
+        extender.autoExtendStartEvent += (object sender, EventArgs e) => {
             flexible();
 		    rope.maxSpeed = 40;
 
             anchor.velocityCorrection = 1;
 		    hook.active = true;
-        });
+        };
 
-        extender.addAutoExtendEndCallback(() => {
+        extender.autoExtendEndEvent += (object sender, EventArgs e) => {
             anchor.velocityCorrection = 0;
             anchor.mass = 1;
             anchor.inertia = .05;
 		    rope.maxSpeed = 25;
-        });
+        };
 
-        extender.addAutoRetractStartCallback(() => {
+        extender.autoRetractStartEvent += (object sender, EventArgs e) => {
             hook.active = false;
 		    hook.unHook();
 
@@ -81,11 +81,11 @@ public class PlayerRopeNoIn : MonoBehaviour, RopeBehaviour {
 		    flexible();
 		    rope.angulerDrag = .995;
 		    rope.maxSpeed = 30;
-        });
+        };
 
-        extender.addAutoRetractEndCallback(() => {
+        extender.autoRetractEndEvent += (object sender, EventArgs e) => {
             flexible();
-        });
+        };
     }
 
     public void OnUpdate() {

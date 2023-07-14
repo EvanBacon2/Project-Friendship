@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PlayerRopeHook : Hook, RopeBehaviour {
@@ -16,9 +17,8 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
     private bool constrainHook = false;
 
     protected override void start() {
-        addHookedCallback(() => {
-            //rope.autoExtend = false;
-            Debug.Log("///////////////hooked");
+        hookedEvent += (object sender, EventArgs e) => {
+            Debug.Log("Hooked");
             constrainHook = false;
             rope.configure(rope.angleLimitDegrees, .97, .98, rope.maxSpeed, rope.maxSpeedScale);
             hookSegment.mass = 500;
@@ -27,20 +27,21 @@ public class PlayerRopeHook : Hook, RopeBehaviour {
             hookSegment.velocity.y /= 500;
             hookSegment.previousPosition.x = hookSegment.position.x - hookSegment.velocity.x;
             hookSegment.previousPosition.y = hookSegment.position.y - hookSegment.velocity.y;
-        });
+        };
 
-        addUnHookedCallback(() => {
+        unHookedEvent += (object sender, EventArgs e) => {
             hookSegment.mass = 1;
-        });
+            Debug.Log("UnHooked");
+        };
 
-        extender.addAutoExtendStartCallback(() => {
+        extender.autoExtendStartEvent += (object sender, EventArgs e) => {
             constrainHook = true;
-        });
+        };
     }
 
     public void OnUpdate() {
         //deactivate hook when rope isn't extended
-        if (!extender.extended && !extender.autoExtend) {
+        if (active && !extender.extended && !extender.autoExtend) {
 		    active = false;
 			unHook();
 		}   

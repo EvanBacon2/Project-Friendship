@@ -15,10 +15,10 @@ public class RopeExtender : MonoBehaviour, RopeBehaviour {
             if (_autoExtend != value) {
                 _autoExtend = value;
 
-                if (_autoExtend)
-                    on(autoExtendStart);
+                if (_autoExtend) 
+                    autoExtendStartEvent.Invoke(this, new());
                 else
-                    on(autoExtendEnd);
+                    autoExtendEndEvent.Invoke(this, new());
             }
         }
 	}
@@ -31,9 +31,9 @@ public class RopeExtender : MonoBehaviour, RopeBehaviour {
                 _autoRetract = value;
             
                 if (_autoRetract)
-                    on(autoRetractStart);
+                    autoRetractStartEvent.Invoke(this, new());
                 else
-                    on(autoRetractEnd);
+                    autoRetractEndEvent.Invoke(this, new());
             }
         }
 	}
@@ -67,6 +67,9 @@ public class RopeExtender : MonoBehaviour, RopeBehaviour {
     private List<Action> autoRetractEnd = new List<Action>();
 
     public EventHandler autoExtendStartEvent;
+    public EventHandler autoExtendEndEvent;
+    public EventHandler autoRetractStartEvent;
+    public EventHandler autoRetractEndEvent;
 
     private void Awake() {
         rope = GetComponent<Rope>();
@@ -119,26 +122,6 @@ public class RopeExtender : MonoBehaviour, RopeBehaviour {
         inactiveOrientation.x = x;
         inactiveOrientation.y = y;
     }
-
-    public void addAutoExtendStartCallback(Action callback) {
-        autoExtendStart.Add(callback);
-    }
-
-    public void addAutoExtendEndCallback(Action callback) {
-        autoExtendEnd.Add(callback);
-    }
-
-    public void addAutoRetractStartCallback(Action callback) {
-        autoRetractStart.Add(callback);
-    }
-
-    public void addAutoRetractEndCallback(Action callback) {
-        autoRetractEnd.Add(callback);
-    }
-
-    private void on(List<Action> callbacks) {
-        callbacks.ForEach((callback) => callback());
-    } 
 
 	/*
      * Winds and unwinds rope based on adjustment
